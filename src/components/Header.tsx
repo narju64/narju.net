@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 interface NavLink {
   href: string
@@ -11,20 +12,27 @@ const navLinks: NavLink[] = [
   { href: '/blog', label: 'Blog' },
   { href: '/books', label: 'Books' },
   { href: '/vinyl', label: 'Vinyl' },
+  { href: '/OrbitalCalendar', label: 'Orbital Calendar' },
 ]
 
 const Header: React.FC = () => {
+  const location = useLocation();
+
   return (
     <header className="header">
       <nav className="nav">
         <div className="nav-brand">
-          <a href="/" className="logo">narju.net</a>
+          <Link to="/" className="logo">narju.net</Link>
         </div>
         <div className="nav-links">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="nav-link">
+            <Link 
+              key={link.href} 
+              to={link.href} 
+              className={`nav-link ${location.pathname === link.href ? 'active' : ''}`}
+            >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
       </nav>

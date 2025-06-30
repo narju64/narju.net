@@ -55,9 +55,6 @@ const OrbitalCalendarPage: React.FC = () => {
     return date.toLocaleDateString('en-US', { weekday: 'short' });
   };
 
-  // Check if current month has special days
-  const hasSpecialDays = selectedMonth === 10 || (selectedMonth === 13 && orbitalCalendar.isGregorianLeapYear(selectedYear));
-
   return (
     <div className="orbital-calendar-page">
       <div className="container mx-auto px-4 py-8">
@@ -161,10 +158,8 @@ const OrbitalCalendarPage: React.FC = () => {
           {/* Month Calendar Grid */}
           <div className="grid grid-cols-7 gap-2">
             {/* Day headers */}
-            {['Monday', 'Tuesday', 'Gaiday', 'Quaday', 'Friday', 'Kinday', 'Sunday'].map((dayName, index) => (
-              <div key={dayName} className="text-center p-2 font-semibold text-gray-700 bg-gray-100 rounded">
-                {dayName}
-              </div>
+            {['Monday', 'Tuesday', 'Gaiday', 'Quaday', 'Friday', 'Kinday', 'Sunday'].map((dayName) => (
+              <th key={dayName}>{dayName}</th>
             ))}
             
             {/* Regular calendar days only */}

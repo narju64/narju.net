@@ -57,13 +57,13 @@ export class OrbitalCalendar {
   getWeekDayName(weekDay: number): string {
     const weekDayNames = [
       'Special',     // 0 - for Urobor and Leap Day
-      'Monday',      // 1
-      'Tuesday',     // 2
-      'Gaiday',      // 3
-      'Quaday',      // 4
-      'Friday',      // 5
-      'Kinday',      // 6
-      'Sunday'       // 7
+      'Unyom',      // 1
+      'Tuyom',      // 2
+      'Triyom',     // 3
+      'Foyom',      // 4
+      'Phiyom',     // 5
+      'Seyom',      // 6
+      'Sabbath'     // 7
     ];
     return weekDayNames[weekDay] || 'Unknown';
   }
@@ -153,78 +153,43 @@ export class OrbitalCalendar {
    * Convert a Gregorian date to Orbital Calendar date
    */
   gregorianToOrbital(gregorianDate: Date): OrbitalDate {
-    const epoch = new Date(this.config.epochYear, this.config.epochMonth - 1, this.config.epochDay);
-    const daysSinceEpoch = Math.floor((gregorianDate.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Handle negative dates (before epoch)
-    if (daysSinceEpoch < 0) {
-      throw new Error('Dates before the Spring Equinox epoch are not supported');
+    // Determine the correct Orbital year for this Gregorian date
+    const gregorianYear = gregorianDate.getFullYear();
+    let orbitalYear = gregorianYear;
+    const march20 = new Date(gregorianYear, 2, 20); // March is month 2 (0-based)
+    if (gregorianDate < march20) {
+      orbitalYear = gregorianYear - 1;
     }
 
-    const gregorianMonth = gregorianDate.getMonth() + 1;
-    const gregorianDay = gregorianDate.getDate();
-    const year = gregorianDate.getFullYear();
-    
-    // Check for Urobor (December 25)
-    if (gregorianMonth === 12 && gregorianDay === 25) {
-      return {
-        year,
-        month: 0,
-        day: 1, // Urobor is day 1 of month 0
-        weekDay: 0,
-        gregorianDate: new Date(gregorianDate),
-        isSpecialDay: true,
-        specialDayType: 'urobor'
-      };
-    }
-
-    // Check for Leap Day (March 19 in leap years)
-    if (this.isGregorianLeapYear(year) && gregorianMonth === 3 && gregorianDay === 19) {
-      return {
-        year: year - 1, // The Orbital year that contains this leap day is the previous year
-        month: 0,
-        day: 2, // Leap Day is day 2 of month 0
-        weekDay: 0,
-        gregorianDate: new Date(gregorianDate),
-        isSpecialDay: true,
-        specialDayType: 'leap-day'
-      };
-    }
-
-    // Regular day calculation
-    // We need to calculate which month this falls into based on the actual date ranges
-    let month = 0;
-    let day = 0;
-    
-    // Get month ranges for this specific year
-    const monthRanges = this.getMonthRanges(year);
-
-    // Find which month this date belongs to
-    for (let i = 0; i < monthRanges.length; i++) {
-      const range = monthRanges[i];
-      if (gregorianDate >= range.start && gregorianDate <= range.end) {
-        month = i + 1;
-        // Calculate day within the month
-        const daysInRange = Math.floor((gregorianDate.getTime() - range.start.getTime()) / (1000 * 60 * 60 * 24));
-        day = daysInRange + 1;
-        break;
+    // Search all months (including special days) for a matching Gregorian date
+    for (let month = 0; month <= 13; month++) {
+      const days = this.getDaysInMonth(orbitalYear, month);
+      for (const day of days) {
+        if (
+          day.gregorianDate.getFullYear() === gregorianDate.getFullYear() &&
+          day.gregorianDate.getMonth() === gregorianDate.getMonth() &&
+          day.gregorianDate.getDate() === gregorianDate.getDate()
+        ) {
+          return day;
+        }
       }
     }
 
-    if (month === 0) {
-      throw new Error('Date not found in any month range');
+    // If not found, try previous orbital year (for edge cases at year boundary)
+    for (let month = 0; month <= 13; month++) {
+      const days = this.getDaysInMonth(orbitalYear - 1, month);
+      for (const day of days) {
+        if (
+          day.gregorianDate.getFullYear() === gregorianDate.getFullYear() &&
+          day.gregorianDate.getMonth() === gregorianDate.getMonth() &&
+          day.gregorianDate.getDate() === gregorianDate.getDate()
+        ) {
+          return day;
+        }
+      }
     }
 
-    const weekDay = this.calculateWeekDay(gregorianDate);
-
-    return {
-      year,
-      month,
-      day,
-      weekDay,
-      gregorianDate: new Date(gregorianDate),
-      isSpecialDay: false
-    };
+    throw new Error('Date not found in any month of the Orbital calendar');
   }
 
   /**

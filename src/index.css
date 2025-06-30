@@ -716,6 +716,7 @@ html {
   font-weight: 500;
   background: none;
   transition: background 0.2s, color 0.2s;
+  font-size: 1rem;
 }
 
 .dropdown-menu li > a:hover,
@@ -759,6 +760,7 @@ html {
   font-weight: 500;
   background: none;
   transition: background 0.2s, color 0.2s;
+  font-size: 1rem;
 }
 
 .dropdown-menu-mobile li > a:hover,

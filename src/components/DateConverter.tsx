@@ -1,161 +1,123 @@
 import React, { useState } from 'react';
 import { orbitalCalendar, OrbitalDate } from '../utils/orbitalCalendar';
+import './DateConverter.css';
 
 const DateConverter: React.FC = () => {
   const [gregorianDate, setGregorianDate] = useState(new Date().toISOString().split('T')[0]);
   const [orbitalDate, setOrbitalDate] = useState<OrbitalDate>(orbitalCalendar.getCurrentOrbitalDate());
-  const [conversionMode, setConversionMode] = useState<'gregorian-to-orbital' | 'orbital-to-gregorian'>('gregorian-to-orbital');
 
+  // When Gregorian changes, update Orbital
   const handleGregorianChange = (dateString: string) => {
     setGregorianDate(dateString);
-    if (conversionMode === 'gregorian-to-orbital') {
-      const date = new Date(dateString);
-      const orbital = orbitalCalendar.gregorianToOrbital(date);
-      setOrbitalDate(orbital);
-    }
+    // Parse as local date
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const orbital = orbitalCalendar.gregorianToOrbital(date);
+    setOrbitalDate(orbital);
   };
 
+  // When Orbital changes, update Gregorian
   const handleOrbitalChange = (field: 'year' | 'month' | 'day', value: number) => {
-    const newOrbitalDate = { 
-      ...orbitalDate, 
-      [field]: value,
-      isSpecialDay: value === 0 // If month is 0, it's a special day
-    };
-    setOrbitalDate(newOrbitalDate);
-    
-    if (conversionMode === 'orbital-to-gregorian') {
-      const gregorian = orbitalCalendar.orbitalToGregorian(newOrbitalDate);
-      setGregorianDate(gregorian.toISOString().split('T')[0]);
-    }
-  };
+    let newOrbitalDate = { ...orbitalDate };
 
-  const handleSpecialDayChange = (specialDayType: 'urobor' | 'leap-day') => {
-    const newOrbitalDate = {
-      ...orbitalDate,
-      month: 0,
-      day: specialDayType === 'urobor' ? 1 : 2,
-      weekDay: 0,
-      isSpecialDay: true,
-      specialDayType
-    };
-    setOrbitalDate(newOrbitalDate);
-    
-    if (conversionMode === 'orbital-to-gregorian') {
-      const gregorian = orbitalCalendar.orbitalToGregorian(newOrbitalDate);
-      setGregorianDate(gregorian.toISOString().split('T')[0]);
+    if (field === 'month') {
+      newOrbitalDate.month = value;
+      if (value === 0) {
+        // Special month: always reset to Urobor
+        newOrbitalDate.day = 1;
+        newOrbitalDate.isSpecialDay = true;
+        newOrbitalDate.specialDayType = 'urobor';
+      } else {
+        // Regular month: clear special flags
+        newOrbitalDate.isSpecialDay = false;
+        newOrbitalDate.specialDayType = undefined;
+        // Clamp day to 28 if needed
+        if (newOrbitalDate.day > 28) newOrbitalDate.day = 28;
+      }
+    } else if (field === 'day') {
+      newOrbitalDate.day = value;
+      if (newOrbitalDate.month === 0) {
+        if (value === 1) {
+          newOrbitalDate.isSpecialDay = true;
+          newOrbitalDate.specialDayType = 'urobor';
+        } else if (value === 2 && (newOrbitalDate.year + 1) % 4 === 0) {
+          newOrbitalDate.isSpecialDay = true;
+          newOrbitalDate.specialDayType = 'leap-day';
+        } else {
+          // Invalid day for special month, reset to 1
+          newOrbitalDate.day = 1;
+          newOrbitalDate.isSpecialDay = true;
+          newOrbitalDate.specialDayType = 'urobor';
+        }
+      } else {
+        newOrbitalDate.isSpecialDay = false;
+        newOrbitalDate.specialDayType = undefined;
+      }
+    } else if (field === 'year') {
+      newOrbitalDate.year = value;
+      // If currently on Leap Day, but new year is not leap, reset to Urobor
+      if (newOrbitalDate.month === 0 && newOrbitalDate.day === 2 && (value + 1) % 4 !== 0) {
+        newOrbitalDate.day = 1;
+        newOrbitalDate.isSpecialDay = true;
+        newOrbitalDate.specialDayType = 'urobor';
+      } else if (newOrbitalDate.month === 0) {
+        // Update special flags for special month
+        if (newOrbitalDate.day === 1) {
+          newOrbitalDate.isSpecialDay = true;
+          newOrbitalDate.specialDayType = 'urobor';
+        } else if (newOrbitalDate.day === 2 && (value + 1) % 4 === 0) {
+          newOrbitalDate.isSpecialDay = true;
+          newOrbitalDate.specialDayType = 'leap-day';
+        } else {
+          newOrbitalDate.day = 1;
+          newOrbitalDate.isSpecialDay = true;
+          newOrbitalDate.specialDayType = 'urobor';
+        }
+      }
     }
-  };
 
-  const convertDate = () => {
-    if (conversionMode === 'gregorian-to-orbital') {
-      const date = new Date(gregorianDate);
-      const orbital = orbitalCalendar.gregorianToOrbital(date);
-      setOrbitalDate(orbital);
-    } else {
-      const gregorian = orbitalCalendar.orbitalToGregorian(orbitalDate);
-      setGregorianDate(gregorian.toISOString().split('T')[0]);
-    }
+    setOrbitalDate(newOrbitalDate);
+    const gregorian = orbitalCalendar.orbitalToGregorian(newOrbitalDate);
+    setGregorianDate(gregorian.toISOString().split('T')[0]);
   };
 
   return (
-    <div className="date-converter bg-white p-6 rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">Date Converter</h3>
-      
-      <div className="mb-4">
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setConversionMode('gregorian-to-orbital')}
-            className={`px-4 py-2 rounded transition-all ${
-              conversionMode === 'gregorian-to-orbital'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Gregorian → Orbital
-          </button>
-          <button
-            onClick={() => setConversionMode('orbital-to-gregorian')}
-            className={`px-4 py-2 rounded transition-all ${
-              conversionMode === 'orbital-to-gregorian'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Orbital → Gregorian
-          </button>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
+    <div className="date-converter">
+      <h3 className="date-converter-title">Date Converter</h3>
+      <p className="date-converter-note">Changing either date will update the other automatically.</p>
+      <div className="date-converter-cols">
         {/* Gregorian Date Input */}
-        <div>
-          <h4 className="font-semibold text-gray-700 mb-2">Gregorian Date</h4>
+        <div className="date-col">
+          <label className="date-label">Gregorian Date</label>
           <input
             type="date"
             value={gregorianDate}
             onChange={(e) => handleGregorianChange(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="date-input"
           />
-          <p className="text-sm text-gray-600 mt-1">
-            {new Date(gregorianDate).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
-        </div>
-
-        {/* Orbital Date Input */}
-        <div>
-          <h4 className="font-semibold text-gray-700 mb-2">Orbital Date</h4>
-          
-          {/* Special Day Selection */}
-          <div className="mb-3">
-            <label className="text-sm text-gray-600">Special Days:</label>
-            <div className="flex gap-2 mt-1">
-              <button
-                onClick={() => handleSpecialDayChange('urobor')}
-                className={`px-3 py-1 text-sm rounded border transition-all ${
-                  orbitalDate.isSpecialDay && orbitalDate.specialDayType === 'urobor'
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                }`}
-              >
-                Urobor (00/01)
-              </button>
-              <button
-                onClick={() => handleSpecialDayChange('leap-day')}
-                className={`px-3 py-1 text-sm rounded border transition-all ${
-                  orbitalDate.isSpecialDay && orbitalDate.specialDayType === 'leap-day'
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                }`}
-              >
-                Leap Day (00/02)
-              </button>
-            </div>
+          <div className="date-preview">
+            {(() => {
+              const [year, month, day] = gregorianDate.split('-').map(Number);
+              const localDate = new Date(year, month - 1, day);
+              return localDate.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+              });
+            })()}
           </div>
-
-          {/* Regular Date Inputs */}
-          <div className="grid grid-cols-3 gap-2">
+        </div>
+        {/* Orbital Date Input */}
+        <div className="date-col">
+          <label className="date-label">Orbital Date</label>
+          <div className="orbital-inputs-row">
             <div>
-              <label className="text-sm text-gray-600">Year</label>
-              <input
-                type="number"
-                value={orbitalDate.year}
-                onChange={(e) => handleOrbitalChange('year', parseInt(e.target.value) || 2024)}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600">Month</label>
+              <label className="date-label">Month</label>
               <select
+                name="month"
                 value={orbitalDate.month}
                 onChange={(e) => handleOrbitalChange('month', parseInt(e.target.value))}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="date-input"
               >
-                <option value={0}>Special Days (00)</option>
+                <option value={0}>00. Special</option>
                 {Array.from({ length: 13 }, (_, i) => i + 1).map(month => (
                   <option key={month} value={month}>
                     {month.toString().padStart(2, '0')}. {orbitalCalendar.getMonthName(month)}
@@ -164,30 +126,44 @@ const DateConverter: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-600">Day</label>
-              <input
-                type="number"
-                min="1"
-                max="28"
+              <label className="date-label">Day</label>
+              <select
+                name="day"
                 value={orbitalDate.day}
-                onChange={(e) => handleOrbitalChange('day', parseInt(e.target.value) || 1)}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={orbitalDate.isSpecialDay}
-              />
+                onChange={(e) => handleOrbitalChange('day', parseInt(e.target.value))}
+                className="date-input"
+              >
+                {orbitalDate.month === 0 ? (
+                  <>
+                    <option value={1}>1</option>
+                    {(orbitalDate.year + 1) % 4 === 0 && <option value={2}>2</option>}
+                  </>
+                ) : (
+                  Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))
+                )}
+              </select>
+            </div>
+            <div>
+              <label className="date-label">Year</label>
+              <select
+                name="year"
+                value={orbitalDate.year}
+                onChange={(e) => handleOrbitalChange('year', parseInt(e.target.value))}
+                className="date-input"
+              >
+                {Array.from({ length: 201 }, (_, i) => 1900 + i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             </div>
           </div>
-          <p className="text-sm text-gray-600 mt-1">
+          <div className="date-preview">
             {orbitalCalendar.formatOrbitalDate(orbitalDate, false)}
-          </p>
+          </div>
         </div>
       </div>
-
-      <button
-        onClick={convertDate}
-        className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
-      >
-        Convert Date
-      </button>
     </div>
   );
 };

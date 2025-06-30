@@ -18,7 +18,7 @@ const App: React.FC = () => {
                 <Projects />
               </>
             } />
-            <Route path="/OrbitalCalendar" element={<OrbitalCalendarPage />} />
+            <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
           </Routes>
         </main>
       </div>

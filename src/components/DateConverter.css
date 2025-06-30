@@ -1,0 +1,114 @@
+/* Date Converter Styles */
+.date-converter {
+  background: var(--color-card-bg);
+  color: var(--color-text);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 2rem;
+}
+.date-converter-title {
+  color: #f97316;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.date-converter-note {
+  color: #bdbdbd;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.date-converter-cols {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.date-col {
+  flex: 1 1 250px;
+  min-width: 330px;
+  background: #232323;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+.date-label {
+  display: block;
+  color: #f97316;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.date-input {
+  width: 100%;
+  background: #232323;
+  color: var(--color-text);
+  border: 1px solid #444;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+.date-input:focus {
+  outline: 2px solid #f97316;
+  border-color: #f97316;
+}
+.special-day-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.special-day-btn {
+  background: #232323;
+  color: #f97316;
+  border: 1px solid #f97316;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.special-day-btn.selected, .special-day-btn:hover {
+  background: #f97316;
+  color: #fff;
+}
+.orbital-inputs-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  min-width: 0;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+.orbital-inputs-row > div {
+  min-width: 0;
+  flex-shrink: 0;
+}
+.orbital-inputs-row select,
+.orbital-inputs-row input[type="number"] {
+  flex-shrink: 0;
+}
+.orbital-inputs-row select[name="month"] {
+  width: 155px;
+}
+.orbital-inputs-row select[name="day"] {
+  width: 65px;
+}
+.orbital-inputs-row select[name="year"] {
+  width: 82px;
+}
+.orbital-inputs-row input[type="number"][name="day"] {
+  width: 60px;
+}
+.orbital-inputs-row input[type="number"][name="year"] {
+  width: 80px;
+}
+.date-preview {
+  color: #bdbdbd;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+@media (max-width: 700px) {
+  .date-converter-cols {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+} 

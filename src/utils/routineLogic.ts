@@ -163,6 +163,16 @@ export const isCurrentTime = (time: string) => {
     return currentHour === 14 && currentMinute < 30;
   }
   
+  // Special handling for 6:00 PM to exclude 6:45+ time
+  if (time === '6:00 PM') {
+    return currentHour === 18 && currentMinute < 45;
+  }
+  
+  // Special handling for 8:00 PM to exclude 8:45+ time
+  if (time === '8:00 PM') {
+    return currentHour === 20 && currentMinute < 45;
+  }
+  
   return currentHour === time24Hour;
 };
 

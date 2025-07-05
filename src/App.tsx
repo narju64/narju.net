@@ -1,9 +1,10 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
-import Sections from './components/Sections'
 import Projects from './components/Projects'
 import OrbitalCalendarPage from './components/OrbitalCalendar'
+import Routine from './components/Routine'
+import CurrentTask from './components/CurrentTask'
 
 const App: React.FC = () => {
   return (
@@ -14,11 +15,12 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={
               <>
-                <Sections />
+                <CurrentTask />
                 <Projects />
               </>
             } />
             <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
+            <Route path="/lifestyle/routine" element={<Routine />} />
           </Routes>
         </main>
       </div>

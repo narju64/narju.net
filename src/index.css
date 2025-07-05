@@ -69,6 +69,15 @@ body {
   transition: color 0.3s ease;
   margin-left: 0;
   padding-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
 }
 
 .logo:hover {

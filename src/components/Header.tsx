@@ -159,7 +159,10 @@ const Header: React.FC = () => {
     <header className="header">
       <nav className="nav">
         <div className="nav-brand">
-          <Link to="/" className="logo">narju.net</Link>
+          <Link to="/" className="logo">
+            <img src="/favicon.png" alt="narju.net" className="logo-icon" />
+            narju.net
+          </Link>
         </div>
         <button className="nav-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
           <span className="hamburger" />

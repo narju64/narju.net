@@ -6,6 +6,7 @@ import OrbitalCalendarPage from './components/OrbitalCalendar'
 import Routine from './components/Routine'
 import CurrentTask from './components/CurrentTask'
 import BeatsPlayer from './components/BeatsPlayer'
+import TraditionalArt from './components/TraditionalArt'
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
             <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
             <Route path="/lifestyle/routine" element={<Routine />} />
             <Route path="/creative/music/beats" element={<BeatsPlayer />} />
+            <Route path="/creative/visual-art/traditional" element={<TraditionalArt />} />
           </Routes>
         </main>
       </div>

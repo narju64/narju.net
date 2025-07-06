@@ -232,3 +232,71 @@ This document outlines the current structure and planned development of narju.ne
 └── /diet
     ├── Recipe collection
 ```
+
+## 🚀 Current Development Priorities & Discussion
+
+### 📋 Recent Planning Session (Latest)
+**Date**: Current session  
+**Focus**: Content creation and feature prioritization
+
+#### 🎯 Immediate Priorities
+1. **Lists System** - Rankings and organized collections
+   - **Features**: Drag-and-drop reordering, authentication for admin access
+   - **Content**: Top rappers, NBA players, movies, philosophy influences, podcasters
+   - **Technical**: Need to decide on auth approach (password protection vs user accounts)
+
+2. **Collections Management** - Physical and digital item catalogs
+   - **Content**: Vinyl records, books, trading cards
+   - **Features**: Cataloging, reviews, statistics
+
+3. **Podcasts Section** - Already exists at `/content/curated-media/podcasts`
+   - **Status**: ✅ Implemented
+   - **Next**: Content population and curation
+
+#### 🔤 Phonetic Alphabet Project (Long-term)
+**Vision**: Custom IPA variant (nPA - narju's Phonetic Alphabet)
+
+**Phase 1**: Core Translator
+- English → nPA translation
+- Site-wide alphabet toggle for visitors
+
+**Phase 2**: Advanced Tools
+- Rhyme detection and analysis
+- Alliteration/assonance finder
+- AI-assisted poetry/lyrics creation
+- Enhanced rhyming dictionary
+
+**Potential Impact**: Could be valuable for other creators and tie into music/beats work
+
+#### 🎨 Design Philosophy
+- **Minimalist approach** - Clean, uncluttered design
+- **Content-first** - Focus on substance over presentation
+- **Simple navigation** - Clear paths without overwhelming options
+
+#### 📝 Content Strategy
+- **Lists**: Data entry with intuitive organization tools
+- **Collections**: Systematic cataloging with personal insights
+- **Creative works**: Showcase existing audio and visual content
+- **Projects**: Technical tools and interactive experiences
+
+### 🔄 Development Approach
+1. **Content creation** before structural changes
+2. **Simple implementations** that can be enhanced later
+3. **User experience** over feature complexity
+4. **Personal utility** as primary driver
+
+### 📊 Progress Tracking
+- ✅ Core infrastructure (React, TypeScript, Vite)
+- ✅ Navigation and routing
+- ✅ Orbital Calendar project
+- ✅ Routine system
+- ✅ Beats player
+- ✅ Traditional art gallery
+- ✅ Podcasts page structure
+- 🔄 Lists system (planning)
+- 🔄 Collections management (planning)
+- 🔄 Phonetic alphabet (concept)
+
+---
+
+*Last updated: Current development session*

@@ -1,0 +1,123 @@
+.music-lists-page {
+  padding: 2rem 0;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.music-lists-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.page-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-titles);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.page-description {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.list-card {
+  background: var(--color-card-bg);
+  border-radius: 12px;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-borders);
+  transition: all 0.3s ease;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+.list-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-border-hover);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.5);
+  border-color: var(--color-border-hover);
+  text-decoration: none;
+  color: inherit;
+}
+
+.list-card:hover::before {
+  transform: scaleX(1);
+}
+
+.list-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-titles);
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.list-description {
+  font-size: 1rem;
+  color: var(--color-text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .music-lists-page .container {
+    padding: 0 1rem;
+  }
+  
+  .lists-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .list-card {
+    padding: 1.5rem;
+  }
+  
+  .list-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.8rem;
+  }
+  
+  .list-title {
+    font-size: 1.3rem;
+  }
+} 

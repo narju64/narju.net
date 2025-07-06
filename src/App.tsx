@@ -7,6 +7,9 @@ import Routine from './components/Routine'
 import CurrentTask from './components/CurrentTask'
 import BeatsPlayer from './components/BeatsPlayer'
 import TraditionalArt from './components/TraditionalArt'
+import Lists from './components/Lists'
+import MusicLists from './components/MusicLists'
+import FavoriteAlbums from './components/FavoriteAlbums'
 
 const App: React.FC = () => {
   return (
@@ -25,6 +28,9 @@ const App: React.FC = () => {
             <Route path="/lifestyle/routine" element={<Routine />} />
             <Route path="/creative/music/beats" element={<BeatsPlayer />} />
             <Route path="/creative/visual-art/traditional" element={<TraditionalArt />} />
+            <Route path="/list" element={<Lists />} />
+            <Route path="/lists/music" element={<MusicLists />} />
+            <Route path="/lists/music/favorite-albums" element={<FavoriteAlbums />} />
           </Routes>
         </main>
       </div>

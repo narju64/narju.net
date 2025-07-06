@@ -1,6 +1,6 @@
 # Narju.net
 
-A personal website showcasing interests, projects, and thoughts. Built with React, TypeScript, and Vite.
+A personal website showcasing creative works, collections, and thoughts. Built with React, TypeScript, and Vite.
 
 ## 🚀 Features
 
@@ -9,7 +9,7 @@ A personal website showcasing interests, projects, and thoughts. Built with Reac
 - **Type Safety**: Full TypeScript coverage for better development experience
 - **Fast Development**: Hot module replacement and fast builds with Vite
 - **Accessible**: Built with accessibility best practices
-- **Extensible**: Easy to add new sections and pages
+- **Minimalist Design**: Clean, uncluttered interface focused on content
 
 ## 📁 Project Structure
 
@@ -17,15 +17,27 @@ A personal website showcasing interests, projects, and thoughts. Built with Reac
 narju.net/
 ├── src/
 │   ├── components/          # React components
-│   │   ├── Header.tsx      # Navigation header
+│   │   ├── Header.tsx      # Navigation header with dropdowns
 │   │   ├── Hero.tsx        # Hero section
 │   │   ├── Sections.tsx    # Main navigation cards
 │   │   ├── Projects.tsx    # Project showcase
+│   │   ├── CurrentTask.tsx # Current task widget
+│   │   ├── Routine.tsx     # Lifestyle routine system
+│   │   ├── BeatsPlayer.tsx # Audio player for beats
+│   │   ├── TraditionalArt.tsx # Art gallery
+│   │   ├── OrbitalCalendar.tsx # Custom calendar
 │   │   └── Footer.tsx      # Footer component
-│   ├── App.tsx             # Main app component
+│   ├── utils/              # Utility functions
+│   │   ├── orbitalCalendar.ts
+│   │   ├── routineLogic.ts
+│   │   └── routines.ts
+│   ├── App.tsx             # Main app component with routing
 │   ├── main.tsx            # React entry point
 │   └── index.css           # Global styles
 ├── public/                 # Static assets
+│   ├── audio/beats/        # 40+ original beats
+│   ├── images/visual-art/  # Traditional and graffiti art
+│   └── favicon.png
 ├── index.html              # HTML template
 ├── package.json            # Dependencies and scripts
 ├── tsconfig.json           # TypeScript configuration
@@ -33,21 +45,29 @@ narju.net/
 └── README.md               # This file
 ```
 
-## 🎯 Planned Pages
+## 🎯 Current Pages & Features
 
-- **Homepage** (`/`) - Central hub with navigation to all sections
-- **Music** (`/music`) - Musical tastes, favorite artists, playlists
-- **Lists** (`/list`) - Rankings and lists
-  - `/list/rappers` - Top rappers
-  - `/list/nba` - NBA player rankings
-  - `/list/movies` - Movie rankings
-- **Blog** (`/blog`) - Thoughts and ideas
-- **Books** (`/books`) - Reading list and recommendations
-- **Vinyl** (`/vinyl`) - Vinyl collection and reviews
+### ✅ Implemented
 
-## 🎮 Projects
+- **Homepage** (`/`) - Minimalist hub with current task and projects
+- **Orbital Calendar** (`/projects/orbital-calendar`) - Custom calendar implementation
+- **Routine System** (`/lifestyle/routine`) - Daily task and schedule management
+- **Beats Player** (`/creative/music/beats`) - Audio player with 40+ original beats
+- **Traditional Art** (`/creative/visual-art/traditional`) - Art gallery showcase
+- **Podcasts** (`/content/curated-media/podcasts`) - Curated podcast recommendations
 
-- **Echoes** (`echoes.narju.net`) - Web-based game (separate subdomain)
+### 🔄 In Development
+
+- **Lists System** - Rankings and organized collections with drag-and-drop
+- **Collections Management** - Vinyl, books, and trading card catalogs
+- **Phonetic Alphabet Project** - Custom IPA variant (nPA) with translation tools
+
+## 🎨 Design Philosophy
+
+- **Minimalist Approach**: Clean, uncluttered design focused on content
+- **Content-First**: Substance over presentation
+- **Simple Navigation**: Clear paths without overwhelming options
+- **Personal Utility**: Built for personal use and organization
 
 ## 🛠️ Development
 
@@ -115,29 +135,11 @@ VITE_SITE_URL=https://narju.net
 VITE_ANALYTICS_ID=your-analytics-id
 ```
 
-## 🎨 Customization
+## 🎮 Projects
 
-### Adding New Sections
-
-1. **Create a new component** in `src/components/`
-2. **Add the route** to your routing system
-3. **Update navigation** in `Header.tsx`
-4. **Add content** with consistent styling
-
-### Styling
-
-The project uses CSS modules and global styles:
-- Global styles in `src/index.css`
-- Component-specific styles can be added as needed
-- Responsive design with CSS Grid and Flexbox
-- Modern color palette and typography
-
-### TypeScript Types
-
-Key interfaces defined:
-- `NavLink` - Navigation link structure
-- `SectionCard` - Section card data
-- `Project` - Project information
+- **Echoes** (`echoes.narju.net`) - Web-based game (separate subdomain)
+- **Orbital Calendar** - Custom calendar system
+- **Phonetic Alphabet** - Custom IPA variant in development
 
 ## 🔧 Technical Details
 
@@ -145,13 +147,14 @@ Key interfaces defined:
 - **React 18** - UI library
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
+- **React Router** - Client-side routing
 - **CSS** - Styling with modern features
 
 ### Performance Optimizations
 - Code splitting with React.lazy()
 - Optimized bundle with Vite
 - Efficient CSS with modern features
-- Image optimization (when added)
+- Audio and image optimization
 
 ### Browser Support
 - Chrome (latest)
@@ -160,6 +163,14 @@ Key interfaces defined:
 - Edge (latest)
 - Mobile browsers
 
+## 📊 Content Assets
+
+- **40+ Original Beats** - Complete audio collection
+- **Traditional Art Gallery** - Personal artwork showcase
+- **Graffiti Collection** - Street art photography
+- **Routine System** - Daily task management
+- **Orbital Calendar** - Custom time tracking
+
 ## 🤝 Contributing
 
 This is a personal project, but suggestions and improvements are welcome!
@@ -167,7 +178,3 @@ This is a personal project, but suggestions and improvements are welcome!
 ## 📄 License
 
 Personal project - feel free to use as inspiration for your own site.
-
----
-
-Built with ❤️ using React, TypeScript, and Vite. 

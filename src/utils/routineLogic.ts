@@ -130,6 +130,10 @@ export const isCurrentTime = (time: string) => {
   }
   
   // Handle specific minute times
+  if (time === '6:00 AM') {
+    return currentHour === 6 && currentMinute < 30;
+  }
+  
   if (time === '6:30 AM') {
     return currentHour === 6 && currentMinute >= 30 && currentMinute < 60;
   }

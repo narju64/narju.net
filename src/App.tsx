@@ -10,6 +10,7 @@ import TraditionalArt from './components/TraditionalArt'
 import Lists from './components/Lists'
 import MusicLists from './components/MusicLists'
 import FavoriteAlbums from './components/FavoriteAlbums'
+import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 
 const App: React.FC = () => {
   return (
@@ -31,6 +32,7 @@ const App: React.FC = () => {
             <Route path="/list" element={<Lists />} />
             <Route path="/lists/music" element={<MusicLists />} />
             <Route path="/lists/music/favorite-albums" element={<FavoriteAlbums />} />
+            <Route path="/projects/phonetic-alphabet" element={<PhoneticAlphabetPage />} />
           </Routes>
         </main>
       </div>

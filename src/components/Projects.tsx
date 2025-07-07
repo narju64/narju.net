@@ -13,6 +13,12 @@ const projects: Project[] = [
     title: 'Echoes',
     description: 'A web-based game with URL-based logic',
     external: true
+  },
+  {
+    href: '/projects/phonetic-alphabet',
+    title: 'nPA Translator',
+    description: 'Translate English text into narju\'s Phonetic Alphabet',
+    external: false
   }
 ]
 

@@ -17,7 +17,7 @@ export async function loadCMUdict(): Promise<void> {
 
   try {
     // Load the CMUdict file
-    const response = await fetch('/data/cmudict.txt');
+    const response = await fetch('/cmudict.txt');
     if (!response.ok) {
       throw new Error(`Failed to load CMUdict: ${response.statusText}`);
     }

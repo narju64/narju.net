@@ -1,3 +1,12 @@
+/* Load nPA font */
+@font-face {
+  font-family: 'nPA';
+  src: url('/fonts/nPAv1.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* CSS Custom Properties */
 :root {
   /* Borders */
@@ -993,4 +1002,70 @@ html {
   .task-activity {
     font-size: 1.1rem;
   }
+} 
+
+/* nPA Toggle in Header */
+.npa-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-left: 2rem;
+}
+
+.npa-toggle-container .site-toggle {
+  background: var(--color-borders);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: inherit;
+}
+
+.npa-toggle-container .site-toggle:hover {
+  background: var(--color-border-hover);
+}
+
+.npa-toggle-container .site-toggle[data-npa-mode="true"] {
+  background: var(--color-titles);
+} 
+
+/* Mobile responsive for nPA toggle */
+@media (max-width: 900px) {
+  .npa-toggle-container {
+    margin-left: 0;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+  
+  .npa-toggle-container .site-toggle {
+    width: 100%;
+    max-width: 200px;
+  }
+} 
+
+/* nPA Mode - Apply font to all text */
+.npa-mode {
+  font-family: 'nPA', 'Courier New', monospace;
+}
+
+.npa-text {
+  font-family: 'nPA', 'Courier New', monospace;
+}
+
+/* Apply nPA font to all text elements when in nPA mode */
+.npa-mode *,
+.npa-mode h1, .npa-mode h2, .npa-mode h3, .npa-mode h4, .npa-mode h5, .npa-mode h6,
+.npa-mode p, .npa-mode span, .npa-mode div, .npa-mode li, .npa-mode a,
+.npa-mode button, .npa-mode input, .npa-mode textarea, .npa-mode label,
+.npa-mode .nav-link, .npa-mode .dropdown-menu, .npa-mode .dropdown-menu * {
+  font-family: 'nPA', 'Courier New', monospace !important;
+}
+
+/* Exclude the toggle button itself from nPA font */
+.npa-mode .site-toggle,
+.npa-mode .npa-toggle-container,
+.npa-mode .npa-toggle-container * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 } 

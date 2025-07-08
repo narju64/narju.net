@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { SiteToggle } from '../npa-translator/components/SiteToggle';
 
 // Hierarchical navigation structure
 const navStructure = [
@@ -185,6 +186,9 @@ const Header: React.FC = () => {
               )}
             </div>
           ))}
+        </div>
+        <div className="npa-toggle-container">
+          <SiteToggle />
         </div>
       </nav>
     </header>

@@ -9,12 +9,14 @@ export function segmentText(text: string): string[] {
 
 // Clean word for dictionary lookup
 export function cleanWord(word: string): string {
-  return word.toLowerCase().trim().replace(/[^\w\s'-]/g, '');
+  // Keep letters, apostrophes, hyphens, and accented characters
+  return word.toLowerCase().trim().replace(/[^\p{L}\s'-]/gu, '');
 }
 
 // Check if a segment is a word (not punctuation or whitespace)
 export function isWord(segment: string): boolean {
-  return /^[a-zA-Z'-]+$/.test(segment);
+  // Allow letters, apostrophes, hyphens, and accented characters
+  return /^[\p{L}'-]+$/u.test(segment);
 }
 
 // Check if a segment is punctuation
@@ -115,33 +117,15 @@ export function reconstructText(processedSegments: Array<{
 
 // Handle plural forms and common word variations
 export function getWordVariations(word: string): string[] {
-  const variations = [word];
-  
-  // Handle common plural forms
-  if (word.endsWith('s')) {
-    variations.push(word.slice(0, -1)); // Remove 's'
-  } else {
-    variations.push(word + 's'); // Add 's'
-  }
-  
-  // Handle common verb forms
-  if (word.endsWith('ing')) {
-    variations.push(word.slice(0, -3)); // Remove 'ing'
-    variations.push(word.slice(0, -3) + 'e'); // Remove 'ing', add 'e'
-  }
-  
-  if (word.endsWith('ed')) {
-    variations.push(word.slice(0, -2)); // Remove 'ed'
-    variations.push(word.slice(0, -2) + 'e'); // Remove 'ed', add 'e'
-  }
-  
-  return [...new Set(variations)]; // Remove duplicates
+  // For phonetic translation, we want to be precise about pronunciation
+  // Only return the original word to avoid incorrect fallbacks
+  return [word];
 }
 
 // Validate word format
 export function isValidWord(word: string): boolean {
-  // Check if word contains only letters and common word characters
-  return /^[a-zA-Z'-]+$/.test(word);
+  // Check if word contains only letters and common word characters (including accented characters)
+  return /^[\p{L}'-]+$/u.test(word);
 }
 
 // Normalize word for consistent processing

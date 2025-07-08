@@ -182,6 +182,77 @@ export function getFailedTranslationsCSV(): string {
   return csvContent;
 }
 
+// Get failed translations as a formatted text document
+export function getFailedTranslationsDocument(): string {
+  if (!isInitialized) {
+    initializeLogger();
+  }
+  
+  const stats = getFailedTranslationStats();
+  const date = new Date().toLocaleDateString();
+  const time = new Date().toLocaleTimeString();
+  
+  let document = `nPA Translator - Failed Translations Report\n`;
+  document += `Generated on ${date} at ${time}\n`;
+  document += `==========================================\n\n`;
+  
+  // Summary statistics
+  document += `SUMMARY:\n`;
+  document += `- Total failed attempts: ${stats.totalFailed}\n`;
+  document += `- Unique words: ${stats.uniqueWords}\n`;
+  document += `- Recent failures (24h): ${stats.recentFailures.length}\n\n`;
+  
+  // Most attempted words
+  if (stats.mostAttempted.length > 0) {
+    document += `MOST ATTEMPTED WORDS:\n`;
+    stats.mostAttempted.forEach((entry, index) => {
+      document += `${index + 1}. "${entry.word}" - ${entry.attempts} attempts`;
+      if (entry.context) {
+        document += ` (${entry.context})`;
+      }
+      document += `\n`;
+    });
+    document += `\n`;
+  }
+  
+  // All failed translations (sorted by attempts, then alphabetically)
+  const sortedTranslations = [...failedTranslations].sort((a, b) => {
+    if (b.attempts !== a.attempts) {
+      return b.attempts - a.attempts;
+    }
+    return a.word.localeCompare(b.word);
+  });
+  
+  document += `ALL FAILED TRANSLATIONS:\n`;
+  document += `========================\n\n`;
+  
+  sortedTranslations.forEach((entry, index) => {
+    document += `${index + 1}. "${entry.word}"\n`;
+    document += `   Attempts: ${entry.attempts}\n`;
+    document += `   Date: ${new Date(entry.timestamp).toLocaleDateString()}\n`;
+    if (entry.context) {
+      document += `   Context: ${entry.context}\n`;
+    }
+    document += `\n`;
+  });
+  
+  return document;
+}
+
+// Export failed translations as a text file
+export function exportFailedTranslationsDocument(): void {
+  const documentContent = getFailedTranslationsDocument();
+  const blob = new Blob([documentContent], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `npa-failed-translations-${new Date().toISOString().split('T')[0]}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
 // Save failed translations to localStorage
 function saveFailedTranslations(): void {
   if (typeof localStorage === 'undefined') return;

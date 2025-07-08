@@ -994,7 +994,7 @@ const favoriteAlbums: Album[] = [
     "id": 60,
     "rank": 60,
     "title": "Liquid Swords",
-    "artist": "GZA/Genius",
+    "artist": "GZA",
     "year": 1995,
     "genre": "Hip-Hop",
     "coverImage": "/images/albums/liquid_swords_gza_genius.jpg",

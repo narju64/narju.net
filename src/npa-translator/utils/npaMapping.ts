@@ -404,14 +404,30 @@ export function npaToArpabet(npaString: string): string {
   ]);
 
   const result: string[] = [];
+  const invalidChars: string[] = [];
   
-  for (const char of npaString) {
-    const arpabet = NPA_TO_ARPABET_MAP.get(char);
-    if (arpabet) {
-      result.push(arpabet);
-    } else {
-      throw new Error(`Invalid nPA character: ${char}`);
+  // Split by spaces if present (for multi-word pronunciations)
+  const words = npaString.split(/\s+/);
+  
+  for (const word of words) {
+    const wordResult: string[] = [];
+    
+    for (const char of word) {
+      const arpabet = NPA_TO_ARPABET_MAP.get(char);
+      if (arpabet) {
+        wordResult.push(arpabet);
+      } else {
+        invalidChars.push(char);
+      }
     }
+    
+    if (wordResult.length > 0) {
+      result.push(wordResult.join(' '));
+    }
+  }
+  
+  if (invalidChars.length > 0) {
+    throw new Error(`Invalid nPA characters: ${invalidChars.join(', ')}. Please use only valid nPA characters.`);
   }
   
   return result.join(' ');

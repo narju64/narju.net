@@ -1524,7 +1524,6 @@ aeronauticas EH2 R OW0 N AO1 T IH0 K AH0 S
 aeronautics EH2 R AH0 N AO1 T IH0 K S
 aeroperu EH2 R OW0 P EY0 R UW1
 aeroperu's EH2 R OW0 P EY0 R UW1 Z
-aeroplane  EH1 R OW0 P L EY0 N
 aeroquip EH1 R AH0 K W IH2 P
 aeroscience EH2 R OW0 S AY1 AH0 S
 aerosmith EH1 R OW0 S M IH2 TH
@@ -1653,7 +1652,6 @@ aficionado AH0 F IY2 SH Y AH0 N AA1 D OW2
 aficionados AH0 F IH2 SH AH0 N AA1 D OW0 Z
 afield AH0 F IY1 L D
 afire AH0 F AY1 R
-afk  EY1 EH0 F K EY0
 afl EY2 EH2 F EH1 L
 aflame AH0 F L EY1 M
 aflatoxin AE2 F L AH0 T AA1 K S IH0 N
@@ -2029,8 +2027,8 @@ ahsahka AA0 S AA1 K AH0
 ahuja AA0 HH UW1 Y AH0
 ahumada AA0 Y UW0 M AA1 D AH0
 ahwahnee AH0 W AA1 N IY0
-ai EY1 AY1
-ai(2) AY1
+ai AY1
+ai(2) EY1 AY1
 aichele AY1 K AH0 L
 aicher AY1 K ER0
 aichi AA0 IY1 CH IY0
@@ -4024,8 +4022,8 @@ ancira AA0 N CH IH1 R AH0
 ancona AA0 N K OW1 N AH0
 ancrum AH0 N K R AH1 M
 anctil AE1 NG K T IH0 L
-and AE1 N D
-and(2) AH0 N D
+and AH0 N D
+and(2) AE1 N D
 andal AE1 N D AH0 L
 andalusia AE2 N D AH0 L UW1 ZH AH0
 andalusian AE2 N D AH0 L UW1 SH AH0 N
@@ -5199,7 +5197,6 @@ aquatic AH0 K W AA1 T IH0 K
 aquatic(2) AH0 K W AE1 T IH0 K
 aqueduct AE1 K W AH0 D AH2 K T
 aqueducts AE1 K W AH0 D AH2 K T S
-aquemini  AH1 K W EH0 M IH0 N AY0
 aqueous EY1 K W IY0 AH0 S
 aquifer AE1 K W AH0 F ER0
 aquifers AE1 K W AH0 F ER0 Z
@@ -6033,8 +6030,8 @@ asahan AE1 S AH0 HH AE0 N
 asahara AE0 S AH0 HH AE1 R AH0
 asahi AH0 S AA1 HH IY0
 asamera AE2 S AH0 M EH1 R AH0
-asap EY1 S AE2 P
-asap(2) EY1 EH1 S EY1 P IY1
+asap EY1 EH1 S EY1 P IY1
+asap(2) EY1 S AE2 P
 asarco AH0 S AA1 R K OW0
 asarco's AH0 S AA1 R K OW0 Z
 asaro AA0 S AA1 R OW0
@@ -7747,7 +7744,6 @@ badami B AA0 D AA1 M IY0
 badass B AE1 D AE2 S
 badavatz B AE1 D AH0 V AE2 T S
 badders B AE1 D ER0 Z
-baddie  B AE1 D IY0
 bade B EY1 D
 badeah B AH0 D IY1 AH0
 badeau B AH0 D OW1
@@ -7780,7 +7776,6 @@ badness B AE1 D N AH0 S
 badolato B AA0 D OW0 L AA1 T OW0
 badour B AH0 D UH1 R
 badu B AH0 D UW1
-baduizm  B AA1 D UW0 IH0 S AH0 M
 badura B AA0 D UH1 R AH0
 bady B EY1 D IY0
 bae B AY1
@@ -9538,6 +9533,7 @@ bbq B IY1 B IY0 K Y UW2
 bbq(2) B AA1 R B IH0 K Y UW2
 bc B IY2 S IY1
 be B IY1
+be(2) B IY0
 be's B IY1 Z
 bea B IY1
 beaber B IY1 B ER0
@@ -12127,7 +12123,6 @@ bjorklund B Y AO1 R K L AH0 N D
 bjorkman B Y AO1 R K M AH0 N
 bjorn B Y AO1 R N
 bjornstad B Y AO1 R N S T AH0 D
-björk  B Y AO1 R K
 blab B L AE1 B
 blabbed B L AE1 B D
 blabber B L AE1 B ER0
@@ -14807,7 +14802,6 @@ brazzaville B R AE1 Z AH0 V IH0 L
 brazzaville's B R AE1 Z AH0 V IH0 L Z
 brazzel B R AE1 Z AH0 L
 brazzell B R AE1 Z AH0 L
-brb  B IY1 AA0 R B IY0
 brca B R IH1 K AH0
 brcko B ER1 CH K OW0
 brcko's B ER1 CH K OW0 Z
@@ -15795,7 +15789,6 @@ bruggeman B R AH1 G M AH0 N
 brugger B R AH1 G ER0
 brugh B R AH1
 brugman B R AH1 G M AH0 N
-bruh  B R AH1
 bruha B R UW1 HH AH0
 bruhl B R AH1 L
 bruhn B R AH1 N
@@ -15974,7 +15967,6 @@ brzycki B R IH1 T S K IY0
 bs B IY2 EH1 S
 bt B IY1 T IY1
 bta B IY1 T IY1 EY1
-btw  B IY1 T IY0 D AH0 B Z
 bua B Y UW1 AH0
 bua(2) B IY1 Y UW1 EY1
 bub B AH1 B
@@ -16992,7 +16984,6 @@ bussi(2) B Y UW1 S IY0
 bussie B AH1 S IY0
 bussie(2) B Y UW1 S IY0
 bussiere B AH1 S IY0 EH0 R
-bussin  B AH1 S IH0 N
 bussing B AH1 S IH0 NG
 bussinger B AH1 S IH0 N JH ER0
 bussman B AH1 S M AH0 N
@@ -17219,7 +17210,6 @@ byrd B ER1 D
 byrd's B ER1 D Z
 byrer B AY1 R ER0
 byrge B AY1 R JH
-byrjun  B IY1 R Y AH0 N
 byrle B AY1 R AH0 L
 byrn B IH1 R N
 byrne B ER1 N
@@ -17457,7 +17447,6 @@ caffrey K AE1 F R IY0
 cafiero K AE2 F IY0 EH1 R OW0
 caftan K AE1 F T AE2 N
 caftans K AE1 F T AE2 N Z
-cag  K AE1 G
 cagan K EY1 G AH0 N
 cage K EY1 JH
 cage's K EY1 JH IH0 Z
@@ -21105,7 +21094,6 @@ chillies CH IH1 L IY0 Z
 chilliest CH IH1 L IY0 AH0 S T
 chilling CH IH1 L IH0 NG
 chillingly CH IH1 L IH0 NG L IY0
-chillout  CH IH1 L AW0 T
 chills CH IH1 L Z
 chilly CH IH1 L IY0
 chilmark CH IH1 L M AA2 R K
@@ -21577,7 +21565,6 @@ chun CH AH1 N
 chun's CH AH1 N Z
 chung CH AH1 NG
 chung's CH AH1 NG Z
-chungus  CH AH1 NG G AH0 S
 chunk CH AH1 NG K
 chunks CH AH1 NG K S
 chunky CH AH1 NG K IY0
@@ -24511,7 +24498,6 @@ conklin K AA1 NG K L IH0 N
 conkling K AA1 NG K L IH0 NG
 conkright K AA1 NG K R AY2 T
 conlan K AA1 N L AH0 N
-conlang  K AA1 N L EY0 NG
 conlee K AA1 N L IY0
 conley K AA1 N L IY0
 conlin K AA1 N L IH0 N
@@ -25486,7 +25472,6 @@ corduroy K AO1 R D ER0 OY2
 cordy K AO1 R D IY0
 core K AO1 R
 corea K AO0 R IY1 AH0
-corecore  K AO1 R K AO0 R
 corel K AO2 R EH1 L
 corell K AO2 R EH1 L
 corella K ER0 EH1 L AH0
@@ -29050,7 +29035,6 @@ dead D EH1 D
 dead-end D EH2 D EH1 N D
 dead-ender D EH2 D EH1 N D ER0
 dead-ends D EH2 D EH1 N D Z
-deadass  D EH1 D AE0 S
 deadbeat D EH1 D B IY2 T
 deadbeats D EH1 D B IY2 T S
 deadbolt D EH1 D B OW2 L T
@@ -29365,7 +29349,6 @@ decelle D IH0 S EH1 L
 decelles D EH1 S AH0 L Z
 december D IH0 S EH1 M B ER0
 december's D IH0 S EH1 M B ER0 Z
-decemberists  D IY1 S EH0 M B ER0 IH0 S T S
 decency D IY1 S AH0 N S IY0
 decennial D AH0 S EH1 N IY0 AH0 L
 decent D IY1 S AH0 N T
@@ -29429,11 +29412,9 @@ decked D EH1 K T
 decker D EH1 K ER0
 decker's D EH1 K ER0 Z
 deckert D EH1 K ER0 T
-deckie  D EH1 K IY0
 decking D EH1 K IH0 NG
 deckman D EH1 K M AH0 N
 decks D EH1 K S
-decky  D EH1 K IY0
 declaim D IH0 K L EY1 M
 declaimed D IH0 K L EY1 M D
 declarant D IH0 K L EH1 R AH0 N T
@@ -30301,7 +30282,6 @@ deluding D IH0 L UW1 D IH0 NG
 deluge D EH1 L Y UW0 JH
 deluged D EH1 L Y UW0 JH D
 deluise D EH0 L UW1 S IY0
-delulu  D AH1 L UW0 L UW0
 deluna D EH0 L UW1 N AH0
 delusion D IH0 L UW1 ZH AH0 N
 delusional D IH0 L UW1 ZH AH0 N AH0 L
@@ -32530,8 +32510,6 @@ diprima D IH0 P R IY1 M AH0
 dips D IH1 P S
 dipshit D IH1 P SH IH2 T
 dipstick D IH1 P S T IH2 K
-dipthong  D IH1 P TH AO0 NG
-dipthongs  D IH1 P TH AO0 NG Z
 dircks D ER1 K S
 dire D AY1 R
 dire(2) D AY1 ER0
@@ -33560,7 +33538,6 @@ dlouhy D AH0 L AW1 IY0
 dlugos D AH0 L UW1 G OW0 S
 dlugosz D AH0 L UW1 G OW0 S
 dlugosz(2) D AH0 L UW1 G OW0 SH
-dm  D IY1 EH0 M
 dmitri D AH0 M IY1 T R IY0
 dmitri(2) D M IY1 T R IY0
 dmz D IY1 EH2 M Z IY2
@@ -33827,7 +33804,6 @@ doing D UW1 IH0 NG
 doings D UW1 IH0 NG Z
 doiron D OY0 R AO1 N
 doiron(2) D OY1 R AH0 N
-doj  D IY1 OW0 JH EY0
 doke D OW1 K
 dokely D OW1 K L IY0
 dokey D OW1 K IY0
@@ -34157,7 +34133,6 @@ dooling D UW1 L IH0 NG
 doolittle D UW1 L IH2 T AH0 L
 doom D UW1 M
 doomed D UW1 M D
-doomer  D UW1 M ER0
 dooming D UW1 M IH0 NG
 dooms D UW1 M Z
 doomsayer D UW2 M S EY1 ER0
@@ -34753,7 +34728,6 @@ dreading D R EH1 D IH0 NG
 dreadnought D R EH1 D N AO2 T
 dreads D R EH1 D Z
 dream D R IY1 M
-dreamcore  D R IY1 M K AO0 R
 dreamed D R IY1 M D
 dreamer D R IY1 M ER0
 dreamers D R IY1 M ER0 Z
@@ -36688,7 +36662,6 @@ eggshaped EH1 G SH EY2 P T
 eggshell EH1 G SH EH2 L
 eggshells EH1 G SH EH2 L Z
 eggum EH1 G AH0 M
-egirl  IY1 G ER0 L
 egland EH1 G L AH0 N D
 eglantine EH1 G L AH0 N T AY2 N
 egle EH1 G AH0 L
@@ -37689,7 +37662,6 @@ emigre EH1 M AH0 G R EY2
 emigres EH1 M AH0 G R EY2 Z
 emil EH0 M IY1 L
 emile EY0 M IY1 L
-emileah  AH1 M IY0 L IY0 AH0
 emilia AH0 M IY1 L IY0 AH0
 emilie EH1 M AH0 L IY0
 emilio AH0 M IY1 L IY0 OW0
@@ -39431,7 +39403,6 @@ esty EH1 S T IY0
 esworthy EH1 S W ER0 DH IY0
 eszterhas EH1 S T ER0 HH AA0 S
 et EH1 T
-eta IY1 T IY0 EY0
 etablissements EH2 T AE0 B L IH2 S AH0 M AA1 N T S
 etc EH2 T S EH1 T ER0 AH0
 etc. EH2 T S EH1 T ER0 AH0
@@ -41040,7 +41011,6 @@ falynn F AE1 L IH0 N
 falzarano F AA0 L Z AA0 R AA1 N OW0
 falzon F AA1 L Z AH0 N
 falzone F AA0 L Z OW1 N IY0
-fam  F AE1 M
 fama F AA1 M AH0
 fambro F AE1 M B R OW0
 fambrough F AE1 M B R AW0
@@ -41145,7 +41115,6 @@ fanuc F AE1 N AH0 K
 fanucchi F AA0 N UW1 K IY0
 fanueil F AE1 N Y AH0 L
 fao F AW1
-faq  EH1 F EY0 K Y UW0
 far F AA1 R
 far's F AA1 R Z
 farabaugh F AE1 R AH0 B AO2
@@ -42793,7 +42762,6 @@ finley's F IH1 N L IY0 Z
 finmeccanica F IH2 N M AH0 K AE1 N IH0 K AH0
 finn F IH1 N
 finn's F IH1 N Z
-finna  F IH1 N AH0
 finnair F IH1 N EH1 R
 finnan F IH1 N AH0 N
 finne F IH1 N
@@ -43927,7 +43895,6 @@ foment F OW1 M EH0 N T
 fomented F OW1 M EH0 N T IH0 D
 fomenting F OW1 M EH0 N T IH0 NG
 fomento F OW2 M EH1 N T OW0
-fomo  F OW1 M OW0
 fomon F OW1 M AH0 N
 fomon's F OW1 M AH0 N Z
 fonar F AA1 N ER0
@@ -44623,7 +44590,6 @@ foy F OY1
 foye F OY1
 foyer F OY1 ER0
 foyle F OY1 L
-foyom  F OW1 Y AA0 M
 foyt F OY1 T
 fraas F R AA1 Z
 frable F R EY1 B AH0 L
@@ -45042,8 +45008,6 @@ freetown F R IY1 T AW2 N
 freeware F R IY1 W EH2 R
 freeway F R IY1 W EY2
 freeways F R IY1 W EY2 Z
-freewheelin'  F R IY1 W IY0 L IH0 N
-freewheelin  F R IY1 W IY0 L IH0 N
 freewheeling F R IY1 W IY2 L IH0 NG
 freewheeling(2) F R IY1 HH W IY2 L IH0 NG
 freewing F R IY1 W IH0 NG
@@ -45780,7 +45744,6 @@ fungicides F AH1 N JH AH0 S AY2 D Z
 fungus F AH1 NG G AH0 S
 funicello F AH2 N AH0 CH EH1 L OW0
 funk F AH1 NG K
-funkadelic  F AH1 NG K AH0 D EH0 L IH0 K
 funke F AH1 NG K
 funkhouser F AH1 NG K HH AW2 S ER0
 funks F AH1 NG K S
@@ -45945,7 +45908,7 @@ fyfe F AY1 F
 fyffe F AY1 F
 fyffes F IH1 F S
 fyffes(2) F AY1 F S
-fyi EH1 F W AY1 AY1
+fyi F AO1 R Y AO1 R IH2 N F ER0 M EY1 SH AH0 N
 fyke F AY1 K
 fyock F Y AA1 K
 fyodor F Y OW1 D ER0
@@ -48013,7 +47976,6 @@ giesler G IY1 S AH0 L ER0
 giesler(2) G IY1 S L ER0
 giessen G IY1 Z S AH0 N
 gietzen G IY1 T Z AH0 N
-gif  G IH1 F
 giff G IH1 F
 giffard G IH1 F ER0 D
 giffen G IH1 F AH0 N
@@ -48869,7 +48831,6 @@ goar G AO1 R
 goard G AO1 R D
 goat G OW1 T
 goat's G OW1 T S
-goated  G OW1 T IH0 D
 goatee G OW1 T IY1
 goates G OW1 EY0 T S
 goatley G OW1 T L IY0
@@ -49416,7 +49377,6 @@ goossen G UW1 S AH0 N
 goossens G UW1 S AH0 N Z
 goostree G UW0 S T R IY1
 gootee G UW1 T IY0
-gop  JH IY1 OW0 P IY0
 gopac G OW1 P AE2 K
 gopac's G OW1 P AE2 K S
 gopal G OW2 P AA1 L
@@ -49489,7 +49449,6 @@ gori G AO1 R IY0
 goria G AO1 R IY0 AH0
 gorilla G ER0 IH1 L AH0
 gorillas G ER0 IH1 L AH0 Z
-gorillaz  G ER1 IH0 L AH0 Z
 gorin G AO1 R AH0 N
 goring G AO1 R IH0 NG
 goris G AO1 R AH0 S
@@ -49719,7 +49678,6 @@ gozo G OW1 Z OW0
 gozo's G OW1 Z OW0 Z
 gozofsky G AH0 Z AO1 F S K IY0
 gps G IY1 P IY0 EH1 S
-gpu  JH IY1 P IY0 Y UW0
 grab G R AE1 B
 grabau G R AE1 B AW0
 grabbe G R AE1 B
@@ -51657,7 +51615,6 @@ gwyneth's G W IH1 N AH0 TH S
 gwyneths G W IH1 N AH0 TH S
 gwynn G W IH1 N
 gwynne G W IH1 N
-gyat  G Y AA1 T
 gyger G AY1 G ER0
 gyi G IY1
 gyi(2) JH IY1 W AY1 AY1
@@ -51708,7 +51665,6 @@ gyroscopes JH AY1 R AH0 S K OW2 P S
 gyroscopic JH AY2 R AH0 S K AA1 P IH0 K
 gytha JH AY1 DH AH0
 gyuhama G Y UW2 HH AA1 M AH0
-gza  G IH1 Z AH0
 h EY1 CH
 h's EY1 CH IH0 Z
 h. EY1 CH
@@ -55256,7 +55212,6 @@ highfill HH AY1 F IH2 L
 highflier HH AY1 F L AY2 ER0
 highfliers HH AY1 F L AY2 ER0 Z
 highflying HH AY1 F L AY2 IH0 NG
-highkey  HH AY1 K IY0
 highland HH AY1 L AH0 N D
 highlander HH AY1 L AE2 N D ER0
 highlanders HH AY1 L AE2 N D ER0 Z
@@ -56059,7 +56014,6 @@ hohum HH OW1 HH AH1 M
 hoi HH OY1
 hoiland HH OY0 L AE1 N D
 hoilman HH OY1 L M AH0 N
-hoins  HH OY1 N Z
 hoisington HH OY1 Z IH0 NG T AH0 N
 hoist HH OY1 S T
 hoisted HH OY1 S T AH0 D
@@ -56452,7 +56406,6 @@ homo HH OW1 M OW0
 homo-erectus HH OW1 M OW0 IH0 R EH1 K T AH0 S
 homogeneity HH AA2 M AH0 JH AH0 N IY1 AH0 T IY0
 homogeneous HH OW2 M AH0 JH IY1 N IY0 AH0 S
-homogenic  HH OW1 M OW0 G EH0 N IH0 K
 homogenization HH OW0 M AA1 JH AH0 N IH0 Z EY2 SH AH0 N
 homogenize HH OW0 M AA1 JH AH0 N AY2 Z
 homogenized HH OW0 M AA1 JH AH0 N AY2 Z D
@@ -56649,7 +56602,6 @@ hopburg HH AA1 P B ER0 G
 hopburg's HH AA1 P B ER0 G Z
 hope HH OW1 P
 hope's HH OW1 P S
-hopecore  HH OW1 P K AO0 R
 hoped HH OW1 P T
 hopeful HH OW1 P F AH0 L
 hopefully HH OW1 P F AH0 L IY0
@@ -58305,8 +58257,6 @@ icicle AY1 S IH0 K AH0 L
 icicles AY1 S IH0 K AH0 L Z
 icily AY1 S IH0 L IY0
 icing AY1 S IH0 NG
-icked  IH1 K T
-ick  IH1 K
 ickes IH1 K IY0 Z
 ickes(2) AY1 K IY0 Z
 ickes(3) AY1 K S
@@ -58392,7 +58342,6 @@ idiotic IH2 D IY0 AA1 T IH0 K
 idiotically IH2 D IY0 AA1 T IH0 K L IY0
 idiots IH1 D IY2 AH0 T S
 iditarod IH2 D IH1 T AH0 R AO2 D
-idk  AY1 D IY0 K EY0
 idle AY1 D AH0 L
 idled AY1 D AH0 L D
 idleman AY1 D AH0 L M AH0 N
@@ -58488,7 +58437,6 @@ ihlenfeldt IH1 L IH0 N F IH0 L T
 ihnen IH1 N AH0 N
 ihrig IH1 R IH0 G
 ihrke IH1 R K
-ii  T UW1
 iiams IY1 AH0 M Z
 iida IY1 D AH0
 iie IY1 IY0
@@ -58561,7 +58509,6 @@ illiquidity IH2 L IH0 K W IH1 D IH0 T IY0
 illiteracy IH2 L IH1 T ER0 AH0 S IY0
 illiterate IH2 L IH1 T ER0 AH0 T
 illiterates IH2 L IH1 T ER0 AH0 T S
-illmatic  IH1 L M AE0 T IH0 K
 illness IH1 L N AH0 S
 illnesses IH1 L N AH0 S IH0 Z
 illogic IH2 L AA1 JH IH0 K
@@ -58657,7 +58604,6 @@ imcera IH2 M S EH1 R AH0
 imel IH1 M AH0 L
 imelda IH2 M EH1 L D AH0
 imes AY1 M Z
-imho  AY1 EH0 M EY0 CH OW0
 imhof IH1 M HH AH0 F
 imhoff IH1 M HH AO2 F
 imig IH1 M IH0 G
@@ -58754,8 +58700,8 @@ immunoperoxidase IH1 M Y UW0 N OW0 P EH0 R AO1 K S IH0 D EY2 Z
 immunotherapy IH2 M Y UW0 N OW0 TH EH1 R AH0 P IY0
 immutable IH2 M Y UW1 T AH0 B AH0 L
 imnet IH1 M N EH2 T
-imo AY1 EH1 M OW1
-imo(2) AY1 M OW0
+imo AY1 M OW0
+imo(2) AY1 EH1 M OW1
 imogen IH1 M AH0 G AH0 N
 imogene IH1 M AH0 JH IY2 N
 imondi IH2 M OW1 N D IY2
@@ -59157,7 +59103,6 @@ incase IH2 N K EY1 S
 incata IH2 NG K AA1 T AH0
 incata's IH2 NG K AA1 T AH0 Z
 ince IH1 N S
-incel  IH1 N S EH0 L
 incendiary IH2 N S EH1 N D IY0 EH0 R IY0
 incense IH2 N S EH1 N S
 incense(2) IH1 N S EH2 N S
@@ -61129,7 +61074,6 @@ iowans AY1 AH0 W AH0 N Z
 iowans(2) AY1 OW0 AH0 N Z
 ip AY1 P IY1
 ip(2) IH1 P
-ipa  AY1 P IY0 EY0
 ipad AY1 P AE2 D
 ipad's AY1 P AE2 D Z
 ipads AY1 P AE2 D Z
@@ -61233,7 +61177,6 @@ irks ER1 K S
 irksome ER1 K S AH0 M
 irkutsk ER0 K UH1 T S K
 irkutsk(2) IH2 R K UH1 T S K
-irl  AY1 AA0 R EH0 L
 irlbeck ER1 L B EH0 K
 irma ER1 M AH0
 irma's ER1 M AH0 Z
@@ -61600,7 +61543,6 @@ itzhak(3) IH1 T S HH AE0 K
 itzkowitz IH1 T S K AH0 W IH0 T S
 iuliano IY0 UW0 L IY0 AA1 N OW0
 iuliano(2) Y UW0 L IY0 AA1 N OW0
-iv  F AO1 R
 iva IY1 V AH0
 ivaco AY1 V AH0 K OW2
 ivan AY1 V AH0 N
@@ -62498,7 +62440,6 @@ jetton JH EH1 T AH0 N
 jetty JH EH1 T IY0
 jeumont JH UW1 M AA2 N T
 jew JH UW1
-jewboy  JH UW1 B OY0
 jewel JH UW1 AH0 L
 jewel(2) JH UW1 L
 jewelcor JH UW1 AH0 L K AO0 R
@@ -63005,8 +62946,6 @@ joys JH OY1 Z
 joystick JH OY1 S T IH2 K
 jozef JH OW1 Z AH0 F
 jozwiak Y AA1 Z V IY0 AE0 K
-jpg  JH EY1 P EH0 G
-jpeg  JH EY1 P EH0 G
 jr JH UW1 N Y ER0
 jr. JH UW1 N ER0
 ju JH UW1
@@ -63716,7 +63655,6 @@ kantor's K AE1 N T ER0 Z
 kantor's(2) K AE1 N T AO0 R Z
 kantrowitz K AE1 N T R AH0 W IH0 T S
 kantz K AE1 N T S
-kanye  K AA1 N Y EY0
 kanz K AE1 N Z
 kanzi K AA1 N Z IY0
 kanzler K AE1 N Z L ER0
@@ -68973,7 +68911,6 @@ lauritzen(2) L AA0 R IY1 T Z AH0 N
 lauro L AO1 R OW0
 laursen L AW1 R S AH0 N
 laury L AO1 R IY0
-lauryn  L AO1 R IH0 N
 lausanne L AO2 S AE1 N
 lausch L AW1 SH
 laut L AO1 T
@@ -70647,7 +70584,6 @@ lifespan L AY1 F S P AE2 N
 lifespans L AY1 F S P AE2 N Z
 lifestyle L AY1 F S T AY2 L
 lifestyles L AY1 F S T AY2 L Z
-lifestylez  L AY1 F S T AY0 L Z
 lifetime L AY1 F T AY2 M
 lifetime's L AY1 F T AY2 M Z
 lifetimes L AY1 F T AY2 M Z
@@ -71468,7 +71404,6 @@ lloyd L OY1 D
 lloyd's L OY1 D Z
 lloyds L OY1 D Z
 lloyds' L OY1 D Z
-lmao  EH1 L EH0 M EY0 OW0
 ln L EY1 N
 lo L OW1
 lo's L OW1 Z
@@ -72359,7 +72294,6 @@ lowest L OW1 AH0 S T
 lowey L OW1 IY0
 lowing L OW1 IH0 NG
 lowinsky L AH0 W IH1 N S K IY0
-lowkey  L OW1 K IY0
 lowland L OW1 L AE2 N D
 lowlands L OW1 L AE2 N D Z
 lowly L OW1 L IY0
@@ -72930,7 +72864,6 @@ lutz L AH1 T S
 lutze L AH1 T Z
 lutzke L AH1 T S K IY0
 luu L UW1 UW0
-luv  L AH1 V
 luvena L AH1 V IH0 N AH0
 luvs L AH1 V Z
 luwana L AH0 W AE1 N AH0
@@ -73484,8 +73417,6 @@ madsen M AE1 D S AH0 N
 madsen's M AE1 D S AH0 N Z
 madson M AE1 D S AH0 N
 madstones M AE1 D S T OW2 N Z
-madvillainy  M AE1 D V IH0 L IH0 N IY0
-madvillain  M AE1 D V IH0 L IH0 N
 mady M EY1 D IY0
 madyun M AE1 D IY0 AH0 N
 madyun(2) M AE1 D Y AH0 N
@@ -74357,7 +74288,6 @@ mangling(2) M AE1 NG G L IH0 NG
 mango M AE1 NG G OW0
 mangoes M AE1 NG G OW0 Z
 mangold M AE1 N G OW2 L D
-mangonada  M EY1 NG G OW0 N AA0 D AH0
 mangone M AA0 NG G OW1 N IY0
 mangope M AE0 NG G OW1 P EY2
 mangosteen M AE1 NG G OW0 S T IY2 N
@@ -77961,7 +77891,6 @@ mendelsohn M EH1 N D AH0 L S AH0 N
 mendelson M EH1 N D AH0 L S AH0 N
 mendelssohn M EH1 N D AH0 L S AH0 N
 mendenhall M EH1 N D AH0 N HH AO2 L
-mender  M EH1 N D ER0
 mendes M EY1 N D EH0 S
 mendez M EH0 N D EH1 Z
 mendez(2) M EH1 N D EH0 Z
@@ -78638,7 +78567,6 @@ mezzo M EH1 Z OW0
 mfume M AH0 F UW1 M EY2
 mg EH2 M G IY1
 mgm EH2 M G IY2 EH1 M
-mgmt  EH1 M G IY0 EH0 M T IY0
 mh EH1 M EY1 CH
 mhm AH0 M HH AH0 M
 mhoon M HH UW1 N
@@ -79833,7 +79761,6 @@ misdiagnoses(2) M IH0 S D AY2 IH0 G N OW1 S AH0 Z
 misdiagnosis M IH0 S D AY2 IH0 G N OW1 S AH0 S
 misdirect M IH0 S D IH0 R EH1 K T
 misdirected M IH0 S D IH0 R EH1 K T IH0 D
-miseducation  M IH1 S EH0 JH AH0 K EY0 SH AH0 N
 misek M IH1 S EH0 K
 misener M IH1 S IY0 N ER0
 misenheimer M IH1 S IH0 N HH AY0 M ER0
@@ -80266,7 +80193,6 @@ mlotok(2) M AH0 L AA1 T AA2 K
 mm M
 mmabatho M AH0 B AA1 TH OW0
 mme EH1 M EH1 M IY1
-mms  EH1 M EH0 M EH0 S
 mnemonic N IH0 M AA1 N IH0 K
 mnemonic(2) N IY0 M AA1 N IH0 K
 mnemonics N IH0 M AA1 N IH0 K S
@@ -82801,8 +82727,6 @@ nagy N EY1 G IY0
 nagymaros N AE2 JH IH0 M AA1 R OW0 S
 nah N AA1
 nahas N AA1 HH AH0 Z
-nahhh  N AA1
-nahh  N AA1
 nahm N AE1 M
 nahm(2) N AA1 M
 nahmias N AA1 M IY0 AH0 Z
@@ -83018,7 +82942,6 @@ narducci N AA0 R D UW1 CH IY0
 nares N AE1 R Z
 narita N EH0 R IY1 T AH0
 narjes N AA1 R Y AH0 S
-narju  N AA1 R ZH UW0
 narlikar N AA1 R L IH0 K AA2 R
 narlock N AA1 R L AH0 K
 narly N AA1 R L IY0
@@ -83055,7 +82978,6 @@ narum N ER0 AH1 M
 narvaez N AA0 R V AA1 EH0 Z
 narveson N AA1 R V IH0 S AH0 N
 nary N EH1 R IY0
-nas  N AA1 S
 nasa N AE1 S AH0
 nasa's N AE1 S AH0 Z
 nasal N EY1 Z AH0 L
@@ -83336,7 +83258,6 @@ nazzaro N AA0 T S AA1 R OW0
 nba EH1 N B IY2 EY1
 nbc EH1 N B IY2 S IY1
 nbc's EH1 N B IY2 S IY1 Z
-nda  EH1 N D IY0 EY0
 ndau EH0 N D AW1
 ne N IY1
 ne(2) N EY1
@@ -84200,7 +84121,6 @@ neysa N EY1 S AH0
 nez N EH1 Z
 nfc EH1 N EH1 F S IY1
 nfl EH1 N EH2 F EH1 L
-nft  EH1 N EH0 F T IY0
 ng EH1 NG
 ng(2) IH1 NG
 ngai G AY1
@@ -85652,12 +85572,9 @@ noyes N OY1 Z
 noyola N OY2 OW1 L AH0
 nozzle N AA1 Z AH0 L
 nozzles N AA1 Z AH0 L Z
-npa  EH1 N P IY0 EY0
-npc  EH1 N P IY0 S IY0
 npr EH1 N P IY1 AA1 R
 npr's EH1 N P IY1 AA1 R Z
 npr.org EH1 N P IY1 AA1 R D AA1 T AO1 R G
-nsa  EH1 N EH0 S EY0
 nth EH1 N TH
 nu N UW1
 nuala N UW0 AA1 L AH0
@@ -86469,7 +86386,6 @@ oded OW1 D EH0 D
 odegaard AA1 D IH0 G AA0 R D
 odegard AA1 D IH0 G ER0 D
 odekirk AA1 D IH0 K ER0 K
-odelay  OW1 D AH0 L EY0
 odele OW0 D EH1 L IY0
 odelet AA1 D IH0 L IH0 T
 odelette AA1 D IH0 L EH0 T
@@ -86817,7 +86733,6 @@ oklahoma OW2 K L AH0 HH OW1 M AH0
 oklahoma's OW2 K L AH0 HH OW1 M AH0 Z
 oklahoman OW2 K L AH0 HH OW1 M AH0 N
 oklahomans OW2 K L AH0 HH OW1 M AH0 N Z
-okok  OW1 K EY0 OW0 K EY0
 okon OW1 K OW0 N
 okoniewski OW0 K AA2 N IY0 EH1 V S K IY0
 okoniewski(2) OW2 K AH0 N UW1 S K IY0
@@ -87076,7 +86991,6 @@ omelia OW0 M EH1 L IY0 AH0
 omen OW1 M AH0 N
 omens OW1 M AH0 N Z
 omer OW1 M ER0
-omg  OW1 EH0 M JH IY0
 ominous AA1 M AH0 N AH0 S
 ominously AA1 M AH0 N AH0 S L IY0
 omission OW0 M IH1 SH AH0 N
@@ -87457,7 +87371,6 @@ orabelle AO1 R AH0 B AH0 L
 oracle AO1 R AH0 K AH0 L
 oracle's AO1 R AH0 K AH0 L Z
 oracles AO1 R AH0 K AH0 L Z
-oracular  AO1 R AE0 K Y UW0 L ER0
 oradour AO1 R AH0 D AO2 R
 oraflex AO1 R AH0 F L EH2 K S
 orahood AO1 R AH0 HH UH2 D
@@ -88235,7 +88148,6 @@ outhouse AW1 T HH AW2 S
 outhouses AW1 T HH AW2 S IH0 Z
 outing AW1 T IH0 NG
 outings AW1 T IH0 NG Z
-outkast  AW1 T K AE0 S T
 outland AW1 T L AE2 N D
 outland(2) AW1 T L AH0 N D
 outlandish AW0 T L AE1 N D IH0 SH
@@ -88399,7 +88311,6 @@ outwitted AW1 T W IH2 T IH0 D
 outwitting AW1 T W IH2 T IH0 NG
 ouzts AW1 Z T S
 ouzts(2) AW1 S T S
-ov  AH1 V
 ova OW1 V AH0
 oval OW1 V AH0 L
 ovalle AA1 V EY0 L
@@ -88940,7 +88851,6 @@ p.'s P IY1 Z
 p.m. P IY1 EH1 M
 p.s P IY1 Z
 pa P AA1
-paak  P AE1 K
 paap P AA1 P
 paape P AA1 P
 paar P AA1 R
@@ -92232,7 +92142,6 @@ phippen F IH1 P AH0 N
 phipps F IH1 P S
 phish F IH1 SH
 phishing F IH1 SH IH0 NG
-phiyom  F AY1 Y AA0 M
 phlcorp P IY1 EY1 CH EH1 L K AO1 R P
 phlebitis F L AH0 B AY1 T IH0 S
 phlegm F L EH1 M
@@ -92785,7 +92694,6 @@ pindaric P IH0 N D AE1 R IH0 K
 pindell P IH1 N D AH0 L
 pinder P AY1 N D ER0
 pindling P IH1 N D L IH0 NG
-pindrop  P IH1 N D R AA0 P
 pine P AY1 N
 pineal P AY2 N IY1 AH0 L
 pineapple P AY1 N AE2 P AH0 L
@@ -93097,7 +93005,6 @@ pixar P IH1 K S AA0 R
 pixel P IH1 K S AH0 L
 pixels P IH1 K S AH0 L Z
 pixie P IH1 K S IY0
-pixies  P IH1 K S IY0 Z
 pixler P IH1 K S L ER0
 pixley P IH1 K S L IY0
 pizana P IY0 Z AE1 N AH0
@@ -93122,7 +93029,6 @@ pizzo P IH1 Z OW0
 pizzolato P IY0 T S OW0 L AA1 T OW0
 pizzuti P IY0 T S UW1 T IY0
 pizzuto P IY0 T S UW1 T OW0
-pj  P IY1 JH EY0
 pj's P IY1 JH EY2 Z
 pla P L AA1
 placard P L AE1 K ER0 D
@@ -93559,7 +93465,6 @@ plowshare P L AW1 SH EY2 R
 plowshares P L AW1 SH EY2 R Z
 ploy P L OY1
 ploys P L OY1 Z
-pls  P L IY1 Z
 plucinski P L AH0 CH IH1 N S K IY0
 pluck P L AH1 K
 pluck's P L AH1 K S
@@ -93660,7 +93565,6 @@ pneumocystis N UW0 M OW1 S IH0 S T IH0 S
 pneumonia N UW0 M OW1 N Y AH0
 pneumonia(2) N AH0 M OW1 N Y AH0
 pneumonic N UW0 M AA1 N IH0 K
-png  P IY1 EH0 N JH IY0
 po P OW1
 po-jen P OW1 JH EH1 N
 poach P OW1 CH
@@ -94244,7 +94148,6 @@ poop P UW1 P
 pooped P UW1 P T
 pooper P UW1 P ER0
 poopers P UW1 P ER0 Z
-pooplord P UW1 P L AO0 R D
 poops P UW1 P S
 poor P UW1 R
 poor's P UW1 R Z
@@ -94451,7 +94354,6 @@ porting P AO1 R T IH0 NG
 portion P AO1 R SH AH0 N
 portions P AO1 R SH AH0 N Z
 portis P AO1 R T IH0 S
-portishead  P AO1 R T IH0 S HH EH0 D
 portland P AO1 R T L AH0 N D
 portland's P AO1 R T L AH0 N D Z
 portlock P AO1 R T L AA2 K
@@ -94716,7 +94618,6 @@ pottorff P AA1 T ER0 F
 potts P AA1 T S
 potty P AA1 T IY0
 potucek P AA1 T AH0 CH EH0 K
-potus  P OW1 T AH0 S
 potvin P AA1 T V IH0 N
 pou P UW1
 pouch P AW1 CH
@@ -96726,7 +96627,6 @@ psychotherapists S AY2 K AH0 TH EH1 R AH0 P IH0 S T S
 psychotherapy S AY2 K OW0 TH EH1 R AH0 P IY0
 psychotic S AY2 K AA1 T IH0 K
 psyllium S IH1 L IY0 AH0 M
-pt  P AA1 R T
 ptacek T AA1 CH EH2 K
 ptak T AE1 K
 ptolemaic T AA2 L AH0 M EY1 IH0 K
@@ -97302,7 +97202,6 @@ qintex K IH1 N T EH2 K S
 qiryat K IH0 R Y AA1 T
 qmax K Y UW1 M AE2 K S
 qom K AA1 M
-qr  K Y UW1 AA0 R
 qu K UW1
 qua K W AA1
 quach K W AA1 CH
@@ -97952,7 +97851,6 @@ radioactivity(2) R EY2 D IY0 OW0 AE2 K T IH1 V AH0 T IY2
 radioed R EY1 D IY0 OW2 D
 radiographic R EY2 D IY0 OW2 G R AA1 F IH0 K
 radiography R EY2 D IY0 AA1 G R AH0 F IY0
-radiohead  R EY1 D IY0 OW0 HH EH0 D
 radiological R EY2 D IY0 AH0 L AA1 JH IH0 K AH0 L
 radiologist R EY2 D IY0 AA1 L AH0 JH IH0 S T
 radiologists R EY2 D IY0 AA1 L AH0 JH IH0 S T S
@@ -98675,7 +98573,6 @@ ratifying R AE1 T AH0 F AY2 IH0 NG
 rating R EY1 T IH0 NG
 ratings R EY1 T IH0 NG Z
 ratio R EY1 SH IY0 OW2
-ratioed  R EY1 SH IY0 OW0 D
 ration R AE1 SH AH0 N
 ration(2) R EY1 SH AH0 N
 rational R AE1 SH AH0 N AH0 L
@@ -103131,7 +103028,6 @@ rizer R AY1 Z ER0
 rizk R IH1 Z K
 rizo R IY1 Z OW0
 rizor R AY1 Z ER0
-rizz  R IH1 Z
 rizza R IH1 Z AH0
 rizzi R IH1 Z IY0
 rizzo R IH1 Z OW0
@@ -103531,7 +103427,6 @@ roff R AO1 F
 roffe R AA1 F
 roffman R AO1 F M AH0 N
 rofin R OW1 F IH0 N
-rofl  R AA1 F AH0 L
 rog R AA1 G
 rogachev R OW1 G AH0 CH AH0 V
 rogacki R AH0 G AA1 T S K IY0
@@ -105105,7 +105000,6 @@ ryuzo R AY2 UW1 Z OW0
 ryzhkov R AY1 Z K AA0 V
 rzasa ER0 Z AA1 S AH0
 rzepka ER0 Z EH1 P K AH0
-rós  R OW1 S
 s EH1 S
 s's EH1 S IH0 Z
 s. EH1 S
@@ -107889,7 +107783,6 @@ scottsbluff S K AA1 T S B L AH2 F
 scottsdale S K AA1 T S D EY2 L
 scotty S K AA1 T IY0
 scotty's S K AA1 T IY0 Z
-scotus  S K OW1 T AH0 S
 scoundrel S K AW1 N D R AH0 L
 scoundrels S K AW1 N D R AH0 L Z
 scour S K AW1 ER0
@@ -109570,7 +109463,6 @@ seyller S EY1 L ER0
 seymore S IY1 M AO0 R
 seymour S IY1 M AO0 R
 seymour's S IY1 M AO0 R Z
-seyom  S EY1 Y AA0 M
 sfernice S F ER1 N IH0 S
 sfernice(2) S AH0 F ER1 N IH0 S
 sferra S F EH1 R AH0
@@ -110394,7 +110286,6 @@ shinners SH IH1 N ER0 Z
 shinnick SH IH1 N IH0 K
 shinri SH IH1 N R IY0
 shinrikyo SH IH0 N R IY1 K Y OW0
-shins  SH IH1 N Z
 shinsei SH IH0 N S EY1
 shinsky SH IH1 N S K IY0
 shintaro SH IH0 N T AA1 R OW0
@@ -110980,7 +110871,6 @@ shuttling(2) SH AH1 T L IH0 NG
 shutts SH AH1 T S
 shuwa SH UW1 W AH0
 shuwa's SH UW1 W AH0 Z
-shwoiner  SH W OY1 N ER0
 shy SH AY1
 shying SH AY1 IH0 NG
 shyjan SH AY1 JH AE2 N
@@ -111515,7 +111405,6 @@ simonsson S AY1 M AH0 N S AH0 N
 simonton S AY1 M AH0 N T AH0 N
 simonton(2) S IH0 M AA1 N T AH0 N
 simony S AY1 M AH0 N IY0
-simp  S IH1 M P
 simper S IH1 M P ER0
 simpkins S IH1 M P K IH0 N Z
 simple S IH1 M P AH0 L
@@ -111557,7 +111446,6 @@ simulcast S AY1 M Y AH0 L K AE2 S T
 simulcast(2) S IH1 M Y AH0 L K AE2 S T
 simultaneous S AY2 M AH0 L T EY1 N IY0 AH0 S
 simultaneously S AY2 M AH0 L T EY1 N IY0 AH0 S L IY0
-simz  S IH1 M Z
 sin S IH1 N
 sinagra S IH0 N AE1 G R AH0
 sinai S AY1 N AY2
@@ -112081,8 +111969,6 @@ skrew-up S K R UW1 AH2 P
 skrew-ups S K R UW1 AH2 P S
 skroch S K R AA1 K
 skrocki S K R AA1 K IY0
-skrrt  S K ER1 T
-skrt  S K ER1 T
 skrzypek S K ER0 Z IH1 P EH0 K
 skudra S K UW1 D R AA0
 skufca S K AH1 F K AA0
@@ -112608,7 +112494,6 @@ smatter S M AE1 T ER0
 smattering S M AE1 T ER0 IH0 NG
 smay S M EY1
 smead S M IY1 D
-smeagol  S M IY1 G AO0 L
 smeal S M IY1 L
 smear S M IH1 R
 smeared S M IH1 R D
@@ -114215,8 +114100,6 @@ speechwriters S P IY1 CH R AY2 T ER0 Z
 speed S P IY1 D
 speedboat S P IY1 D B OW2 T
 speedboats S P IY1 D B OW2 T S
-speedcubing  S P IY1 D K Y UW0 B IH0 NG
-speedcube  S P IY1 D K Y UW0 B
 speeded S P IY1 D IH0 D
 speeder S P IY1 D ER0
 speeders S P IY1 D ER0 Z
@@ -117725,7 +117608,6 @@ suffuse S AH0 F Y UW1 Z
 suffused S AH0 F Y UW1 Z D
 suffuses S AH0 F Y UW1 Z IH0 Z
 suffusing S AH0 F Y UW1 Z IH0 NG
-sufjan  S UW1 F Y AA0 N
 sugar SH UH1 G ER0
 sugar's SH UH1 G ER0 Z
 sugarcane SH UH1 G ER0 K EY2 N
@@ -119460,7 +119342,6 @@ takihyo T AH0 K IY1 Y OW0
 takin' T EY1 K IH0 N
 taking T EY1 K IH0 NG
 takings T EY1 K IH0 NG Z
-takk  T AA1 K
 takla-makan T AE1 K L AH0 M EY1 K AH0 N
 takoma T AH0 K OW1 M AH0
 takoma's T AH0 K OW1 M AH0 Z
@@ -120055,8 +119936,6 @@ taylors T EY1 L ER0 Z
 tayman T EY1 M AH0 N
 tays T EY1 Z
 tb T IY1 B IY1
-tbd  T IY1 B IY0 D IY0
-tba  T IY1 B IY0 EY0
 tbilisi T AH0 B IH0 L IY1 S IY0
 tbilisi(2) T AH0 B L IY1 S IY0
 tcas T IY1 S IY1 EY1 EH1 S
@@ -120067,7 +119946,6 @@ tchaikovsky's CH EY2 K AA1 V S K IY0 Z
 tchaikovsky's(2) CH AY2 K AA1 V S K IY0 Z
 tchaikovsky's(3) CH AY2 K AA1 F S K IY0 Z
 tchuruk CH UH1 R IH0 K
-tcp  T IY1 S IY0 P IY0
 te T IY1
 tea T IY1
 teac T IY1 K
@@ -121739,7 +121617,6 @@ thwarting TH W AO1 R T IH0 NG
 thwarts TH W AO1 R T S
 thweatt TH W IY1 T
 thwing TH W IH1 NG
-thx  TH AE1 NG K S
 thy DH AY1
 thygerson TH AY1 G ER0 S AH0 N
 thyme TH AY1 M
@@ -122222,9 +122099,7 @@ tkach K AE1 CH
 tkacz K AA1 CH
 tlateloco T L AE2 T IH0 L OW1 K OW0
 tlc T IY2 EH2 L S IY1
-tldr  T IY1 EH0 L D IY0 AA0 R
 tlingit T L IY1 NG G IH0 T
-tnt  T IY1 EH0 N T IY0
 to T UW1
 to(2) T IH0
 to(3) T AH0
@@ -123248,7 +123123,6 @@ transamerican T R AE2 N Z AH0 M EH1 R IH0 K AH0 N
 transamerican's T R AE2 N Z AH0 M EH1 R IH0 K AH0 N Z
 transatlantic T R AE2 N Z AH0 T L AE1 N T IH0 K
 transatlantic(2) T R AE2 N Z AH0 T L AE1 N IH0 K
-transatlanticism  T R AE1 N S AE0 T L AE0 N T AH0 S IH0 S AH0 M
 transcanada T R AE2 N Z K AE1 N AH0 T AH0
 transcanada's T R AE2 N Z K AE1 N AH0 D AH0 Z
 transcapital T R AE2 N Z K AE1 P IH0 T AH0 L
@@ -123954,7 +123828,6 @@ trivializes T R IH1 V IY0 AH0 L AY2 Z IH0 Z
 trivializing T R IH1 V IY0 AH0 L AY2 Z IH0 NG
 trixie T R IH1 K S IY0
 trixy T R IH1 K S IY0
-triyom  T R AY1 Y AA0 M
 trizec T R IH1 Z AH0 K
 trizec's T R IH1 Z EH0 K S
 trnka T R IH1 NG K AH0
@@ -124312,7 +124185,6 @@ tsurumi T S UW0 R UW1 M IY0
 tsurumi(2) S UW0 R UW1 M IY0
 tsutomu T S UW0 T OW1 M UW0
 tt's T IY1 T IY1 Z
-ttyl  T IY1 T IY0 W AY0 EH0 L
 tu T UW1
 tub T AH1 B
 tuba T UW1 B AH0
@@ -124549,7 +124421,6 @@ turco T ER1 K OW0
 turcott T ER1 K AH0 T
 turcotte T ER0 K AO1 T
 turcotte's T ER0 K AO1 T S
-turd  T ER1 D
 ture T UH1 R
 turek T Y UW1 R IH0 K
 turenne T Y UW1 R IH0 N
@@ -124700,7 +124571,6 @@ tuxedos T AH0 K S IY1 D OW2 Z
 tuxford T AH1 K S F ER0 D
 tuxhorn T AH1 K S HH ER0 N
 tuyle T UW1 L
-tuyom  T UW1 Y AA0 M
 tuzla T UW1 Z L AH0
 tuzla's T UW1 Z L AH0 Z
 tuzzolino T UW0 T S OW0 L IY1 N OW0
@@ -126288,7 +126158,6 @@ untied AH0 N T AY1 D
 untiedt AO1 N T IY0 T
 until AH0 N T IH1 L
 untimely AH0 N T AY1 M L IY0
-untitled  AH1 N T AY0 T AH0 L D
 unto AH1 N T UW0
 untold AH0 N T OW1 L D
 untouchable AH0 N T AH1 CH AH0 B AH0 L
@@ -126360,7 +126229,6 @@ unwrapped AH0 N R AE1 P T
 unwrapping AH0 N R AE1 P IH0 NG
 unwritten AH0 N R IH1 T AH0 N
 unyielding AH0 N Y IY1 L D IH0 NG
-unyom  UW1 N Y AA0 M
 unz AH1 N Z
 unzicker AO1 N Z IH0 K ER0
 unzip AH0 N Z IH1 P
@@ -126742,7 +126610,6 @@ uv Y UW1 V IY1
 uva Y UW1 V AH0
 uva(2) Y UW1 V IY1 EY1
 uwe Y UW1
-ux  Y UW1 EH0 K S
 uy UW1 IY0
 uy(2) Y UW1 W AY1
 uyeda AY0 IY1 D AH0
@@ -128243,7 +128110,6 @@ videoconferencing V IY2 D IY0 OW0 K AA1 N F R AH0 N S IH0 NG
 videodisk V IH1 D IY0 OW0 D IH2 S K
 videodisks V IH1 D IY0 OW0 D IH2 S K S
 videogame V IH1 D IY0 OW0 G EY2 M
-videogames  V IH1 D IY0 OW0 G EY0 M Z
 videographer V IH0 D IY0 AO1 G R AH0 F ER0
 videophile V IH1 D IY0 OW0 F AY2 AH0 L
 videophone V IH1 D IY0 OW0 F OW2 N
@@ -129077,7 +128943,6 @@ voynavich V OY1 N AH0 V IH0 CH
 voytek V OY1 T IH0 K
 voytko V OY1 T K OW0
 vp V IY2 P IY1
-vpn  V IY1 P IY0 EH0 N
 vrabel V R AE1 B AH0 L
 vradenburg V R EY1 D AH0 N B ER0 G
 vrain V R EY1 N
@@ -129297,8 +129162,6 @@ waigel W AY1 G AH0 L
 waikiki W AY2 K IY0 K IY1
 wail W EY1 L
 wailed W EY1 L D
-wailers  W EY1 L ER0 Z
-wailer  W EY1 L ER0
 wailes W EY1 L Z
 wailing W EY1 L IH0 NG
 wails W EY1 L Z
@@ -131986,7 +131849,6 @@ wilbourne W IH1 L B ER0 N
 wilbur W IH1 L B ER0
 wilburn W IH1 L B ER0 N
 wilcher W IH1 L CH ER0
-wilco  W IH1 L K OW0
 wilcock W IH1 L K AA0 K
 wilcox W IH1 L K AA0 K S
 wilcoxen W IH0 L K AA1 K S AH0 N
@@ -132347,7 +132209,6 @@ winegar W IH1 N IH0 G ER0
 winegarden W AY1 N G AA2 R D AH0 N
 winegardner W IH1 N IH0 G AA0 R D N ER0
 wineheim W AY1 N HH AY2 M
-winehouse  W AY1 N HH AW0 S
 wineinger W AY1 N IH0 NG ER0
 wineland W AY1 N L AH0 N D
 wineland(2) W IH1 N IH0 L AH0 N D
@@ -133484,7 +133345,6 @@ wuttke W AH1 T K IY0
 wuxi W AH1 K S IY0
 wuyda W OY1 D AH0
 wuzzy W UH1 Z IY0
-wwe  D AH1 B AH0 L Y UW0 D AH0 B AH0 L Y UW0 IY0
 wy W EY1
 wy(2) D AH1 B AH0 L Y UW0 W AY1
 wyan W AY1 AH0 N
@@ -133937,7 +133797,6 @@ yedda Y EH1 D AH0
 yedinak Y EH1 D IH0 N AE0 K
 yediyat Y EH1 D IH0 Y AE2 T
 yee Y IY1
-yeet  Y IY1 T
 yegor Y EY1 G ER0
 yeh Y EH1
 yehiya Y AH0 HH IY1 AH0
@@ -134195,7 +134054,6 @@ yoshihiro's Y OW2 SH IH0 HH IY1 R OW2 Z
 yoshihisa Y OW2 SH IH0 HH IY1 S AH0
 yoshikawa Y OW0 SH IY0 K AA1 W AH0
 yoshikazu Y OW2 SH IH0 K AA1 Z UW0
-yoshimi  Y OW1 SH IY0 M IY0
 yoshimoto Y OW0 SH IY0 M OW1 T OW0
 yoshimura Y OW2 SH IH0 M UW1 R AH0
 yoshino Y OW0 SH IY1 N OW0
@@ -134292,7 +134150,6 @@ yoyo Y OW1 Y OW0
 yoyos Y OW1 Y OW0 Z
 ypsilanti IH2 P S AH0 L AE1 N T IY0
 yquem IY1 K W AH0 M
-ys  IY1 Z
 ysleta IY0 S L EY1 T AH0
 yttrium IH1 T R IY0 AH0 M
 yu Y UW1
@@ -134316,7 +134173,6 @@ yugoslavia Y UW2 G OW0 S L AA1 V IY0 AH0
 yugoslavia's Y UW2 G OW0 S L AA1 V IY0 AH0 Z
 yugoslavian Y UW2 G OW0 S L AA1 V IY0 AH0 N
 yugoslavs Y UW1 G OW0 S L AE2 V Z
-yuh  Y AH1
 yuhas Y UW1 HH AH0 Z
 yuhasz Y AH1 HH AH0 SH
 yuichi Y UW1 CH IY1
@@ -134636,7 +134492,6 @@ zayas Z EY1 AA0 Z
 zayed Z EY1 AH0 D
 zayre Z EY1 R
 zayre's Z EY1 ER0 Z
-zaza  Z AA1 Z AA0
 zazueta Z AA0 Z W EH1 T AH0
 zbig Z B IH1 G
 zbigniew Z B IH1 G N UW0
@@ -134948,7 +134803,6 @@ zig-zag Z IH1 G Z AE2 G
 zig-zagged Z IH1 G Z AE2 G D
 ziggurat Z IH1 G ER0 AE2 T
 ziggurats Z IH1 G ER0 AE2 T S
-ziggy  Z IH1 G IY0
 ziglar Z IH1 G L ER0
 zigler Z AY1 G AH0 L ER0
 zigler(2) Z AY1 G L ER0
@@ -135146,7 +135000,6 @@ zoologists Z OW0 AA1 L AH0 JH AH0 S T S
 zoology Z OW0 AA1 L AH0 JH IY0
 zoom Z UW1 M
 zoomed Z UW1 M D
-zoomer  Z UW1 M ER0
 zooming Z UW1 M IH0 NG
 zooms Z UW1 M Z
 zooropa Z UW0 R OW1 P AH0
@@ -135157,7 +135010,6 @@ zora Z AO1 R AH0
 zorah Z AO1 R AH0
 zoran Z AO1 R AH0 N
 zorana Z AO0 R AE1 N AH0
-zorb  Z AO1 R B
 zorich Z AO1 R IH0 K
 zorina Z AO0 R IY1 N AH0
 zorine Z AO0 R IY1 N IY0
@@ -135312,5 +135164,3 @@ zyuganov(2) Z UW1 G AA0 N AA0 V
 zyuganov's Z Y UW1 G AA0 N AA0 V Z
 zyuganov's(2) Z UW1 G AA0 N AA0 V Z
 zywicki Z IH0 W IH1 K IY0
-
-ágætis  AW1 G AY0 T IH0 S

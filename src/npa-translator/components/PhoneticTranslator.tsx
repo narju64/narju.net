@@ -5,6 +5,7 @@ import { TranslationResult, PronunciationVariation } from '../types/phonetic';
 import { PronunciationSelector } from './PronunciationSelector';
 import { PronunciationEditor } from './PronunciationEditor';
 import { addWordToDictionary } from '../utils/dictionaryLogger';
+import { exportFailedTranslationsDocument, clearFailedTranslations } from '../utils/translationLogger';
 import './PhoneticTranslator.css';
 
 interface PhoneticTranslatorProps {
@@ -63,8 +64,8 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
       const newWordVariations = new Map<string, PronunciationVariation[]>();
       const newSelectedPronunciations = new Map<string, number>();
       
-      // Extract words from the input text
-      const words = inputText.toLowerCase().match(/\b[a-z'-]+\b/g) || [];
+      // Extract words from the input text (including accented characters)
+      const words = inputText.toLowerCase().match(/\b[\p{L}'-]+\b/gu) || [];
       
       for (const word of words) {
         const variations = await translationEngine.getWordNPAVariations(word);
@@ -221,7 +222,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
     const words = text.split(/(\s+)/); // Split by whitespace but keep the spaces
     
     return words.map((word, index) => {
-      const cleanWord = word.toLowerCase().replace(/[^\w'-]/g, '');
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}'-]/gu, '');
       
       // Check if word has multiple pronunciations
       if (wordVariations.has(cleanWord)) {
@@ -420,16 +421,37 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
         </div>
       )}
 
-      {/* Apply Dictionary Changes Button (Development Only) */}
+      {/* Development Tools Section */}
       {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
         <div className="translator-section">
-          <div className="apply-changes-container">
+          <div className="development-tools">
             <button
               className="translator-button primary apply-changes"
               onClick={handleApplyDictionaryChanges}
               title="Apply pending dictionary changes to CMUdict"
             >
               Apply Dictionary Changes
+            </button>
+            
+            <button
+              className="translator-button secondary export-failed"
+              onClick={exportFailedTranslationsDocument}
+              title="Export all failed translations to a text document"
+            >
+              Export Failed Translations
+            </button>
+            
+            <button
+              className="translator-button secondary clear-failed"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all failed translation logs? This cannot be undone.')) {
+                  clearFailedTranslations();
+                  alert('Failed translations log cleared!');
+                }
+              }}
+              title="Clear all failed translation logs"
+            >
+              Clear Failed Log
             </button>
             
             {/* Pending Dictionary Changes */}

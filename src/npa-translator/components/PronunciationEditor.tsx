@@ -73,7 +73,7 @@ export function PronunciationEditor({ word, isOpen, onClose, onSubmit }: Pronunc
               value={npaInput}
               onChange={(e) => setNpaInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="e.g., nRJu for 'narju'"
+              placeholder="e.g., tIt for 'TNT' or t I t for 'T I T'"
               className="npa-input"
               autoFocus
             />

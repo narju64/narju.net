@@ -15,6 +15,35 @@ const NUMBER_PATTERNS: NumberPattern[] = [
     description: 'Large numbers'
   },
 
+  // Time formats (e.g., 5:20, 2:30 PM, 14:30)
+  {
+    pattern: /(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/g,
+    replacement: (_match: string, hour: string, minute: string, period: string) => {
+      const hourNum = parseInt(hour);
+      const minuteNum = parseInt(minute);
+      
+      let result;
+      if (minuteNum === 0) {
+        // Handle o'clock times (e.g., 5:00 -> five o'clock)
+        result = convertNumberToWords(hourNum) + ' o clock';
+      } else {
+        // Handle regular times (e.g., 5:20 -> five twenty)
+        result = convertNumberToWords(hourNum) + ' ' + convertNumberToWords(minuteNum);
+      }
+      
+      if (period) {
+        if (period.toUpperCase() === 'PM') {
+          result += ' P M';
+        } else {
+          result += ' Ay M';
+        }
+      }
+      
+      return result;
+    },
+    description: 'Time formats'
+  },
+
   // Phone numbers
   {
     pattern: /(\+?1?[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/g,
@@ -36,6 +65,50 @@ const NUMBER_PATTERNS: NumberPattern[] = [
       return `${wholeWords} point ${decimalDigits}`;
     },
     description: 'Decimal numbers'
+  },
+
+
+
+  // Date formats (mm/dd/yy or mm/dd/yyyy) - MUST come before fractions to avoid conflicts
+  {
+    pattern: /\b(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})\b/g,
+    replacement: (_match: string, month: string, day: string, year: string) => {
+      const monthNum = parseInt(month);
+      const dayNum = parseInt(day);
+      const yearNum = parseInt(year);
+      
+      // Convert month and day to words
+      const monthWords = convertNumberToWords(monthNum);
+      const dayWords = convertNumberToWords(dayNum);
+      
+      // Handle year conversion
+      let yearWords = '';
+      if (year.length === 2) {
+        // yy format: pronounce as individual number
+        yearWords = convertNumberToWords(yearNum);
+      } else {
+        // yyyy format: split into two parts
+        const firstPart = Math.floor(yearNum / 100);
+        const secondPart = yearNum % 100;
+        
+        if (firstPart === 20 && secondPart >= 0 && secondPart <= 9) {
+          // Exception: 2000-2009 pronounced as "two thousand X"
+          yearWords = 'two thousand ' + convertNumberToWords(secondPart);
+        } else {
+          // Regular yyyy: split into two parts
+          const firstWords = convertNumberToWords(firstPart);
+          const secondWords = convertNumberToWords(secondPart);
+          // Ensure proper spacing and prevent any interference
+          // Add explicit separators to prevent phonetic translation issues
+          yearWords = firstWords + ' ' + secondWords;
+        }
+      }
+      
+      // Add extra spaces to prevent interference from other patterns
+      // Ensure year parts are properly separated
+      return ` ${monthWords} ${dayWords} ${yearWords} `;
+    },
+    description: 'Date formats (mm/dd/yy or mm/dd/yyyy)'
   },
 
   // Fractions
@@ -169,12 +242,6 @@ const SYMBOL_PATTERNS: SymbolPattern[] = [
   { symbol: '$', pronunciation: 'dollars' },
   { symbol: '€', pronunciation: 'euros' },
   { symbol: '£', pronunciation: 'pounds' },
-
-  // Time indicators
-  { symbol: 'AM', pronunciation: 'A M' },
-  { symbol: 'PM', pronunciation: 'P M' },
-  { symbol: 'am', pronunciation: 'A M' },
-  { symbol: 'pm', pronunciation: 'P M' },
 
   // Common abbreviations
   { symbol: 'Dr.', pronunciation: 'doctor' },
@@ -358,6 +425,8 @@ function getDenominatorWords(denominator: number): string {
   return convertToOrdinal(denominator);
 }
 
+
+
 // Main preprocessing function
 export function preprocessText(text: string): string {
   let result = text;
@@ -373,9 +442,13 @@ export function preprocessText(text: string): string {
 
   // Apply symbol patterns (only to standalone symbols, not parts of words)
   SYMBOL_PATTERNS.forEach(symbol => {
-    // Use word boundaries to ensure we only match standalone symbols, not parts of words
+    // Escape the symbol for regex
     const escapedSymbol = symbol.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escapedSymbol}\\b`, 'g');
+    // Match symbols that are either:
+    // 1. Surrounded by word boundaries (standalone symbols)
+    // 2. At the beginning or end of the string
+    // 3. Surrounded by whitespace
+    const regex = new RegExp(`(\\b${escapedSymbol}\\b|^${escapedSymbol}|${escapedSymbol}$|\\s${escapedSymbol}\\s)`, 'g');
     // Add spaces around the replacement to ensure proper word separation
     result = result.replace(regex, ` ${symbol.pronunciation} `);
   });
@@ -443,3 +516,5 @@ export function convertTimeToWords(time: string): string {
 
   return result;
 } 
+
+ 

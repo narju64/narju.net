@@ -1068,4 +1068,9 @@ html {
 .npa-mode .npa-toggle-container,
 .npa-mode .npa-toggle-container * {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Disable text-transform when in nPA mode to preserve case-sensitive characters */
+.npa-mode * {
+  text-transform: none !important;
 } 

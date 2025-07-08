@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { SiteToggle } from '../npa-translator/components/SiteToggle';
+import { usePhoneticContext } from '../npa-translator/context/PhoneticContext';
 
 // Hierarchical navigation structure
 const navStructure = [
@@ -111,13 +112,69 @@ const navStructure = [
 
 const Header: React.FC = () => {
   const location = useLocation();
+  const { isNPAMode, translateText } = usePhoneticContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: string | null }>({});
+  const [translatedNavStructure, setTranslatedNavStructure] = useState(navStructure);
   const navRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Helper to check if a path is active or a parent of the current path
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
+
+  // Recursively translate navigation structure
+  const translateNavItem = async (item: any): Promise<any> => {
+    // Debug: Log what we're translating
+    if (item.label === 'Lifestyle' || item.label === 'Elsewhere') {
+      console.log('Translating nav item:', item.label);
+    }
+    
+    // Check if the label is already in nPA format (contains nPA characters)
+    const npaChars = /[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]/;
+    const isAlreadyNPA = npaChars.test(item.label) && !item.label.includes(' ');
+    
+    let translatedLabel;
+    if (isAlreadyNPA) {
+      // Skip translation if already in nPA format
+      translatedLabel = item.label;
+      if (item.label === 'Lifestyle' || item.label === 'Elsewhere') {
+        console.log('Skipping translation - already in nPA format:', item.label);
+      }
+    } else {
+      translatedLabel = await translateText(item.label);
+    }
+    
+    // Debug: Log the translation result
+    if (item.label === 'Lifestyle' || item.label === 'Elsewhere') {
+      console.log('Translation result for', item.label + ':', translatedLabel);
+    }
+    
+    const translatedItem = { ...item, label: translatedLabel };
+    
+    if (item.children) {
+      const translatedChildren = await Promise.all(item.children.map(translateNavItem));
+      translatedItem.children = translatedChildren;
+    }
+    
+    return translatedItem;
+  };
+
+  // Update translated navigation structure when nPA mode changes
+  useEffect(() => {
+    const updateNavStructure = async () => {
+      if (isNPAMode) {
+        const translated = await Promise.all(navStructure.map(translateNavItem));
+        setTranslatedNavStructure(translated);
+      } else {
+        setTranslatedNavStructure(navStructure);
+      }
+    };
+
+    updateNavStructure();
+  }, [isNPAMode, translateText]);
+
+  // Use the appropriate navigation structure
+  const currentNavStructure = isNPAMode ? translatedNavStructure : navStructure;
 
   // Recursive dropdown rendering for desktop
   const renderDropdown = (items: any[], parentLabel: string, depth = 0, topLevelLabel?: string) => {
@@ -169,7 +226,7 @@ const Header: React.FC = () => {
           <span className="hamburger" />
         </button>
         <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
-          {navStructure.map((item) => (
+          {currentNavStructure.map((item) => (
             <div
               className={`nav-link${isActive(item.href) ? ' active' : ''}`}
               key={item.href}

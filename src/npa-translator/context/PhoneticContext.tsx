@@ -36,6 +36,68 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
     initializeEngine();
   }, []);
 
+  // Set up event listeners for navigation and dropdown events
+  useEffect(() => {
+    if (!isNPAMode) return;
+
+    // Function to translate new content
+    const translateNewContent = async () => {
+      if (!isInitialized) return;
+      
+      // Small delay to ensure DOM is updated
+      setTimeout(async () => {
+        await translateAllTextContent();
+      }, 50);
+    };
+
+    // Listen for navigation events (React Router)
+    const handleNavigation = () => {
+      translateNewContent();
+    };
+
+    // Listen for dropdown events - more targeted
+    const handleDropdownOpen = (event: Event) => {
+      const target = event.target as Element;
+      // Check if we're hovering over a dropdown that's actually visible
+      const dropdownMenu = target.closest('.dropdown-menu');
+      if (dropdownMenu && window.getComputedStyle(dropdownMenu).display !== 'none') {
+        translateNewContent();
+      }
+    };
+
+    // Listen for React Router navigation
+    const handleRouteChange = () => {
+      translateNewContent();
+    };
+
+    // Add event listeners
+    window.addEventListener('popstate', handleNavigation);
+    window.addEventListener('pushstate', handleRouteChange);
+    window.addEventListener('replacestate', handleRouteChange);
+    document.addEventListener('mouseenter', handleDropdownOpen);
+
+    // Also listen for URL changes
+    let currentUrl = window.location.href;
+    const checkUrlChange = () => {
+      if (window.location.href !== currentUrl) {
+        currentUrl = window.location.href;
+        translateNewContent();
+      }
+    };
+
+    // Check for URL changes periodically
+    const urlCheckInterval = setInterval(checkUrlChange, 100);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+      window.removeEventListener('pushstate', handleRouteChange);
+      window.removeEventListener('replacestate', handleRouteChange);
+      document.removeEventListener('mouseenter', handleDropdownOpen);
+      clearInterval(urlCheckInterval);
+    };
+  }, [isNPAMode, isInitialized]);
+
   // Toggle nPA mode
   const toggleNPAMode = () => {
     const newMode = !isNPAMode;
@@ -116,6 +178,13 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
     
     for (const node of textNodes) {
       if (node.textContent && node.textContent.trim()) {
+        // Skip if already translated (has originalText stored)
+        if ((node as any).originalText) continue;
+        
+        // Skip if this text node is inside a label element (will be handled separately)
+        const parentElement = node.parentElement;
+        if (parentElement && parentElement.tagName === 'LABEL') continue;
+        
         try {
           const translated = await translateText(node.textContent);
           if (translated !== node.textContent) {
@@ -135,7 +204,7 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
       const placeholder = element.getAttribute('placeholder');
       const labelText = element.textContent;
       
-      if (placeholder) {
+      if (placeholder && !(element as any).originalPlaceholder) {
         try {
           const translated = await translateText(placeholder);
           if (translated !== placeholder) {
@@ -147,7 +216,7 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
         }
       }
       
-      if (labelText && labelText.trim()) {
+      if (labelText && labelText.trim() && !(element as any).originalLabelText) {
         try {
           const translated = await translateText(labelText);
           if (translated !== labelText) {
@@ -183,6 +252,20 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
       
       if ((element as any).originalLabelText) {
         element.textContent = (element as any).originalLabelText;
+        delete (element as any).originalLabelText;
+      }
+    }
+
+    // Clear any remaining stored original text from all elements
+    const allElements = document.querySelectorAll('*');
+    for (const element of allElements) {
+      if ((element as any).originalText) {
+        delete (element as any).originalText;
+      }
+      if ((element as any).originalPlaceholder) {
+        delete (element as any).originalPlaceholder;
+      }
+      if ((element as any).originalLabelText) {
         delete (element as any).originalLabelText;
       }
     }

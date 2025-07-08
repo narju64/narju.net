@@ -26,7 +26,6 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
         if (savedMode === 'true') {
           setIsNPAMode(true);
           document.body.classList.add('npa-mode');
-          console.log('Restored nPA mode from localStorage');
         }
       } catch (error) {
         console.error('Failed to initialize phonetic context:', error);
@@ -109,10 +108,8 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
     // Add or remove npa-mode class to body for font application
     if (newMode) {
       document.body.classList.add('npa-mode');
-      console.log('Added npa-mode class to body');
     } else {
       document.body.classList.remove('npa-mode');
-      console.log('Removed npa-mode class from body');
     }
     
     // If switching to nPA mode, translate all text content

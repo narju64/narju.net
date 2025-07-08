@@ -32,13 +32,19 @@ export async function loadCMUdict(): Promise<void> {
       const parts = line.split(/\s+/);
       if (parts.length < 2) continue;
 
-      const word = parts[0].toLowerCase();
+      const rawWord = parts[0];
       const pronunciation = parts.slice(1).join(' ');
+      
+      // Remove (2), (3), etc. suffixes from word (e.g., "read(2)" -> "read")
+      const word = rawWord.replace(/\(\d+\)$/, '').toLowerCase();
 
       // Handle multiple pronunciations for the same word
       if (cmudictData.has(word)) {
         const existing = cmudictData.get(word)!;
-        existing.pronunciations.push(pronunciation);
+        // Only add if this pronunciation doesn't already exist
+        if (!existing.pronunciations.includes(pronunciation)) {
+          existing.pronunciations.push(pronunciation);
+        }
       } else {
         cmudictData.set(word, {
           word,
@@ -49,7 +55,6 @@ export async function loadCMUdict(): Promise<void> {
     }
 
     isLoaded = true;
-    console.log(`CMUdict loaded: ${cmudictData.size} words`);
   } catch (error) {
     console.error('Error loading CMUdict:', error);
     throw error;

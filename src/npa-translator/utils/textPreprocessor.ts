@@ -361,40 +361,28 @@ function getDenominatorWords(denominator: number): string {
 // Main preprocessing function
 export function preprocessText(text: string): string {
   let result = text;
-  console.log('Preprocessing input:', text);
 
   // Apply number patterns
   NUMBER_PATTERNS.forEach(pattern => {
-    console.log('Applying pattern:', pattern.description);
-    const before = result;
     if (typeof pattern.replacement === 'function') {
       result = result.replace(pattern.pattern, pattern.replacement as any);
     } else {
       result = result.replace(pattern.pattern, pattern.replacement);
     }
-    if (before !== result) {
-      console.log(`Pattern "${pattern.description}" changed: "${before}" -> "${result}"`);
-    }
   });
 
-  // Apply symbol patterns
+  // Apply symbol patterns (only to standalone symbols, not parts of words)
   SYMBOL_PATTERNS.forEach(symbol => {
-    console.log('Applying symbol:', symbol.symbol, '->', symbol.pronunciation);
-    const before = result;
-    // For symbols, don't use word boundaries since symbols aren't word characters
+    // Use word boundaries to ensure we only match standalone symbols, not parts of words
     const escapedSymbol = symbol.symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(escapedSymbol, 'g');
+    const regex = new RegExp(`\\b${escapedSymbol}\\b`, 'g');
     // Add spaces around the replacement to ensure proper word separation
     result = result.replace(regex, ` ${symbol.pronunciation} `);
-    if (before !== result) {
-      console.log(`Symbol "${symbol.symbol}" changed: "${before}" -> "${result}"`);
-    }
   });
 
   // Clean up extra spaces
   result = result.replace(/\s+/g, ' ').trim();
 
-  console.log('Final result:', result);
   return result;
 }
 

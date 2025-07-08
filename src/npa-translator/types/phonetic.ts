@@ -1,6 +1,7 @@
 // Core translation types
 export interface TranslationOptions {
   pronunciation?: string;
+  wordPronunciations?: Map<string, number>; // Map of word -> pronunciation index
   enableLogging?: boolean;
   cacheResults?: boolean;
 }
@@ -9,6 +10,13 @@ export interface WordPronunciation {
   word: string;
   pronunciations: string[];
   defaultIndex: number;
+}
+
+export interface PronunciationVariation {
+  index: number;
+  arpabet: string;
+  ipa: string;
+  npa: string;
 }
 
 export interface TranslationResult {

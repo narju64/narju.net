@@ -1,0 +1,114 @@
+/* Pronunciation Selector Styles */
+.pronunciation-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 6px;
+  min-width: 200px;
+}
+
+.pronunciation-label {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 13px;
+  margin-bottom: 0.25rem;
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-button {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-borders);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+}
+
+.dropdown-button:hover {
+  border-color: var(--color-border-hover);
+}
+
+.dropdown-button:focus {
+  outline: none;
+  border-color: var(--color-border-hover);
+}
+
+.selected-npa {
+  font-family: 'nPA', 'Courier New', monospace !important;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-button:focus .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-borders);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown-option {
+  width: 100%;
+  padding: 0.75rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-family: 'nPA', 'Courier New', monospace !important;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-option:hover {
+  background: var(--color-border-hover);
+}
+
+.dropdown-option.selected {
+  background: var(--color-accent);
+  color: white;
+}
+
+
+
+
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pronunciation-selector {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+} 

@@ -193,7 +193,6 @@ export function mapIndividualSounds(ipaString: string): string {
 
 // Main mapping function - process character by character
 export function mapIPAToNPA(ipaString: string): string {
-  console.log('Input IPA:', ipaString);
   
   let result = '';
   let i = 0;
@@ -311,7 +310,6 @@ export function mapIPAToNPA(ipaString: string): string {
     i++;
   }
   
-  console.log('Output nPA:', result);
   return result;
 }
 

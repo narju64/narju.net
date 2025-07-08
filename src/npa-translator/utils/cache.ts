@@ -172,10 +172,9 @@ function loadCacheFromStorage(): void {
 }
 
 // Preload common words into cache
-export function preloadCommonWords(commonWords: string[]): void {
+export function preloadCommonWords(_commonWords: string[]): void {
   // This will be called after the translation engine is ready
   // to preload frequently used words
-  console.log(`Preloading ${commonWords.length} common words into cache`);
 }
 
 // Get cache size

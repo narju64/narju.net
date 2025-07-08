@@ -107,9 +107,7 @@ export function clearFailedTranslations(): void {
   failedTranslations = [];
   saveFailedTranslations();
   
-  if (LOGGER_CONFIG.logToConsole) {
-    console.log('Cleared all failed translations');
-  }
+
 }
 
 // Get failed translations statistics
@@ -159,9 +157,7 @@ export function importFailedTranslations(translations: FailedTranslation[]): voi
   failedTranslations = [...translations];
   saveFailedTranslations();
   
-  if (LOGGER_CONFIG.logToConsole) {
-    console.log(`Imported ${translations.length} failed translations`);
-  }
+
 }
 
 // Get failed translations as CSV for export
@@ -247,9 +243,7 @@ export function cleanupOldFailedTranslations(daysOld: number = 30): number {
   if (removedCount > 0) {
     saveFailedTranslations();
     
-    if (LOGGER_CONFIG.logToConsole) {
-      console.log(`Cleaned up ${removedCount} old failed translations`);
-    }
+
   }
   
   return removedCount;

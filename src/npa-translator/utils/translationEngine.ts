@@ -1,4 +1,4 @@
-import { TranslationOptions, TranslationResult } from '../types/phonetic';
+import { TranslationOptions, TranslationResult, PronunciationVariation } from '../types/phonetic';
 import { mapIPAToNPA, convertARPABETToIPA } from './npaMapping';
 import { 
   getWordPronunciations, 
@@ -39,7 +39,6 @@ export class TranslationEngine {
       initializeLogger();
       
       this.isInitialized = true;
-      console.log('Translation engine initialized successfully');
     } catch (error) {
       console.error('Failed to initialize translation engine:', error);
       throw error;
@@ -71,9 +70,21 @@ export class TranslationEngine {
       const ipaSegments: string[] = [];
       for (const segment of processedSegments) {
         if (segment.type === 'word') {
+          // Check if we have a specific pronunciation for this word
+          const selectedPronunciationIndex = options.wordPronunciations?.get(segment.content);
+          let specificPronunciation: string | undefined;
+          
+          if (selectedPronunciationIndex !== undefined) {
+            const wordData = getWordPronunciations(segment.content);
+            if (wordData && wordData.pronunciations[selectedPronunciationIndex]) {
+              specificPronunciation = wordData.pronunciations[selectedPronunciationIndex];
+              console.log(`Using pronunciation ${selectedPronunciationIndex} for "${segment.content}": ${specificPronunciation}`);
+            }
+          }
+          
           const translation = await this.translateWord(
             segment.content, 
-            options.pronunciation
+            specificPronunciation || options.pronunciation
           );
           
           if (translation.startsWith('[') && translation.endsWith(']')) {
@@ -86,8 +97,8 @@ export class TranslationEngine {
             ipaSegments.push(segment.content); // Keep original for IPA
           } else {
             // Get ARPABET and IPA for translated word
-            const arpabet = await this.getWordARPABET(segment.content, options.pronunciation);
-            const ipa = await this.getWordIPA(segment.content, options.pronunciation);
+            const arpabet = await this.getWordARPABET(segment.content, specificPronunciation || options.pronunciation);
+            const ipa = await this.getWordIPA(segment.content, specificPronunciation || options.pronunciation);
             arpabetSegments.push(arpabet || segment.content);
             ipaSegments.push(ipa || segment.content);
           }
@@ -232,6 +243,41 @@ export class TranslationEngine {
     }
     
     return [];
+  }
+
+  // Get all nPA variations for a word
+  async getWordNPAVariations(word: string): Promise<PronunciationVariation[]> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    const cleanWord = word.toLowerCase().trim();
+    const wordData = getWordPronunciations(cleanWord);
+    
+    console.log(`getWordNPAVariations for "${cleanWord}":`, wordData);
+    
+    if (!wordData || wordData.pronunciations.length === 0) {
+      return [];
+    }
+
+    const variations = [];
+    
+    for (let i = 0; i < wordData.pronunciations.length; i++) {
+      const arpabet = wordData.pronunciations[i];
+      const ipa = convertARPABETToIPA(arpabet);
+      const npa = mapIPAToNPA(ipa);
+      
+      console.log(`Variation ${i} for "${cleanWord}": ARPABET=${arpabet}, IPA=${ipa}, nPA=${npa}`);
+      
+      variations.push({
+        index: i,
+        arpabet,
+        ipa,
+        npa
+      });
+    }
+    
+    return variations;
   }
 
   // Get ARPABET for a word
@@ -417,12 +463,9 @@ export class TranslationEngine {
 
   // Handle possessive forms as smart fallback
   private handlePossessive(word: string): string | null {
-    console.log('Checking possessive for:', word);
-    
     // Check for malformed possessives (like boy's's, boys's, etc.)
     // These patterns are grammatically invalid in English
     if (word.includes("'s'") || word.includes("''")) {
-      console.log('Malformed possessive detected:', word);
       return null; // Don't process malformed possessives
     }
     
@@ -434,7 +477,6 @@ export class TranslationEngine {
         const basePronunciation = baseWordData.pronunciations[baseWordData.defaultIndex];
         // If base word already ends in Z (plural), then adding 's is invalid
         if (basePronunciation.endsWith(' Z')) {
-          console.log('Invalid plural + singular possessive detected:', word);
           return null;
         }
       }
@@ -443,7 +485,6 @@ export class TranslationEngine {
     // Check for 's ending (regular possessive)
     if (word.endsWith("'s")) {
       const baseWord = word.slice(0, -2); // Remove 's
-      console.log('Found \'s ending, base word:', baseWord);
       const baseWordData = getWordPronunciations(baseWord);
       if (baseWordData) {
         const basePronunciation = baseWordData.pronunciations[baseWordData.defaultIndex];
@@ -452,12 +493,10 @@ export class TranslationEngine {
         if (basePronunciation.endsWith(' S')) {
           // Base word ends in 's', so add 'iz' sound (IH Z)
           const result = basePronunciation + ' IH Z';
-          console.log('Possessive result (iz sound):', result);
           return result;
         } else {
           // Base word doesn't end in 's', so add 'z' sound (Z)
           const result = basePronunciation + ' Z';
-          console.log('Possessive result (z sound):', result);
           return result;
         }
       }
@@ -466,25 +505,21 @@ export class TranslationEngine {
     // Check for ' ending (possessive for words already ending in 's')
     if (word.endsWith("'")) {
       const baseWord = word.slice(0, -1); // Remove '
-      console.log('Found \' ending, base word:', baseWord);
       const baseWordData = getWordPronunciations(baseWord);
       if (baseWordData) {
         // Check if the base word is already plural (ends in Z sound)
         const basePronunciation = baseWordData.pronunciations[baseWordData.defaultIndex];
         if (basePronunciation.endsWith(' Z')) {
           // Base word is already plural (like 'boys'), so possessive is same as plural
-          console.log('Possessive result (same as plural):', basePronunciation);
           return basePronunciation;
         } else {
           // Base word is singular ending in 's' (like 'boss'), so add 'iz' sound
           const result = basePronunciation + ' IH Z'; // IH Z is the ARPABET for 'iz' sound
-          console.log('Possessive result:', result);
           return result;
         }
       }
     }
     
-    console.log('No possessive pattern found');
     return null; // Not a possessive or base word not found
   }
 
@@ -529,8 +564,6 @@ export class TranslationEngine {
 
     clearCache();
     clearFailedTranslations();
-    
-    console.log('All translation data cleared');
   }
 
   // Test translation with various examples
@@ -575,8 +608,6 @@ export class TranslationEngine {
       'supercalifragilisticexpialidocious',
     ];
 
-    console.log('Running translation tests...');
-    
     for (const testCase of testCases) {
       try {
         const result = await this.translateWord(testCase);
@@ -585,8 +616,6 @@ export class TranslationEngine {
         console.error(`Test failed for "${testCase}":`, error);
       }
     }
-    
-    console.log('Translation tests completed');
   }
 
   // Add this method at the end of the class

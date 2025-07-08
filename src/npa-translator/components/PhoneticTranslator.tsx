@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { usePhoneticContext } from '../context/PhoneticContext';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import { translationEngine } from '../utils/translationEngine';
-import { TranslationResult } from '../types/phonetic';
+import { TranslationResult, PronunciationVariation } from '../types/phonetic';
+import { PronunciationSelector } from './PronunciationSelector';
 import './PhoneticTranslator.css';
 
 interface PhoneticTranslatorProps {
@@ -9,18 +10,17 @@ interface PhoneticTranslatorProps {
 }
 
 export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) {
-  const { getWordPronunciations } = usePhoneticContext();
+
   
   // State
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
   const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
-  const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [wordPronunciations, setWordPronunciations] = useState<string[]>([]);
-  const [selectedPronunciation, setSelectedPronunciation] = useState<number>(0);
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [showCharacterGuide, setShowCharacterGuide] = useState(false);
+  const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
+  
+  // New state for multiple pronunciation variations
+  const [wordVariations, setWordVariations] = useState<Map<string, PronunciationVariation[]>>(new Map());
+  const [selectedPronunciations, setSelectedPronunciations] = useState<Map<string, number>>(new Map());
   
   // Refs
   const outputRef = useRef<HTMLTextAreaElement>(null);
@@ -40,14 +40,39 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
   };
 
   // Translate text
-  const handleTranslate = async () => {
+  const handleTranslate = useCallback(async () => {
     if (!inputText.trim()) return;
 
-    setIsTranslating(true);
     try {
-      const result = await translationEngine.translateToNPA(inputText);
+      const result = await translationEngine.translateToNPA(inputText, {
+        wordPronunciations: selectedPronunciations
+      });
       setOutputText(result.npa);
       setTranslationResult(result);
+      
+      // Find words with multiple pronunciations
+      const newWordVariations = new Map<string, PronunciationVariation[]>();
+      const newSelectedPronunciations = new Map<string, number>();
+      
+      // Extract words from the input text
+      const words = inputText.toLowerCase().match(/\b[a-z'-]+\b/g) || [];
+      
+      for (const word of words) {
+        const variations = await translationEngine.getWordNPAVariations(word);
+        console.log(`Variations for "${word}":`, variations);
+        if (variations.length > 1) {
+          newWordVariations.set(word, variations);
+          // Set default selection to 0 if not already set
+          if (!selectedPronunciations.has(word)) {
+            newSelectedPronunciations.set(word, 0);
+          } else {
+            newSelectedPronunciations.set(word, selectedPronunciations.get(word)!);
+          }
+        }
+      }
+      
+      setWordVariations(newWordVariations);
+      setSelectedPronunciations(newSelectedPronunciations);
       
       // Auto-resize output
       if (outputRef.current) {
@@ -56,71 +81,71 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
     } catch (error) {
       console.error('Translation failed:', error);
       setOutputText('Translation failed. Please try again.');
-    } finally {
-      setIsTranslating(false);
     }
-  };
+  }, [inputText, selectedPronunciations]);
 
   // Handle word selection for pronunciation
   const handleWordClick = async (word: string) => {
-    setSelectedWord(word);
-    try {
-      const pronunciations = await getWordPronunciations(word);
-      setWordPronunciations(pronunciations);
-      setSelectedPronunciation(0);
-    } catch (error) {
-      console.error('Failed to get pronunciations:', error);
-      setWordPronunciations([]);
-    }
+    setSelectedWords(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(word)) {
+        newSet.delete(word);
+      } else {
+        newSet.add(word);
+      }
+      return newSet;
+    });
   };
 
-  // Handle pronunciation selection
-  const handlePronunciationChange = async (index: number) => {
-    if (!selectedWord) return;
+  // Handle pronunciation selection for a specific word
+  const handlePronunciationChange = async (word: string, index: number) => {
+    console.log(`Pronunciation changed for "${word}" to index ${index}`);
     
-    setSelectedPronunciation(index);
+    const newSelectedPronunciations = new Map(selectedPronunciations);
+    newSelectedPronunciations.set(word, index);
+    setSelectedPronunciations(newSelectedPronunciations);
+    
+    // Re-translate with the new pronunciation
     try {
-      await translationEngine.translateWordWithPronunciation(selectedWord, index);
-      
-      // Update the output text with the new pronunciation
-      if (translationResult) {
-        const updatedResult = await translationEngine.translateToNPA(inputText);
-        setOutputText(updatedResult.npa);
-        setTranslationResult(updatedResult);
-      }
+      console.log('Re-translating with pronunciations:', Object.fromEntries(newSelectedPronunciations));
+      const result = await translationEngine.translateToNPA(inputText, {
+        wordPronunciations: newSelectedPronunciations
+      });
+      console.log('Translation result:', result.npa);
+      setOutputText(result.npa);
+      setTranslationResult(result);
     } catch (error) {
       console.error('Failed to translate with pronunciation:', error);
     }
   };
 
-  // Copy to clipboard
-  const handleCopy = async () => {
-    if (!outputText) return;
-    
-    try {
-      await navigator.clipboard.writeText(outputText);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy text:', error);
-    }
-  };
 
-  // Clear all
-  const handleClear = () => {
-    setInputText('');
-    setOutputText('');
-    setTranslationResult(null);
-    setSelectedWord(null);
-    setWordPronunciations([]);
-    setSelectedPronunciation(0);
+
+  // Render text with highlighted words that have multiple pronunciations
+  const renderTextWithHighlights = (text: string) => {
+    if (!text.trim()) return null;
+
+    const words = text.split(/(\s+)/); // Split by whitespace but keep the spaces
     
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-    }
-    if (outputRef.current) {
-      outputRef.current.style.height = 'auto';
-    }
+    return words.map((word, index) => {
+      const cleanWord = word.toLowerCase().replace(/[^\w'-]/g, '');
+      
+      if (wordVariations.has(cleanWord)) {
+        const isSelected = selectedWords.has(cleanWord);
+        return (
+          <span
+            key={index}
+            className={`highlighted-word ${isSelected ? 'selected' : ''}`}
+            onClick={() => handleWordClick(cleanWord)}
+            title={`Click to ${isSelected ? 'deselect' : 'select'} pronunciation for "${cleanWord}"`}
+          >
+            {word}
+          </span>
+        );
+      }
+      
+      return <span key={index}>{word}</span>;
+    });
   };
 
   // Auto-translate on input (debounced)
@@ -132,7 +157,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [inputText]);
+  }, [inputText, handleTranslate]);
 
   return (
     <div className={`phonetic-translator ${className}`}>
@@ -150,61 +175,59 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
           value={inputText}
           onChange={handleInputChange}
           placeholder="Enter English text to translate to nPA..."
-          disabled={isTranslating}
+
         />
+        {/* English Text Preview with highlighted words */}
+        {inputText && (
+          <div className="translator-section">
+            <label className="translator-label">
+              Text Preview
+            </label>
+            <div className="text-preview">
+              {renderTextWithHighlights(inputText)}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Controls */}
-      <div className="translator-controls">
-        <button
-          className="translator-button"
-          onClick={handleTranslate}
-          disabled={!inputText.trim() || isTranslating}
-        >
-          {isTranslating ? 'Translating...' : 'Translate'}
-        </button>
-        
-        <button
-          className="translator-button secondary"
-          onClick={handleClear}
-          disabled={!inputText && !outputText}
-        >
-          Clear All
-        </button>
-        
-        <button
-          className={`copy-button ${copySuccess ? 'copied' : ''}`}
-          onClick={handleCopy}
-          disabled={!outputText}
-        >
-          {copySuccess ? 'Copied!' : 'Copy nPA'}
-        </button>
-        
-        <button
-          className="translator-button secondary"
-          onClick={() => setShowCharacterGuide(!showCharacterGuide)}
-        >
-          {showCharacterGuide ? 'Hide' : 'Show'} Character Guide
-        </button>
-      </div>
 
-      {/* Pronunciation Selector */}
-      {selectedWord && wordPronunciations.length > 1 && (
-        <div className="pronunciation-selector">
-          <label htmlFor="pronunciation-select">
-            Pronunciation for "{selectedWord}":
-          </label>
-          <select
-            id="pronunciation-select"
-            value={selectedPronunciation}
-            onChange={(e) => handlePronunciationChange(parseInt(e.target.value))}
-          >
-            {wordPronunciations.map((pronunciation, index) => (
-              <option key={index} value={index}>
-                {pronunciation} ({index + 1})
-              </option>
+
+      {/* Pronunciation Selectors for Selected Words */}
+      {selectedWords.size > 0 && (
+        <div className="selected-words-selectors">
+          <div className="selectors-header">
+            <span className="selectors-title">Selected words with multiple pronunciations:</span>
+            <button
+              className="translator-button secondary close-all-selectors"
+              onClick={() => setSelectedWords(new Set())}
+            >
+              Clear All
+            </button>
+          </div>
+          <div className="selectors-grid">
+            {Array.from(selectedWords).map(word => (
+              wordVariations.has(word) && (
+                <div key={word} className="word-selector-container">
+                  <PronunciationSelector
+                    word={word}
+                    variations={wordVariations.get(word)!}
+                    selectedIndex={selectedPronunciations.get(word) || 0}
+                    onSelectionChange={(index) => handlePronunciationChange(word, index)}
+                  />
+                  <button
+                    className="translator-button secondary remove-word"
+                    onClick={() => setSelectedWords(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(word);
+                      return newSet;
+                    })}
+                  >
+                    ×
+                  </button>
+                </div>
+              )
             ))}
-          </select>
+          </div>
         </div>
       )}
 
@@ -288,171 +311,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
         </div>
       )}
 
-      {/* Character Guide */}
-      {showCharacterGuide && (
-        <div className="npa-character-guide">
-          <h3>nPA Character Guide</h3>
-          <div className="npa-character-grid">
-            {/* R-controlled Vowels */}
-            <div className="npa-character-category">
-              <h4>R-controlled Vowels</h4>
-              <div className="npa-character-list">
-                <div className="npa-character-item">
-                  <div className="npa-character">R</div>
-                  <div className="npa-ipa">ɑr</div>
-                  <div className="npa-example">car</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">X</div>
-                  <div className="npa-ipa">ɛr</div>
-                  <div className="npa-example">air</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">G</div>
-                  <div className="npa-ipa">ɪr</div>
-                  <div className="npa-example">ear</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">Q</div>
-                  <div className="npa-ipa">ɔr/ʊr</div>
-                  <div className="npa-example">or/poor</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">H</div>
-                  <div className="npa-ipa">ɜr</div>
-                  <div className="npa-example">her</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Diphthongs */}
-            <div className="npa-character-category">
-              <h4>Diphthongs</h4>
-              <div className="npa-character-list">
-                <div className="npa-character-item">
-                  <div className="npa-character">A</div>
-                  <div className="npa-ipa">eɪ</div>
-                  <div className="npa-example">face</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">I</div>
-                  <div className="npa-ipa">aɪ</div>
-                  <div className="npa-example">price</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">Y</div>
-                  <div className="npa-ipa">ɔɪ</div>
-                  <div className="npa-example">boy</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">W</div>
-                  <div className="npa-ipa">aʊ</div>
-                  <div className="npa-example">mouth</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">O</div>
-                  <div className="npa-ipa">oʊ</div>
-                  <div className="npa-example">goat</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Vowels */}
-            <div className="npa-character-category">
-              <h4>Vowels</h4>
-              <div className="npa-character-list">
-                <div className="npa-character-item">
-                  <div className="npa-character">E</div>
-                  <div className="npa-ipa">i</div>
-                  <div className="npa-example">see</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">i</div>
-                  <div className="npa-ipa">ɪ</div>
-                  <div className="npa-example">sit</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">e</div>
-                  <div className="npa-ipa">e/ɛ</div>
-                  <div className="npa-example">bed/bet</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">a</div>
-                  <div className="npa-ipa">æ</div>
-                  <div className="npa-example">cat</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">o</div>
-                  <div className="npa-ipa">ɑ/ɒ</div>
-                  <div className="npa-example">father/lot</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">C</div>
-                  <div className="npa-ipa">ɔ</div>
-                  <div className="npa-example">thought</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">U</div>
-                  <div className="npa-ipa">ʊ</div>
-                  <div className="npa-example">put</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">u</div>
-                  <div className="npa-ipa">u</div>
-                  <div className="npa-example">too</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">V</div>
-                  <div className="npa-ipa">ʌ/ə</div>
-                  <div className="npa-example">cut/about</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Consonants */}
-            <div className="npa-character-category">
-              <h4>Consonants</h4>
-              <div className="npa-character-list">
-                <div className="npa-character-item">
-                  <div className="npa-character">T</div>
-                  <div className="npa-ipa">θ</div>
-                  <div className="npa-example">thin</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">D</div>
-                  <div className="npa-ipa">ð</div>
-                  <div className="npa-example">this</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">S</div>
-                  <div className="npa-ipa">ʃ</div>
-                  <div className="npa-example">ship</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">J</div>
-                  <div className="npa-ipa">ʒ</div>
-                  <div className="npa-example">vision</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">c</div>
-                  <div className="npa-ipa">tʃ</div>
-                  <div className="npa-example">chair</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">j</div>
-                  <div className="npa-ipa">dʒ</div>
-                  <div className="npa-example">jam</div>
-                </div>
-                <div className="npa-character-item">
-                  <div className="npa-character">N</div>
-                  <div className="npa-ipa">ŋ</div>
-                  <div className="npa-example">sing</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 

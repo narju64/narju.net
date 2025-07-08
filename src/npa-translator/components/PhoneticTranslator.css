@@ -108,6 +108,101 @@
   background: rgba(255, 115, 0, 0.4);
 }
 
+/* Unknown word styling */
+.unknown-word {
+  text-decoration: underline;
+  text-decoration-color: #dc3545;
+  text-decoration-thickness: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.unknown-word:hover {
+  background: rgba(220, 53, 69, 0.2);
+  text-decoration-color: #c82333;
+}
+
+.unknown-word.selected {
+  background: rgba(220, 53, 69, 0.3);
+  text-decoration-color: #dc3545;
+  text-decoration-thickness: 3px;
+  font-weight: bold;
+}
+
+.unknown-word.selected:hover {
+  background: rgba(220, 53, 69, 0.4);
+}
+
+/* Apply Dictionary Changes Button */
+.apply-changes {
+  background: var(--color-bg);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: fit-content;
+  margin: 0;
+}
+
+.apply-changes:hover {
+  background: var(--color-titles) !important;
+  color: #000 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 174, 0, 0.2);
+}
+
+.apply-changes:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.apply-changes:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Apply Changes Container */
+.apply-changes-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Pending Words Display */
+.pending-words {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 6px;
+  font-size: 14px;
+  height: fit-content;
+  min-height: 44px; /* Match button height */
+}
+
+.pending-label {
+  font-weight: 600;
+  color: var(--color-titles);
+}
+
+.pending-list {
+  color: var(--color-titles);
+  font-style: italic;
+}
+
 /* Selected Words Selectors */
 .selected-words-selectors {
   margin: 1rem 0;

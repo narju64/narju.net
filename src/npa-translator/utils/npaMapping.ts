@@ -384,4 +384,35 @@ export function getNPACharacter(ipaSound: string): string | undefined {
 // Utility function to get IPA for ARPABET symbol
 export function getIPASound(arpabetSymbol: string): string | undefined {
   return ARPABET_TO_IPA_MAP.get(arpabetSymbol);
+}
+
+// Reverse mapping: nPA to ARPABET
+export function npaToArpabet(npaString: string): string {
+  // Simple direct mapping from nPA to ARPABET
+  const NPA_TO_ARPABET_MAP = new Map<string, string>([
+    // Vowels
+    ['E', 'IY'], ['i', 'IH'], ['e', 'EH'], ['a', 'AE'], ['o', 'AA'], ['C', 'AO'], ['U', 'UH'], ['u', 'UW'], ['V', 'AH'],
+    // Diphthongs
+    ['A', 'EY'], ['I', 'AY'], ['Y', 'OY'], ['W', 'AW'], ['O', 'OW'],
+    // R-controlled vowels
+    ['R', 'AA R'], ['X', 'EH R'], ['G', 'IH R'], ['Q', 'AO R'], ['H', 'ER'],
+    // Consonants
+    ['T', 'TH'], ['D', 'DH'], ['S', 'SH'], ['J', 'ZH'], ['c', 'CH'], ['j', 'JH'], ['N', 'NG'],
+    // Regular consonants (same as nPA)
+    ['p', 'P'], ['b', 'B'], ['t', 'T'], ['d', 'D'], ['k', 'K'], ['g', 'G'], ['f', 'F'], ['v', 'V'],
+    ['s', 'S'], ['z', 'Z'], ['h', 'HH'], ['m', 'M'], ['n', 'N'], ['l', 'L'], ['r', 'R'], ['y', 'Y'], ['w', 'W']
+  ]);
+
+  const result: string[] = [];
+  
+  for (const char of npaString) {
+    const arpabet = NPA_TO_ARPABET_MAP.get(char);
+    if (arpabet) {
+      result.push(arpabet);
+    } else {
+      throw new Error(`Invalid nPA character: ${char}`);
+    }
+  }
+  
+  return result.join(' ');
 } 

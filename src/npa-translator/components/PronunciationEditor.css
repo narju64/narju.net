@@ -1,0 +1,231 @@
+/* Pronunciation Editor Modal */
+.pronunciation-editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.pronunciation-editor-modal {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 8px;
+  max-width: 1000px;
+  width: 95%;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-borders);
+}
+
+.editor-header h3 {
+  margin: 0;
+  color: var(--color-titles);
+  font-size: 1.2rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background: var(--color-borders);
+}
+
+.editor-content {
+  padding: 0.5rem 1rem;
+}
+
+.input-section {
+  margin-bottom: 1.5rem;
+}
+
+.editor-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.npa-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-borders);
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-family: 'nPA', 'Courier New', monospace;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: border-color 0.2s;
+}
+
+.npa-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.output-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 4px;
+}
+
+.arpabet-output {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.npa-character-guide {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 4px;
+}
+
+.npa-character-guide h4 {
+  margin: 0 0 1rem 0;
+  color: var(--color-titles);
+  font-size: 1rem;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.character-category h5 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-titles);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.character-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.character-list span {
+  font-family: 'Courier New', monospace;
+  color: var(--color-text);
+}
+
+.npa-char {
+  font-family: 'nPA', 'Courier New', monospace !important;
+  font-size: 1.2em;
+  color: var(--color-accent);
+  font-weight: bold;
+  margin-right: 0.25rem;
+}
+
+.ipa-char {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: var(--color-titles);
+  font-weight: normal;
+  margin-right: 0.25rem;
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.cancel-button {
+  padding: 0.5rem 1rem;
+  background: var(--color-borders);
+  color: var(--color-text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background: var(--color-border-hover);
+}
+
+.submit-button {
+  padding: 0.5rem 1rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-borders);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: var(--color-card-bg);
+  border-color: var(--color-border-hover);
+}
+
+.submit-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .character-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .pronunciation-editor-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .character-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .editor-footer {
+    flex-direction: column;
+  }
+  
+  .cancel-button,
+  .submit-button {
+    width: 100%;
+  }
+} 

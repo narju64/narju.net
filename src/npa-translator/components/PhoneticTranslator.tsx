@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { translationEngine } from '../utils/translationEngine';
 import { TranslationResult, PronunciationVariation } from '../types/phonetic';
 import { PronunciationSelector } from './PronunciationSelector';
+import { PronunciationEditor } from './PronunciationEditor';
+import { addWordToDictionary } from '../utils/dictionaryLogger';
 import './PhoneticTranslator.css';
 
 interface PhoneticTranslatorProps {
@@ -21,6 +23,13 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
   // New state for multiple pronunciation variations
   const [wordVariations, setWordVariations] = useState<Map<string, PronunciationVariation[]>>(new Map());
   const [selectedPronunciations, setSelectedPronunciations] = useState<Map<string, number>>(new Map());
+  
+  // State for pronunciation editor
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingWord, setEditingWord] = useState('');
+  
+  // State for pending dictionary changes
+  const [pendingWords, setPendingWords] = useState<string[]>([]);
   
   // Refs
   const outputRef = useRef<HTMLTextAreaElement>(null);
@@ -86,15 +95,23 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
 
   // Handle word selection for pronunciation
   const handleWordClick = async (word: string) => {
-    setSelectedWords(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(word)) {
-        newSet.delete(word);
-      } else {
-        newSet.add(word);
-      }
-      return newSet;
-    });
+    // Check if this is an unknown word
+    if (translationResult && translationResult.unknownWords.includes(word)) {
+      // Open pronunciation editor for unknown words
+      setEditingWord(word);
+      setEditorOpen(true);
+    } else {
+      // Toggle selection for words with multiple pronunciations
+      setSelectedWords(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(word)) {
+          newSet.delete(word);
+        } else {
+          newSet.add(word);
+        }
+        return newSet;
+      });
+    }
   };
 
   // Handle pronunciation selection for a specific word
@@ -119,7 +136,83 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
     }
   };
 
+  // Fetch pending words from DictionaryChanges.txt
+  const fetchPendingWords = useCallback(async () => {
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return; // Only fetch in development
+    }
+    
+    try {
+      const response = await fetch('/DictionaryChanges.txt');
+      if (!response.ok) {
+        setPendingWords([]);
+        return;
+      }
+      
+      const content = await response.text();
+      const lines = content.split('\n').filter(line => line.trim());
+      
+      const words = lines
+        .map(line => {
+          const parts = line.split('|');
+          if (parts[0] === 'ADD' && parts[1]) {
+            return parts[1]; // Return the word
+          }
+          return null;
+        })
+        .filter((word): word is string => word !== null);
+      
+      setPendingWords(words);
+    } catch (error) {
+      console.warn('Could not fetch pending words:', error);
+      setPendingWords([]);
+    }
+  }, []);
 
+  // Fetch pending words on component mount and after adding new words
+  useEffect(() => {
+    fetchPendingWords();
+  }, [fetchPendingWords]);
+
+  // Handle pronunciation editor submission
+  const handlePronunciationSubmit = async (word: string, arpabet: string, npa: string) => {
+    try {
+      await addWordToDictionary(word, arpabet, npa);
+      console.log(`Pronunciation for "${word}" has been logged for review.`);
+      // Refresh pending words after adding
+      fetchPendingWords();
+    } catch (error) {
+      console.error('Failed to log dictionary change:', error);
+    }
+  };
+
+  // Handle applying dictionary changes
+  const handleApplyDictionaryChanges = async () => {
+    try {
+      const response = await fetch('/api/apply-dictionary-changes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('Dictionary changes applied successfully:', result.output);
+        alert('Dictionary changes applied successfully!');
+        // Clear pending words and re-translate
+        setPendingWords([]);
+        if (inputText.trim()) {
+          handleTranslate();
+        }
+      } else {
+        console.error('Failed to apply dictionary changes:', result.error);
+        alert(`Failed to apply dictionary changes: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error applying dictionary changes:', error);
+      alert('Error applying dictionary changes. Check console for details.');
+    }
+  };
 
   // Render text with highlighted words that have multiple pronunciations
   const renderTextWithHighlights = (text: string) => {
@@ -130,6 +223,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
     return words.map((word, index) => {
       const cleanWord = word.toLowerCase().replace(/[^\w'-]/g, '');
       
+      // Check if word has multiple pronunciations
       if (wordVariations.has(cleanWord)) {
         const isSelected = selectedWords.has(cleanWord);
         return (
@@ -140,6 +234,21 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
             title={`Click to ${isSelected ? 'deselect' : 'select'} pronunciation for "${cleanWord}"`}
           >
             {word}
+          </span>
+        );
+      }
+      
+      // Check if word is unknown (in translation result)
+      if (translationResult && translationResult.unknownWords.includes(cleanWord)) {
+        const isSelected = selectedWords.has(cleanWord);
+        return (
+          <span
+            key={index}
+            className={`unknown-word ${isSelected ? 'selected' : ''}`}
+            onClick={() => handleWordClick(cleanWord)}
+            title={`Click to ${isSelected ? 'deselect' : 'select'} unknown word "${cleanWord}"`}
+          >
+            [{word}]
           </span>
         );
       }
@@ -311,6 +420,38 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
         </div>
       )}
 
+      {/* Apply Dictionary Changes Button (Development Only) */}
+      {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+        <div className="translator-section">
+          <div className="apply-changes-container">
+            <button
+              className="translator-button primary apply-changes"
+              onClick={handleApplyDictionaryChanges}
+              title="Apply pending dictionary changes to CMUdict"
+            >
+              Apply Dictionary Changes
+            </button>
+            
+            {/* Pending Dictionary Changes */}
+            {pendingWords.length > 0 && (
+              <div className="pending-words">
+                <span className="pending-label">Pending: </span>
+                <span className="pending-list">
+                  {pendingWords.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pronunciation Editor */}
+      <PronunciationEditor
+        word={editingWord}
+        isOpen={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        onSubmit={handlePronunciationSubmit}
+      />
 
     </div>
   );

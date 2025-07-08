@@ -17447,6 +17447,7 @@ caffrey K AE1 F R IY0
 cafiero K AE2 F IY0 EH1 R OW0
 caftan K AE1 F T AE2 N
 caftans K AE1 F T AE2 N Z
+cag  K AE1 G
 cagan K EY1 G AH0 N
 cage K EY1 JH
 cage's K EY1 JH IH0 Z
@@ -37662,6 +37663,7 @@ emigre EH1 M AH0 G R EY2
 emigres EH1 M AH0 G R EY2 Z
 emil EH0 M IY1 L
 emile EY0 M IY1 L
+emileah  AH1 M IY0 L IY0 AH0
 emilia AH0 M IY1 L IY0 AH0
 emilie EH1 M AH0 L IY0
 emilio AH0 M IY1 L IY0 OW0
@@ -62440,6 +62442,7 @@ jetton JH EH1 T AH0 N
 jetty JH EH1 T IY0
 jeumont JH UW1 M AA2 N T
 jew JH UW1
+jewboy  JH UW1 B OY0
 jewel JH UW1 AH0 L
 jewel(2) JH UW1 L
 jewelcor JH UW1 AH0 L K AO0 R
@@ -82942,6 +82945,7 @@ narducci N AA0 R D UW1 CH IY0
 nares N AE1 R Z
 narita N EH0 R IY1 T AH0
 narjes N AA1 R Y AH0 S
+narju  N AA1 R ZH UW0
 narlikar N AA1 R L IH0 K AA2 R
 narlock N AA1 R L AH0 K
 narly N AA1 R L IY0
@@ -94148,6 +94152,7 @@ poop P UW1 P
 pooped P UW1 P T
 pooper P UW1 P ER0
 poopers P UW1 P ER0 Z
+pooplord  P UW1 P L AO0 R D
 poops P UW1 P S
 poor P UW1 R
 poor's P UW1 R Z
@@ -124421,6 +124426,7 @@ turco T ER1 K OW0
 turcott T ER1 K AH0 T
 turcotte T ER0 K AO1 T
 turcotte's T ER0 K AO1 T S
+turd  T ER1 D
 ture T UH1 R
 turek T Y UW1 R IH0 K
 turenne T Y UW1 R IH0 N

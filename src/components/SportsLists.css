@@ -1,0 +1,118 @@
+.sports-lists-page {
+  padding: 2rem 0;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.sports-lists-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.sports-lists-page .page-title {
+  font-size: 3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--color-titles);
+}
+
+.sports-lists-page .page-description {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: var(--color-text);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sports-lists-page .lists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.sports-lists-page .list-card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 12px;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sports-lists-page .list-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-border-hover);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.sports-lists-page .list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.5);
+  border-color: var(--color-border-hover);
+}
+
+.sports-lists-page .list-card:hover::before {
+  transform: scaleX(1);
+}
+
+.sports-lists-page .list-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-titles);
+}
+
+.sports-lists-page .list-description {
+  font-size: 1rem;
+  color: var(--color-text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .sports-lists-page .page-title {
+    font-size: 2rem;
+  }
+  
+  .sports-lists-page .container {
+    padding: 0 1rem;
+  }
+  
+  .sports-lists-page .lists-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .sports-lists-page .list-card {
+    padding: 1.5rem;
+  }
+  
+  .sports-lists-page .list-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sports-lists-page .page-title {
+    font-size: 1.8rem;
+  }
+  
+  .sports-lists-page .list-title {
+    font-size: 1.3rem;
+  }
+} 

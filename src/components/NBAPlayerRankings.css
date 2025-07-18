@@ -1,0 +1,309 @@
+.nba-rankings-page {
+  padding: 2rem 0;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.nba-rankings-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.nba-rankings-page .page-title {
+  font-size: 3rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--color-titles);
+}
+
+.nba-rankings-page .page-description {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: var(--color-text);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nba-rankings-page .rankings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.nba-rankings-page .player-card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  gap: 2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nba-rankings-page .player-left {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 280px;
+}
+
+.nba-rankings-page .player-photo {
+  width: 280px;
+  height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid var(--color-borders);
+}
+
+.nba-rankings-page .player-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Specific adjustments for individual players */
+.nba-rankings-page .player-card:nth-child(7) .player-photo img {
+  object-position: center 10%;
+}
+
+.nba-rankings-page .player-card:nth-child(20) .player-photo img {
+  object-position: center 10%;
+}
+
+.nba-rankings-page .player-card:nth-child(23) .player-photo img {
+  object-position: center 20%;
+}
+
+.nba-rankings-page .player-physical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid var(--color-borders);
+}
+
+.nba-rankings-page .physical-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nba-rankings-page .physical-label {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.nba-rankings-page .physical-value {
+  color: var(--color-titles);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.nba-rankings-page .player-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-border-hover);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.nba-rankings-page .player-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.5);
+  border-color: var(--color-border-hover);
+}
+
+.nba-rankings-page .player-card:hover::before {
+  transform: scaleX(1);
+}
+
+.nba-rankings-page .player-years {
+  color: var(--color-border-hover);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.nba-rankings-page .player-info {
+  flex: 1;
+}
+
+.nba-rankings-page .player-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.nba-rankings-page .name-and-years {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nba-rankings-page .player-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-titles);
+}
+
+.nba-rankings-page .player-teams {
+  color: var(--color-text);
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+
+.nba-rankings-page .stats-section {
+  margin-bottom: 1.5rem;
+}
+
+.nba-rankings-page .stats-category-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-titles);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nba-rankings-page .player-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid var(--color-borders);
+}
+
+.nba-rankings-page .player-left .player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.nba-rankings-page .stat {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nba-rankings-page .stat-label {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.nba-rankings-page .stat-value {
+  color: var(--color-titles);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.nba-rankings-page .player-era {
+  color: var(--color-border-hover);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.nba-rankings-page .achievements-section {
+  margin-top: 1rem;
+}
+
+.nba-rankings-page .achievements-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid var(--color-borders);
+}
+
+.nba-rankings-page .achievement-item {
+  background: var(--color-border-hover);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+
+
+@media (max-width: 768px) {
+  .nba-rankings-page .page-title {
+    font-size: 2rem;
+  }
+  
+  .nba-rankings-page .container {
+    padding: 0 1rem;
+  }
+  
+  .nba-rankings-page .player-card {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .nba-rankings-page .player-left {
+    width: 100%;
+    align-items: center;
+  }
+  
+  .nba-rankings-page .player-photo {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .nba-rankings-page .player-name {
+    font-size: 1.5rem;
+  }
+  
+  .nba-rankings-page .stats-category-title {
+    font-size: 1rem;
+  }
+  
+  .nba-rankings-page .player-stats {
+    gap: 0.5rem;
+  }
+  
+  .nba-rankings-page .player-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nba-rankings-page .page-title {
+    font-size: 1.8rem;
+  }
+  
+  .nba-rankings-page .player-name {
+    font-size: 1.3rem;
+  }
+} 

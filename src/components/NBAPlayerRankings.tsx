@@ -5,6 +5,8 @@ interface Player {
   rank: number;
   name: string;
   era: string;
+  nationality: string;
+  position: string;
   photo: string;
   height: string;
   weight: string;
@@ -37,11 +39,61 @@ const NBAPlayerRankings: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const getFlagColor = (nationality: string): string => {
+    const colors: { [key: string]: string } = {
+      'American': '#B22234',
+      'Nigerian': '#008751',
+      'Canadian': '#FF0000',
+      'German': '#000000',
+      'French': '#002395',
+      'Spanish': '#AA151B',
+      'Italian': '#009246',
+      'Greek': '#0D5EAF',
+      'Serbian': '#C6363C',
+      'Croatian': '#171796',
+      'Slovenian': '#FFFFFF',
+      'Lithuanian': '#FDB913',
+      'Latvian': '#9E3039',
+      'Estonian': '#4891D9',
+      'Russian': '#FFFFFF',
+      'Ukrainian': '#005BBB',
+      'Turkish': '#E30A17',
+      'Brazilian': '#009C3B',
+      'Argentine': '#75AADB',
+      'Venezuelan': '#FFD700',
+      'Dominican': '#CE1126',
+      'Puerto Rican': '#FFFFFF',
+      'Mexican': '#006847',
+      'Australian': '#012169',
+      'Chinese': '#DE2910',
+      'Japanese': '#FFFFFF',
+      'Korean': '#CD2E3A',
+      'Filipino': '#0038A8',
+      'Indian': '#FF9933',
+      'Iranian': '#239F40',
+      'Lebanese': '#EE161F',
+      'Egyptian': '#CE1126',
+      'Senegalese': '#00853F',
+      'Congolese': '#007FFF',
+      'Cameroonian': '#007C5B',
+      'Ghanaian': '#CE1126',
+      'Ivorian': '#F77F00',
+      'Malian': '#CE1126',
+      'Angolan': '#CC0000',
+      'South African': '#007A4D',
+      'Tunisian': '#E70013',
+      'Algerian': '#006233',
+      'Moroccan': '#C1272D'
+    };
+    return colors[nationality] || '#666666';
+  };
+
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
         const response = await fetch('/data/nba-players.json');
         const data = await response.json();
+        console.log('Loaded players data:', data.slice(0, 2)); // Log first 2 players
         setPlayers(data);
       } catch (error) {
         console.error('Error loading NBA players data:', error);
@@ -73,6 +125,15 @@ const NBAPlayerRankings: React.FC = () => {
         <div className="rankings-list">
           {players.map((player) => (
             <div key={player.rank} className="player-card">
+              <div 
+                className="player-nationality"
+                style={{
+                  backgroundImage: `url(/images/flags/${player.nationality.toLowerCase().replace(/\s+/g, '-')}.png)`,
+                  backgroundColor: getFlagColor(player.nationality)
+                }}
+              >
+                {player.nationality}
+              </div>
               <div className="player-left">
                 <div className="player-photo">
                   <img src={player.photo} alt={player.name} />
@@ -94,10 +155,11 @@ const NBAPlayerRankings: React.FC = () => {
               </div>
               <div className="player-info">
                 <div className="player-header">
-                  <div className="name-and-years">
-                    <h2 className="player-name">#{player.rank} {player.name}</h2>
-                    <div className="player-years">({player.era})</div>
-                  </div>
+                                      <div className="name-and-years">
+                      <h2 className="player-name">#{player.rank} {player.name}</h2>
+                      <div className="player-position">{player.position || 'N/A'}</div>
+                      <div className="player-years">({player.era})</div>
+                    </div>
                   <div className="player-teams">{player.teams.join(" • ")}</div>
                 </div>
                 <div className="stats-section">

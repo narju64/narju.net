@@ -115,6 +115,7 @@ const secretNavStructure = [
   {
     label: 'Accounts',
     href: '/najnimre/accounts',
+    children: []
   },
 ];
 

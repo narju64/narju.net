@@ -3,14 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   verifyPassword, 
   storeEncryptedData, 
-  getEncryptedData, 
   clearEncryptedData,
   RateLimiter 
 } from '../utils/security';
 import './SecretPage.css';
 
 const SecretPage: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);

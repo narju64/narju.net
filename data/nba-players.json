@@ -6,6 +6,19 @@
     "nationality": "American",
     "position": "SG",
     "teams": ["Chicago Bulls", "Washington Wizards"],
+    "peakSeason": {
+      "year": "1987-88",
+      "stats": {
+        "ppg": 35.0,
+        "apg": 5.9,
+        "rpg": 5.5,
+        "fgp": 53.5,
+        "threeptp": 13.2,
+        "ftp": 84.1
+      },
+      "achievements": "MVP, DPOY, All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion, Steals Leader",
+      "context": "Jordan's most dominant two-way season, leading the league in scoring and steals while winning both MVP and DPOY"
+    },
     "photo": "/images/players/michael-jordan.jpg",
     "height": "6'6\"",
     "weight": "216 lbs",
@@ -39,6 +52,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Philadelphia Warriors", "San Francisco Warriors", "Philadelphia 76ers", "Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1961-62",
+      "stats": {
+        "ppg": 50.4,
+        "apg": 2.4,
+        "rpg": 25.7,
+        "fgp": 50.6,
+        "threeptp": "N/A",
+        "ftp": 61.3
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, Scoring Champion, Rebounding Champion",
+      "context": "Wilt's legendary 50.4 PPG season, the highest scoring average in NBA history, while also leading the league in rebounds"
+    },
     "photo": "/images/players/wilt-chamberlain.jpg",
     "height": "7'1\"",
     "weight": "275 lbs",
@@ -72,6 +98,19 @@
     "nationality": "American",
     "position": "SG",
     "teams": ["Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "2005-06",
+      "stats": {
+        "ppg": 35.4,
+        "apg": 4.5,
+        "rpg": 5.3,
+        "fgp": 45.0,
+        "threeptp": 34.7,
+        "ftp": 85.0
+      },
+      "achievements": "All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion",
+      "context": "Kobe's highest scoring season, including his iconic 81-point game against Toronto, carrying a weak Lakers roster"
+    },
     "photo": "/images/players/kobe-bryant.jpg",
     "height": "6'6\"",
     "weight": "212 lbs",
@@ -105,6 +144,19 @@
     "nationality": "American",
     "position": "SF",
     "teams": ["Boston Celtics"],
+    "peakSeason": {
+      "year": "1984-85",
+      "stats": {
+        "ppg": 28.7,
+        "apg": 6.6,
+        "rpg": 10.5,
+        "fgp": 52.2,
+        "threeptp": 42.7,
+        "ftp": 88.2
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 2nd Team",
+      "context": "Bird's most efficient season, shooting over 50% from the field and 40% from three while averaging a near triple-double"
+    },
     "photo": "/images/players/larry-bird.jpg",
     "height": "6'9\"",
     "weight": "220 lbs",
@@ -138,6 +190,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Milwaukee Bucks", "Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1971-72",
+      "stats": {
+        "ppg": 34.8,
+        "apg": 4.6,
+        "rpg": 16.6,
+        "fgp": 57.4,
+        "threeptp": "N/A",
+        "ftp": 68.9
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion, Rebounding Champion",
+      "context": "Kareem's highest scoring season with the Bucks, leading the league in both points and rebounds while shooting 57% from the field"
+    },
     "photo": "/images/players/kareem-abdul-jabbar.jpg",
     "height": "7'2\"",
     "weight": "225 lbs",
@@ -171,6 +236,19 @@
     "nationality": "American",
     "position": "PG",
     "teams": ["Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1986-87",
+      "stats": {
+        "ppg": 23.9,
+        "apg": 12.2,
+        "rpg": 6.3,
+        "fgp": 52.2,
+        "threeptp": 20.5,
+        "ftp": 84.8
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, Assists Leader",
+      "context": "Magic's MVP season, leading the league in assists while scoring efficiently and orchestrating the Showtime Lakers offense"
+    },
     "photo": "/images/players/magic-johnson.jpg",
     "height": "6'9\"",
     "weight": "220 lbs",
@@ -204,6 +282,19 @@
     "nationality": "Nigerian",
     "position": "C",
     "teams": ["Houston Rockets", "Toronto Raptors"],
+    "peakSeason": {
+      "year": "1993-94",
+      "stats": {
+        "ppg": 27.3,
+        "apg": 3.6,
+        "rpg": 11.9,
+        "fgp": 52.8,
+        "threeptp": 42.1,
+        "ftp": 71.6
+      },
+      "achievements": "MVP, DPOY, All-Star, All-NBA 1st Team, All-Defense 1st Team, Championship, Finals MVP",
+      "context": "Hakeem's legendary MVP and DPOY season, leading the Rockets to their first championship while dominating on both ends"
+    },
     "photo": "/images/players/hakeem-olajuwon.jpg",
     "height": "7'0\"",
     "weight": "255 lbs",
@@ -237,6 +328,19 @@
     "nationality": "American",
     "position": "PF",
     "teams": ["San Antonio Spurs"],
+    "peakSeason": {
+      "year": "2001-02",
+      "stats": {
+        "ppg": 25.5,
+        "apg": 3.7,
+        "rpg": 12.7,
+        "fgp": 50.8,
+        "threeptp": 10.0,
+        "ftp": 79.9
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team",
+      "context": "Duncan's first MVP season, averaging a double-double while anchoring the Spurs' defense and leading them to 58 wins"
+    },
     "photo": "/images/players/tim-duncan.jpg",
     "height": "6'11\"",
     "weight": "250 lbs",
@@ -270,6 +374,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Orlando Magic", "Los Angeles Lakers", "Miami Heat", "Phoenix Suns", "Cleveland Cavaliers", "Boston Celtics"],
+    "peakSeason": {
+      "year": "1999-00",
+      "stats": {
+        "ppg": 29.7,
+        "apg": 3.8,
+        "rpg": 13.6,
+        "fgp": 57.4,
+        "threeptp": 0.0,
+        "ftp": 52.4
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 2nd Team, Championship, Finals MVP, Scoring Champion",
+      "context": "Shaq's dominant MVP season, leading the Lakers to their first championship of the three-peat while averaging nearly 30 points and 14 rebounds"
+    },
     "photo": "/images/players/shaquille-oneal.jpg",
     "height": "7'1\"",
     "weight": "325 lbs",
@@ -303,6 +420,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Boston Celtics"],
+    "peakSeason": {
+      "year": "1961-62",
+      "stats": {
+        "ppg": 18.9,
+        "apg": 4.7,
+        "rpg": 23.6,
+        "fgp": 45.7,
+        "threeptp": "N/A",
+        "ftp": 59.5
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Championship, Rebounding Champion",
+      "context": "Russell's highest rebounding season, leading the Celtics to another championship while averaging nearly 24 rebounds per game"
+    },
     "photo": "/images/players/bill-russell.jpg",
     "height": "6'10\"",
     "weight": "215 lbs",
@@ -336,6 +466,19 @@
     "nationality": "American",
     "position": "PG",
     "teams": ["Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1965-66",
+      "stats": {
+        "ppg": 31.3,
+        "apg": 7.1,
+        "rpg": 7.1,
+        "fgp": 47.3,
+        "threeptp": "N/A",
+        "ftp": 86.0
+      },
+      "achievements": "All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion",
+      "context": "West's highest scoring season, leading the league in points while maintaining his elite playmaking and defense"
+    },
     "photo": "/images/players/jerry-west.jpg",
     "height": "6'3\"",
     "weight": "175 lbs",
@@ -369,6 +512,19 @@
     "nationality": "American",
     "position": "SF",
     "teams": ["Cleveland Cavaliers", "Miami Heat", "Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "2012-13",
+      "stats": {
+        "ppg": 27.1,
+        "apg": 7.3,
+        "rpg": 8.0,
+        "fgp": 56.5,
+        "threeptp": 40.6,
+        "ftp": 75.3
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Championship, Finals MVP",
+      "context": "LeBron's most efficient season, shooting 56% from the field and 40% from three while leading the Heat to back-to-back championships"
+    },
     "photo": "/images/players/lebron-james.jpg",
     "height": "6'9\"",
     "weight": "250 lbs",
@@ -402,6 +558,19 @@
     "nationality": "American",
     "position": "PG",
     "teams": ["Cincinnati Royals", "Milwaukee Bucks"],
+    "peakSeason": {
+      "year": "1961-62",
+      "stats": {
+        "ppg": 30.8,
+        "apg": 11.4,
+        "rpg": 12.5,
+        "fgp": 47.8,
+        "threeptp": "N/A",
+        "ftp": 80.3
+      },
+      "achievements": "All-Star, All-NBA 1st Team, Assists Leader",
+      "context": "The Big O's legendary triple-double season, averaging 30.8 points, 11.4 assists, and 12.5 rebounds per game"
+    },
     "photo": "/images/players/oscar-robertson.jpg",
     "height": "6'5\"",
     "weight": "205 lbs",
@@ -435,6 +604,19 @@
     "nationality": "American",
     "position": "SF",
     "teams": ["Virginia Squires", "New York Nets", "Philadelphia 76ers"],
+    "peakSeason": {
+      "year": "1975-76",
+      "stats": {
+        "ppg": 29.3,
+        "apg": 5.0,
+        "rpg": 11.0,
+        "fgp": 50.7,
+        "threeptp": "N/A",
+        "ftp": 77.8
+      },
+      "achievements": "MVP, All-Star, All-ABA 1st Team, Championship, Finals MVP",
+      "context": "Dr. J's ABA MVP season with the Nets, leading them to the championship while averaging 29 points and 11 rebounds"
+    },
     "photo": "/images/players/julius-erving.jpg",
     "height": "6'7\"",
     "weight": "210 lbs",
@@ -468,6 +650,19 @@
     "nationality": "Serbian",
     "position": "C",
     "teams": ["Denver Nuggets"],
+    "peakSeason": {
+      "year": "2021-22",
+      "stats": {
+        "ppg": 27.1,
+        "apg": 7.9,
+        "rpg": 13.8,
+        "fgp": 58.3,
+        "threeptp": 33.7,
+        "ftp": 81.0
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team",
+      "context": "Jokić's second consecutive MVP season, averaging a near triple-double while shooting 58% from the field and leading the Nuggets"
+    },
     "photo": "/images/players/nikola-jokic.jpg",
     "height": "6'11\"",
     "weight": "284 lbs",
@@ -501,6 +696,19 @@
     "nationality": "American",
     "position": "PG",
     "teams": ["Golden State Warriors"],
+    "peakSeason": {
+      "year": "2015-16",
+      "stats": {
+        "ppg": 30.1,
+        "apg": 6.7,
+        "rpg": 5.4,
+        "fgp": 50.4,
+        "threeptp": 45.4,
+        "ftp": 90.8
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, Scoring Champion, Steals Leader",
+      "context": "Curry's unanimous MVP season, breaking the single-season three-point record with 402 threes while leading the Warriors to 73 wins"
+    },
     "photo": "/images/players/stephen-curry.jpg",
     "height": "6'3\"",
     "weight": "185 lbs",
@@ -534,6 +742,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Utah Stars", "Spirits of St. Louis", "Buffalo Braves", "Houston Rockets", "Philadelphia 76ers", "Washington Bullets", "Atlanta Hawks", "Milwaukee Bucks", "San Antonio Spurs"],
+    "peakSeason": {
+      "year": "1981-82",
+      "stats": {
+        "ppg": 31.1,
+        "apg": 1.8,
+        "rpg": 14.7,
+        "fgp": 51.9,
+        "threeptp": "N/A",
+        "ftp": 76.2
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion, Rebounding Champion",
+      "context": "Moses' MVP season with the Rockets, leading the league in both scoring and rebounding while carrying Houston to the Finals"
+    },
     "photo": "/images/players/moses-malone.jpg",
     "height": "6'10\"",
     "weight": "215 lbs",
@@ -567,6 +788,19 @@
     "nationality": "American",
     "position": "SF",
     "teams": ["Seattle SuperSonics", "Oklahoma City Thunder", "Golden State Warriors", "Brooklyn Nets", "Phoenix Suns"],
+    "peakSeason": {
+      "year": "2013-14",
+      "stats": {
+        "ppg": 32.0,
+        "apg": 5.5,
+        "rpg": 7.4,
+        "fgp": 50.3,
+        "threeptp": 39.1,
+        "ftp": 87.3
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, Scoring Champion",
+      "context": "Durant's MVP season, leading the league in scoring while shooting 50% from the field and 39% from three"
+    },
     "photo": "/images/players/kevin-durant.jpg",
     "height": "6'10\"",
     "weight": "240 lbs",
@@ -600,6 +834,19 @@
     "nationality": "American",
     "position": "PF",
     "teams": ["Minnesota Timberwolves", "Boston Celtics", "Brooklyn Nets"],
+    "peakSeason": {
+      "year": "2003-04",
+      "stats": {
+        "ppg": 24.2,
+        "apg": 5.0,
+        "rpg": 13.9,
+        "fgp": 49.9,
+        "threeptp": 25.6,
+        "ftp": 79.1
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Rebounding Champion",
+      "context": "KG's MVP season with the Timberwolves, leading the league in rebounds while averaging 24 points and 5 assists"
+    },
     "photo": "/images/players/kevin-garnett.jpg",
     "height": "6'11\"",
     "weight": "240 lbs",
@@ -633,6 +880,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Chicago American Gears", "Minneapolis Lakers"],
+    "peakSeason": {
+      "year": "1950-51",
+      "stats": {
+        "ppg": 28.4,
+        "apg": 3.1,
+        "rpg": 14.1,
+        "fgp": 42.8,
+        "threeptp": "N/A",
+        "ftp": 80.3
+      },
+      "achievements": "All-Star, All-NBA 1st Team, Scoring Champion, Rebounding Champion, Championship",
+      "context": "Mikan's highest scoring season, leading the league in both points and rebounds while winning his third championship"
+    },
     "photo": "/images/players/george-mikan.jpg",
     "height": "6'10\"",
     "weight": "245 lbs",

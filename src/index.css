@@ -955,6 +955,14 @@ html {
   border-left: 4px solid #294cad;
 }
 
+.current-task {
+  border-left: 4px solid #ff7300;
+}
+
+.next-task {
+  margin-bottom: 0;
+}
+
 .task-label {
   font-size: 0.9rem;
   color: #7f8c8d;
@@ -976,6 +984,39 @@ html {
   font-weight: 600;
   color: #ffffff;
   line-height: 1.3;
+}
+
+.daily-description {
+  background: #0a0a0a;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #294cad;
+}
+
+.description-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 0;
+  display: inline;
+}
+
+.description-display {
+  font-size: 0.9rem;
+  color: #ff7300;
+  font-weight: bold;
+  line-height: 1.4;
+  padding: 0.5rem;
+  background: #1a1a1a;
+  border-radius: 4px;
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
 }
 
 /* Responsive Design */

@@ -146,6 +146,7 @@
   background: #0a0a0a;
   padding: 0.5rem;
   min-height: 60px;
+  height: 60px;
   vertical-align: top;
 }
 
@@ -199,6 +200,22 @@
   border-radius: 4px;
   height: 50px;
   opacity: 0.3;
+}
+
+.hidden-cell {
+  display: none;
+}
+
+.extended-cell {
+  background: #0a0a0a;
+}
+
+.extended-cell .routine-item {
+  min-height: 60px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .routine-legend {

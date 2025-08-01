@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { orbitalCalendar, OrbitalDate } from '../utils/orbitalCalendar';
 import { getCurrentAndNextTask, getDayName, formatOrbitalDate, formatGregorianDate } from '../utils/routineLogic';
 
-
 const CurrentTask: React.FC = () => {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState<OrbitalDate | null>(null);
@@ -26,9 +25,39 @@ const CurrentTask: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const getDailyDescription = (weekDay: number): string => {
+    if (weekDay === 7) {
+      return '24 Hour Fast, Rest Day';
+    }
+    
+    const exerciseTypes = {
+      1: 'Upper Body',
+      2: 'Vert & Core', 
+      3: 'Upper Body',
+      4: 'Vert & Core',
+      5: 'Upper Body',
+      6: 'Vert & Core'
+    };
+    
+    const weeklyTasks = {
+      1: 'Grooming',
+      2: 'Laundry', 
+      3: 'Groceries',
+      4: 'Cleaning',
+      5: 'Plants',
+      6: 'Meal Prep'
+    };
+    
+    const exerciseType = exerciseTypes[weekDay as keyof typeof exerciseTypes];
+    const weeklyTask = weeklyTasks[weekDay as keyof typeof weeklyTasks];
+    
+    return `${exerciseType} Day • ${weeklyTask}`;
+  };
+
   if (!currentDate) return null;
 
   const { current, next } = getCurrentAndNextTask(currentDate);
+  const dailyDescription = getDailyDescription(currentDate.weekDay);
 
   return (
     <div className="current-task-widget">
@@ -42,6 +71,13 @@ const CurrentTask: React.FC = () => {
           {getDayName(currentDate.weekDay)}, {orbitalCalendar.getMonthName(currentDate.month)} {currentDate.day} ({formatOrbitalDate(currentDate)})
         </div>
         <div className="current-date">{formatGregorianDate(currentDate)}</div>
+      </div>
+
+      <div className="daily-description">
+        <div className="description-label">Day Overview:</div>
+        <div className="description-display">
+          {dailyDescription}
+        </div>
       </div>
 
       {current ? (

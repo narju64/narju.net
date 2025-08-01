@@ -11,7 +11,14 @@ import {
 } from '../utils/routineLogic';
 import './Routine.css';
 
-
+// Interface for processed routine data with row spans
+interface ProcessedRoutine {
+  time: string;
+  activity: string;
+  category: string;
+  rowSpan: number;
+  isExtended: boolean;
+}
 
 const Routine: React.FC = () => {
   const [currentDate] = React.useState<OrbitalDate>(orbitalCalendar.getCurrentOrbitalDate());
@@ -34,14 +41,53 @@ const Routine: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-
-
   const times = generateTimes();
+
+  // Process routine data to calculate row spans for visual extension
+  const processRoutineForDay = (routines: any[]): ProcessedRoutine[] => {
+    const processed: ProcessedRoutine[] = [];
+    
+    for (let i = 0; i < routines.length; i++) {
+      const routine = routines[i];
+      const activity = routine.activity || '';
+      
+      if (activity) {
+        // This slot has an activity, calculate how many empty slots follow
+        let rowSpan = 1;
+        let j = i + 1;
+        
+        // Count consecutive empty slots
+        while (j < routines.length && !routines[j].activity) {
+          rowSpan++;
+          j++;
+        }
+        
+        processed.push({
+          time: routine.time,
+          activity: routine.activity,
+          category: routine.category,
+          rowSpan,
+          isExtended: rowSpan > 1
+        });
+      } else {
+        // This slot is empty, skip it (will be covered by the extended cell above)
+        continue;
+      }
+    }
+    
+    return processed;
+  };
 
   // Generate weekly routine using shared logic
   const weeklyRoutine: DayRoutine[] = Array.from({ length: 7 }, (_, index) => ({
     day: index + 1,
     routines: getCurrentRoutine(index + 1)
+  }));
+
+  // Process each day's routine for visual extension
+  const processedWeeklyRoutine = weeklyRoutine.map(day => ({
+    day: day.day,
+    processedRoutines: processRoutineForDay(day.routines)
   }));
 
   const getCategoryColor = (category: string) => {
@@ -57,8 +103,6 @@ const Routine: React.FC = () => {
     };
     return colors[category] || '#95a5a6';
   };
-
-
 
   const getDateForDay = (dayNumber: number): OrbitalDate => {
     // Calculate the orbital date for this specific day of the week
@@ -106,13 +150,9 @@ const Routine: React.FC = () => {
     };
   };
 
-
-
   const isCurrentDay = (dayNumber: number) => {
     return dayNumber === currentDate.weekDay;
   };
-
-
 
   const isCurrentCell = (dayNumber: number, time: string) => {
     return isCurrentDay(dayNumber) && isCurrentTime(time);
@@ -152,27 +192,34 @@ const Routine: React.FC = () => {
             {times.map(time => (
               <tr key={time}>
                 <td className={`time-cell ${isCurrentTime(time) ? 'current-time' : ''}`}>{time}</td>
-                {weeklyRoutine.map(day => {
-                  const routine = day.routines.find(r => r.time === time);
+                {processedWeeklyRoutine.map(day => {
+                  const processedRoutine = day.processedRoutines.find(r => r.time === time);
+                  
+                  if (!processedRoutine) {
+                    // This time slot is empty and covered by an extended cell above
+                    return <td key={day.day} className="routine-cell hidden-cell"></td>;
+                  }
+                  
                   return (
-                    <td key={day.day} className={`routine-cell ${isCurrentCell(day.day, time) ? 'current-cell' : ''}`}>
-                      {routine ? (
-                        <div 
-                          className={`routine-item ${routine.activity ? '' : 'empty-activity'}`}
-                          style={{ 
-                            borderLeftColor: routine.category ? getCategoryColor(routine.category) : '#e1e5e9'
-                          }}
-                        >
-                          <div className="routine-activity">
-                            {routine.activity || 'Add activity...'}
-                          </div>
-                          {routine.category && (
-                            <div className="routine-category">{routine.category}</div>
-                          )}
+                    <td 
+                      key={day.day} 
+                      className={`routine-cell ${isCurrentCell(day.day, time) ? 'current-cell' : ''} ${processedRoutine.isExtended ? 'extended-cell' : ''}`}
+                      rowSpan={processedRoutine.rowSpan > 1 ? processedRoutine.rowSpan : undefined}
+                    >
+                      <div 
+                        className={`routine-item ${processedRoutine.activity ? '' : 'empty-activity'}`}
+                        style={{ 
+                          borderLeftColor: processedRoutine.category ? getCategoryColor(processedRoutine.category) : '#e1e5e9',
+                          height: processedRoutine.isExtended ? `${(processedRoutine.rowSpan * 60) + ((processedRoutine.rowSpan - 1) * 10)}px` : 'auto'
+                        }}
+                      >
+                        <div className="routine-activity">
+                          {processedRoutine.activity || 'Add activity...'}
                         </div>
-                      ) : (
-                        <div className="empty-cell"></div>
-                      )}
+                        {processedRoutine.category && (
+                          <div className="routine-category">{processedRoutine.category}</div>
+                        )}
+                      </div>
                     </td>
                   );
                 })}
@@ -181,8 +228,6 @@ const Routine: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-
     </div>
   );
 };

@@ -6,6 +6,19 @@
     "nationality": "American",
     "position": "SG",
     "teams": ["Chicago Bulls", "Washington Wizards"],
+    "peakSeason": {
+      "year": "1987-88",
+      "stats": {
+        "ppg": 35.0,
+        "apg": 5.9,
+        "rpg": 5.5,
+        "fgp": 53.5,
+        "threeptp": 13.2,
+        "ftp": 84.1
+      },
+      "achievements": "MVP, DPOY, All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion, Steals Leader",
+      "context": "Jordan's most dominant two-way season, leading the league in scoring and steals while winning both MVP and DPOY"
+    },
     "photo": "/images/players/michael-jordan.jpg",
     "height": "6'6\"",
     "weight": "216 lbs",
@@ -39,6 +52,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Philadelphia Warriors", "San Francisco Warriors", "Philadelphia 76ers", "Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1961-62",
+      "stats": {
+        "ppg": 50.4,
+        "apg": 2.4,
+        "rpg": 25.7,
+        "fgp": 50.6,
+        "threeptp": "N/A",
+        "ftp": 61.3
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, Scoring Champion, Rebounding Champion",
+      "context": "Wilt's legendary 50.4 PPG season, the highest scoring average in NBA history, while also leading the league in rebounds"
+    },
     "photo": "/images/players/wilt-chamberlain.jpg",
     "height": "7'1\"",
     "weight": "275 lbs",
@@ -72,6 +98,19 @@
     "nationality": "American",
     "position": "SG",
     "teams": ["Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "2005-06",
+      "stats": {
+        "ppg": 35.4,
+        "apg": 4.5,
+        "rpg": 5.3,
+        "fgp": 45.0,
+        "threeptp": 34.7,
+        "ftp": 85.0
+      },
+      "achievements": "All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion",
+      "context": "Kobe's highest scoring season, including his iconic 81-point game against Toronto, carrying a weak Lakers roster"
+    },
     "photo": "/images/players/kobe-bryant.jpg",
     "height": "6'6\"",
     "weight": "212 lbs",
@@ -105,6 +144,19 @@
     "nationality": "American",
     "position": "SF",
     "teams": ["Boston Celtics"],
+    "peakSeason": {
+      "year": "1984-85",
+      "stats": {
+        "ppg": 28.7,
+        "apg": 6.6,
+        "rpg": 10.5,
+        "fgp": 52.2,
+        "threeptp": 42.7,
+        "ftp": 88.2
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 2nd Team",
+      "context": "Bird's most efficient season, shooting over 50% from the field and 40% from three while averaging a near triple-double"
+    },
     "photo": "/images/players/larry-bird.jpg",
     "height": "6'9\"",
     "weight": "220 lbs",
@@ -138,6 +190,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Milwaukee Bucks", "Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1971-72",
+      "stats": {
+        "ppg": 34.8,
+        "apg": 4.6,
+        "rpg": 16.6,
+        "fgp": 57.4,
+        "threeptp": "N/A",
+        "ftp": 68.9
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Scoring Champion, Rebounding Champion",
+      "context": "Kareem's highest scoring season with the Bucks, leading the league in both points and rebounds while shooting 57% from the field"
+    },
     "photo": "/images/players/kareem-abdul-jabbar.jpg",
     "height": "7'2\"",
     "weight": "225 lbs",
@@ -171,6 +236,19 @@
     "nationality": "American",
     "position": "PG",
     "teams": ["Los Angeles Lakers"],
+    "peakSeason": {
+      "year": "1986-87",
+      "stats": {
+        "ppg": 23.9,
+        "apg": 12.2,
+        "rpg": 6.3,
+        "fgp": 52.2,
+        "threeptp": 20.5,
+        "ftp": 84.8
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, Assists Leader",
+      "context": "Magic's MVP season, leading the league in assists while scoring efficiently and orchestrating the Showtime Lakers offense"
+    },
     "photo": "/images/players/magic-johnson.jpg",
     "height": "6'9\"",
     "weight": "220 lbs",
@@ -204,6 +282,19 @@
     "nationality": "Nigerian",
     "position": "C",
     "teams": ["Houston Rockets", "Toronto Raptors"],
+    "peakSeason": {
+      "year": "1993-94",
+      "stats": {
+        "ppg": 27.3,
+        "apg": 3.6,
+        "rpg": 11.9,
+        "fgp": 52.8,
+        "threeptp": 42.1,
+        "ftp": 71.6
+      },
+      "achievements": "MVP, DPOY, All-Star, All-NBA 1st Team, All-Defense 1st Team, Championship, Finals MVP",
+      "context": "Hakeem's legendary MVP and DPOY season, leading the Rockets to their first championship while dominating on both ends"
+    },
     "photo": "/images/players/hakeem-olajuwon.jpg",
     "height": "7'0\"",
     "weight": "255 lbs",
@@ -237,6 +328,19 @@
     "nationality": "American",
     "position": "PF",
     "teams": ["San Antonio Spurs"],
+    "peakSeason": {
+      "year": "2001-02",
+      "stats": {
+        "ppg": 25.5,
+        "apg": 3.7,
+        "rpg": 12.7,
+        "fgp": 50.8,
+        "threeptp": 10.0,
+        "ftp": 79.9
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team",
+      "context": "Duncan's first MVP season, averaging a double-double while anchoring the Spurs' defense and leading them to 58 wins"
+    },
     "photo": "/images/players/tim-duncan.jpg",
     "height": "6'11\"",
     "weight": "250 lbs",
@@ -270,6 +374,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Orlando Magic", "Los Angeles Lakers", "Miami Heat", "Phoenix Suns", "Cleveland Cavaliers", "Boston Celtics"],
+    "peakSeason": {
+      "year": "1999-00",
+      "stats": {
+        "ppg": 29.7,
+        "apg": 3.8,
+        "rpg": 13.6,
+        "fgp": 57.4,
+        "threeptp": 0.0,
+        "ftp": 52.4
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 2nd Team, Championship, Finals MVP, Scoring Champion",
+      "context": "Shaq's dominant MVP season, leading the Lakers to their first championship of the three-peat while averaging nearly 30 points and 14 rebounds"
+    },
     "photo": "/images/players/shaquille-oneal.jpg",
     "height": "7'1\"",
     "weight": "325 lbs",
@@ -303,6 +420,19 @@
     "nationality": "American",
     "position": "C",
     "teams": ["Boston Celtics"],
+    "peakSeason": {
+      "year": "1961-62",
+      "stats": {
+        "ppg": 18.9,
+        "apg": 4.7,
+        "rpg": 23.6,
+        "fgp": 45.7,
+        "threeptp": "N/A",
+        "ftp": 59.5
+      },
+      "achievements": "MVP, All-Star, All-NBA 1st Team, All-Defense 1st Team, Championship, Rebounding Champion",
+      "context": "Russell's highest rebounding season, leading the Celtics to another championship while averaging nearly 24 rebounds per game"
+    },
     "photo": "/images/players/bill-russell.jpg",
     "height": "6'10\"",
     "weight": "215 lbs",

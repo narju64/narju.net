@@ -11,6 +11,19 @@ interface Player {
   height: string;
   weight: string;
   wingspan: string;
+  peakSeason?: {
+    year: string;
+    stats: {
+      ppg: number;
+      apg: number;
+      rpg: number;
+      fgp: number;
+      threeptp: number | string;
+      ftp: number;
+    };
+    achievements: string;
+    context: string;
+  };
   stats: {
     ppg: number;
     apg: number;
@@ -221,6 +234,47 @@ const NBAPlayerRankings: React.FC = () => {
                     )}
                   </div>
                 </div>
+                {player.peakSeason && (
+                  <div className="peak-season-section">
+                    <h3 className="stats-category-title">Peak Season: {player.peakSeason.year}</h3>
+                    <div className="peak-season-stats">
+                      <div className="peak-stats-grid">
+                        <div className="stat">
+                          <span className="stat-label">PPG:</span>
+                          <span className="stat-value">{player.peakSeason.stats.ppg}</span>
+                        </div>
+                        <div className="stat">
+                          <span className="stat-label">APG:</span>
+                          <span className="stat-value">{player.peakSeason.stats.apg}</span>
+                        </div>
+                        <div className="stat">
+                          <span className="stat-label">RPG:</span>
+                          <span className="stat-value">{player.peakSeason.stats.rpg}</span>
+                        </div>
+                        <div className="stat">
+                          <span className="stat-label">FG%:</span>
+                          <span className="stat-value">{player.peakSeason.stats.fgp}%</span>
+                        </div>
+                        <div className="stat">
+                          <span className="stat-label">3PT%:</span>
+                          <span className="stat-value">
+                            {typeof player.peakSeason.stats.threeptp === 'string' ? player.peakSeason.stats.threeptp : `${player.peakSeason.stats.threeptp}%`}
+                          </span>
+                        </div>
+                        <div className="stat">
+                          <span className="stat-label">FT%:</span>
+                          <span className="stat-value">{player.peakSeason.stats.ftp}%</span>
+                        </div>
+                      </div>
+                      <div className="peak-achievements">
+                        <strong>Achievements:</strong> {player.peakSeason.achievements}
+                      </div>
+                      <div className="peak-context">
+                        {player.peakSeason.context}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

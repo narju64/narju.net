@@ -11,173 +11,184 @@ export interface DayRoutine {
   routines: RoutineItem[];
 }
 
-export const generateTimes = () => {
-  const times = [];
-  for (let hour = 6; hour <= 22; hour++) {
-    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    
-    // Skip 7, 8, 9 AM as they'll be combined
-    if (hour >= 7 && hour <= 9) {
-      if (hour === 7) {
-        times.push(`7:00 AM - 10:00 AM`);
+// Single source of truth: each time slot defines both activity and time range
+const ROUTINE_SLOTS = {
+  '6:00 AM': {
+    activity: (dayNumber: number) => {
+      if (dayNumber === 7) {
+        return 'Wake up, make bed, brush teeth, shower';
       }
-      continue;
-    }
-    
-    // Skip 11 AM, 12 PM, 1 PM as they'll be combined
-    if (hour >= 11 && hour <= 13) {
-      if (hour === 11) {
-        times.push(`10:30 AM - 2:00 PM`);
+      return 'Wake up, make bed, brush teeth';
+    },
+    category: '',
+    timeRange: { startHour: 6, startMinute: 0, endHour: 6, endMinute: 29 }
+  },
+  '6:30 AM': {
+    activity: (dayNumber: number) => {
+      if (dayNumber === 7) return 'Religious Study';
+      if (dayNumber === 1 || dayNumber === 3 || dayNumber === 5) return 'Exercise (Upper Body)';
+      if (dayNumber === 2 || dayNumber === 4 || dayNumber === 6) return 'Exercise (Vert & Core)';
+      return 'Exercise';
+    },
+    category: '',
+    timeRange: { startHour: 6, startMinute: 30, endHour: 7, endMinute: 29 }
+  },
+  '7:30 AM': {
+    activity: (dayNumber: number) => {
+      if (dayNumber === 7) {
+        return '';
       }
-      continue;
-    }
-    
-    // Skip 3 PM, 4 PM as they'll be combined
-    if (hour >= 15 && hour <= 16) {
-      if (hour === 15) {
-        times.push(`2:30 PM - 5:00 PM`);
-      }
-      continue;
-    }
-    
-    times.push(`${displayHour}:00 ${ampm}`);
-    
-    // Add 6:30 AM specifically
-    if (hour === 6) {
-      times.push(`6:30 AM`);
-    }
-    // Add 6:45 PM specifically
-    if (hour === 18) {
-      times.push(`6:45 PM`);
-    }
-    // Add 8:45 PM specifically
-    if (hour === 20) {
-      times.push(`8:45 PM`);
-    }
+      return 'Shower';
+    },
+    category: '',
+    timeRange: { startHour: 7, startMinute: 30, endHour: 7, endMinute: 59 }
+  },
+  '8:00 AM': {
+    activity: (dayNumber: number) => dayNumber === 7 ? '' : 'Breakfast & Vitamins',
+    category: '',
+    timeRange: { startHour: 8, startMinute: 0, endHour: 8, endMinute: 29 }
+  },
+  '8:30 AM - 1:00 PM': {
+    activity: 'Coding & Website',
+    category: '',
+    timeRange: { startHour: 8, startMinute: 30, endHour: 12, endMinute: 59 }
+  },
+  '1:00 PM': {
+    activity: (dayNumber: number) => dayNumber === 7 ? '' : 'Lunch',
+    category: '',
+    timeRange: { startHour: 13, startMinute: 0, endHour: 13, endMinute: 29 }
+  },
+  '1:30 PM - 5:00 PM': {
+    activity: 'Art & Music',
+    category: '',
+    timeRange: { startHour: 13, startMinute: 30, endHour: 16, endMinute: 59 }
+  },
+  '5:00 PM': {
+    activity: (dayNumber: number) => {
+      const weeklyTasks = {
+        1: 'Grooming',
+        2: 'Laundry', 
+        3: 'Groceries',
+        4: 'Cleaning',
+        5: 'Plants / mail',
+        6: 'Meal Prep'
+      };
+      return weeklyTasks[dayNumber as keyof typeof weeklyTasks] || '';
+    },
+    category: '',
+    timeRange: { startHour: 17, startMinute: 0, endHour: 17, endMinute: 59 }
+  },
+  '6:00 PM': {
+    activity: 'Dinner',
+    category: '',
+    timeRange: { startHour: 18, startMinute: 0, endHour: 18, endMinute: 29 }
+  },
+  '6:30 PM': {
+    activity: 'Walk',
+    category: '',
+    timeRange: { startHour: 18, startMinute: 30, endHour: 18, endMinute: 59 }
+  },
+  '7:00 PM - 9:00 PM': {
+    activity: 'Podcasts & Media',
+    category: '',
+    timeRange: { startHour: 19, startMinute: 0, endHour: 20, endMinute: 59 }
+  },
+  '9:00 PM': {
+    activity: 'Read',
+    category: '',
+    timeRange: { startHour: 21, startMinute: 0, endHour: 21, endMinute: 59 }
+  },
+  '10:00 PM': {
+    activity: 'Brush teeth, pray, sleep',
+    category: '',
+    timeRange: { startHour: 22, startMinute: 0, endHour: 22, endMinute: 29 }
   }
-  return times;
+};
+
+export const generateTimes = () => {
+  return Object.keys(ROUTINE_SLOTS);
 };
 
 export const getCurrentRoutine = (dayNumber: number): RoutineItem[] => {
   const times = generateTimes();
   return times.map(time => {
-    if (time === '6:00 AM') {
-      return { time, activity: 'Wake up, make bed, brush teeth, shower', category: '' };
-    } else if (time === '6:30 AM') {
-      return { time, activity: 'Walk', category: '' };
-    } else if (time === '7:00 AM - 10:00 AM') {
-      return { time, activity: 'Coding & Website', category: '' };
-    } else if (time === '10:30 AM - 2:00 PM') {
-      return { time, activity: 'Podcasts & Media', category: '' };
-    } else if (time === '2:30 PM - 5:00 PM') {
-      return { time, activity: 'Art & Music', category: '' };
-    } else if (time === '10:00 AM') {
-      return { time, activity: 'Breakfast & Vitamins', category: '' };
-    } else if (time === '2:00 PM') {
-      return { time, activity: 'Lunch', category: '' };
-    } else if (time === '5:00 PM') {
-      // Weekly tasks
-      if (dayNumber === 1) return { time, activity: 'Grooming', category: '' };
-      if (dayNumber === 2) return { time, activity: 'Laundry', category: '' };
-      if (dayNumber === 3) return { time, activity: 'Groceries', category: '' };
-      if (dayNumber === 4) return { time, activity: 'Cleaning', category: '' };
-      if (dayNumber === 5) return { time, activity: 'Plants / mail', category: '' };
-      if (dayNumber === 6) return { time, activity: 'Meal Prep', category: '' };
-      return { time, activity: '', category: '' };
-    } else if (time === '6:00 PM') {
-      return { time, activity: 'Dinner', category: '' };
-    } else if (time === '7:00 PM') {
-      if (dayNumber === 1 || dayNumber === 3 || dayNumber === 5) {
-        return { time, activity: 'Workout', category: '' };
-      } else {
-        return { time, activity: 'Basketball', category: '' };
-      }
-    } else if (time === '9:00 PM') {
-      return { time, activity: 'Read', category: '' };
-    } else if (time === '10:00 PM') {
-      return { time, activity: 'Pray, sleep', category: '' };
-    } else if (time === '8:00 PM') {
-      return { time, activity: 'Walk', category: '' };
-    } else if (time === '8:45 PM') {
-      return { time, activity: 'Shower and brush teeth', category: '' };
-    } else if (time === '6:45 PM') {
-      return { time, activity: 'Yoga', category: '' };
-    } else {
+    const config = ROUTINE_SLOTS[time as keyof typeof ROUTINE_SLOTS];
+    if (!config) {
       return { time, activity: '', category: '' };
     }
+    
+    const activity = typeof config.activity === 'function' 
+      ? config.activity(dayNumber) 
+      : config.activity;
+    
+    return { 
+      time, 
+      activity, 
+      category: config.category 
+    };
   });
 };
 
-export const isCurrentTime = (time: string) => {
+export const isCurrentTime = (time: string, dayNumber?: number) => {
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
   
-  // Handle the special 7:00 AM - 10:00 AM combined slot
-  if (time === '7:00 AM - 10:00 AM') {
-    return currentHour >= 7 && currentHour <= 9;
+  const config = ROUTINE_SLOTS[time as keyof typeof ROUTINE_SLOTS];
+  if (!config) {
+    return false;
   }
   
-  // Handle the special 10:30 AM - 2:00 PM combined slot
-  if (time === '10:30 AM - 2:00 PM') {
-    return (currentHour === 10 && currentMinute >= 30) || (currentHour >= 11 && currentHour <= 13);
+  const { startHour, startMinute, endHour, endMinute } = config.timeRange;
+  
+  // Convert current time to minutes for easier comparison
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
+  const startTimeInMinutes = startHour * 60 + startMinute;
+  const endTimeInMinutes = endHour * 60 + endMinute;
+  
+  // Check if current time falls within this slot's range
+  const isInTimeRange = currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
+  
+  if (!isInTimeRange) {
+    return false;
   }
   
-  // Handle the special 2:30 PM - 5:00 PM combined slot
-  if (time === '2:30 PM - 5:00 PM') {
-    return (currentHour === 14 && currentMinute >= 30) || (currentHour >= 15 && currentHour <= 16);
+  // If this slot has an activity, return true
+  const activity = typeof config.activity === 'function' 
+    ? config.activity(dayNumber || 1) 
+    : config.activity;
+  
+  if (activity) {
+    return true;
   }
   
-  // Handle specific minute times
-  if (time === '6:00 AM') {
-    return currentHour === 6 && currentMinute < 30;
+  // If this slot is empty, check if we should extend the previous activity
+  const times = generateTimes();
+  const currentIndex = times.indexOf(time);
+  
+  // Look backward to find the most recent activity
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const previousTime = times[i];
+    const previousConfig = ROUTINE_SLOTS[previousTime as keyof typeof ROUTINE_SLOTS];
+    
+    if (previousConfig) {
+      const previousActivity = typeof previousConfig.activity === 'function' 
+        ? previousConfig.activity(dayNumber || 1) 
+        : previousConfig.activity;
+      
+      if (previousActivity) {
+        // Check if the previous activity's time range extends to cover current time
+        const { startHour: prevStartHour, startMinute: prevStartMinute, endHour: prevEndHour, endMinute: prevEndMinute } = previousConfig.timeRange;
+        const prevStartTimeInMinutes = prevStartHour * 60 + prevStartMinute;
+        const prevEndTimeInMinutes = prevEndHour * 60 + prevEndMinute;
+        
+        // If current time is within the previous activity's range, extend it
+        return currentTimeInMinutes >= prevStartTimeInMinutes && currentTimeInMinutes <= prevEndTimeInMinutes;
+      }
+    }
   }
   
-  if (time === '6:30 AM') {
-    return currentHour === 6 && currentMinute >= 30 && currentMinute < 60;
-  }
-  
-  if (time === '6:45 PM') {
-    return currentHour === 18 && currentMinute >= 45 && currentMinute < 60;
-  }
-  
-  if (time === '8:45 PM') {
-    return currentHour === 20 && currentMinute >= 45 && currentMinute < 60;
-  }
-  
-  const timeHour = parseInt(time.split(':')[0]);
-  const timeAMPM = time.includes('PM') ? 'PM' : 'AM';
-  
-  // Convert time to 24-hour format for comparison
-  let time24Hour = timeHour;
-  if (timeAMPM === 'PM' && timeHour !== 12) {
-    time24Hour = timeHour + 12;
-  } else if (timeAMPM === 'AM' && timeHour === 12) {
-    time24Hour = 0;
-  }
-  
-  // Special handling for 10:00 AM to exclude 10:30+ time
-  if (time === '10:00 AM') {
-    return currentHour === 10 && currentMinute < 30;
-  }
-  
-  // Special handling for 2:00 PM to exclude 2:30+ time
-  if (time === '2:00 PM') {
-    return currentHour === 14 && currentMinute < 30;
-  }
-  
-  // Special handling for 6:00 PM to exclude 6:45+ time
-  if (time === '6:00 PM') {
-    return currentHour === 18 && currentMinute < 45;
-  }
-  
-  // Special handling for 8:00 PM to exclude 8:45+ time
-  if (time === '8:00 PM') {
-    return currentHour === 20 && currentMinute < 45;
-  }
-  
-  return currentHour === time24Hour;
+  return false;
 };
 
 export const getCurrentAndNextTask = (currentDate: OrbitalDate) => {
@@ -185,18 +196,44 @@ export const getCurrentAndNextTask = (currentDate: OrbitalDate) => {
   let currentTask = null;
   let nextTask = null;
 
-  for (let i = 0; i < routines.length; i++) {
-    const routine = routines[i];
-    if (routine.activity && isCurrentTime(routine.time)) {
-      currentTask = routine;
-      // Find next task
-      for (let j = i + 1; j < routines.length; j++) {
-        if (routines[j].activity) {
-          nextTask = routines[j];
-          break;
-        }
+  // Check if it's sleeping hours (10:30 PM to 6:00 AM)
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  const isSleepingHours = (currentHour === 22 && currentMinute >= 30) || 
+                         (currentHour >= 23) || 
+                         (currentHour >= 0 && currentHour < 6);
+
+  if (isSleepingHours) {
+    // Create a sleeping task
+    currentTask = { 
+      time: 'Sleeping', 
+      activity: 'Sleeping', 
+      category: '' 
+    };
+    
+    // Find the first task of the day as next task
+    for (const routine of routines) {
+      if (routine.activity) {
+        nextTask = routine;
+        break;
       }
-      break;
+    }
+  } else {
+    // Normal routine logic
+    for (let i = 0; i < routines.length; i++) {
+      const routine = routines[i];
+      if (routine.activity && isCurrentTime(routine.time, currentDate.weekDay)) {
+        currentTask = routine;
+        // Find next task
+        for (let j = i + 1; j < routines.length; j++) {
+          if (routines[j].activity) {
+            nextTask = routines[j];
+            break;
+          }
+        }
+        break;
+      }
     }
   }
 

@@ -22,7 +22,7 @@ export const hashPassword = (password: string): string => {
 // Get the secret password from environment variables
 const getSecretPassword = (): string => {
   // For Vite, environment variables need to be prefixed with VITE_
-  return import.meta.env.VITE_SECRET_PASSWORD || '1234';
+  return import.meta.env.VITE_ACCESS_CODE || '1234';
 };
 
 // Check if password is correct

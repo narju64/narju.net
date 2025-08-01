@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { SiteToggle } from '../npa-translator/components/SiteToggle';
 import { usePhoneticContext } from '../npa-translator/context/PhoneticContext';
 
-// Hierarchical navigation structure
-const navStructure = [
+// Normal navigation structure
+const normalNavStructure = [
   {
     label: 'Creative Works',
     href: '/creative',
@@ -110,17 +110,29 @@ const navStructure = [
   },
 ];
 
+// Secret page navigation structure
+const secretNavStructure = [
+  {
+    label: 'Accounts',
+    href: '/najnimre/accounts',
+  },
+];
+
 const Header: React.FC = () => {
   const location = useLocation();
   const { isNPAMode, translateText } = usePhoneticContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: string | null }>({});
-  const [translatedNavStructure, setTranslatedNavStructure] = useState(navStructure);
-  const navRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [translatedNavStructure, setTranslatedNavStructure] = useState(normalNavStructure);
+  const navRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
 
   // Helper to check if a path is active or a parent of the current path
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
+
+  // Determine which navigation structure to use based on current route
+  const isSecretPage = location.pathname === '/najnimre' || location.pathname.startsWith('/najnimre/');
+  const baseNavStructure = isSecretPage ? secretNavStructure : normalNavStructure;
 
   // Recursively translate navigation structure
   const translateNavItem = async (item: any): Promise<any> => {
@@ -163,18 +175,17 @@ const Header: React.FC = () => {
   useEffect(() => {
     const updateNavStructure = async () => {
       if (isNPAMode) {
-        const translated = await Promise.all(navStructure.map(translateNavItem));
+        const translated = await Promise.all(baseNavStructure.map(translateNavItem));
         setTranslatedNavStructure(translated);
       } else {
-        setTranslatedNavStructure(navStructure);
+        setTranslatedNavStructure(baseNavStructure);
       }
     };
 
     updateNavStructure();
-  }, [isNPAMode, translateText]);
+  }, [isNPAMode, translateText, baseNavStructure]);
 
-  // Use the appropriate navigation structure
-  const currentNavStructure = isNPAMode ? translatedNavStructure : navStructure;
+  const currentNavStructure = isNPAMode ? translatedNavStructure : baseNavStructure;
 
   // Recursive dropdown rendering for desktop
   const renderDropdown = (items: any[], parentLabel: string, depth = 0, topLevelLabel?: string) => {
@@ -227,7 +238,9 @@ const Header: React.FC = () => {
         </button>
         <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
           {currentNavStructure.map((item) => (
-            <div
+            <Link
+              to={item.href}
+              onClick={() => setMobileOpen(false)}
               className={`nav-link${isActive(item.href) ? ' active' : ''}`}
               key={item.href}
               ref={el => { navRefs.current[item.label] = el; }}
@@ -235,13 +248,13 @@ const Header: React.FC = () => {
               onMouseLeave={() => setOpenDropdown(null)}
               style={{ position: 'relative', display: 'inline-block' }}
             >
-              <Link to={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>
+              {item.label}
               {item.children && openDropdown === item.label && (
                 <div className="dropdown-container">
                   {renderDropdown(item.children, item.label, 0, item.label)}
                 </div>
               )}
-            </div>
+            </Link>
           ))}
         </div>
         <div className="npa-toggle-container">

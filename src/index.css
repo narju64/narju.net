@@ -107,6 +107,14 @@ body {
   font-weight: 600;
   position: relative;
   display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 .nav-link:hover,

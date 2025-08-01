@@ -16,9 +16,9 @@ const ROUTINE_SLOTS = {
   '6:00 AM': {
     activity: (dayNumber: number) => {
       if (dayNumber === 7) {
-        return 'Wake up, make bed, brush teeth, shower';
+        return 'Wake up, Make bed, Brush teeth, Shower';
       }
-      return 'Wake up, make bed, brush teeth';
+      return 'Wake up, Make bed, Brush teeth';
     },
     category: '',
     timeRange: { startHour: 6, startMinute: 0, endHour: 6, endMinute: 29 }
@@ -30,7 +30,10 @@ const ROUTINE_SLOTS = {
       if (dayNumber === 2 || dayNumber === 4 || dayNumber === 6) return 'Exercise (Vert & Core)';
       return 'Exercise';
     },
-    category: '',
+    category: (dayNumber: number) => {
+      if (dayNumber === 7) return '';
+      return 'health';
+    },
     timeRange: { startHour: 6, startMinute: 30, endHour: 7, endMinute: 29 }
   },
   '7:30 AM': {
@@ -45,22 +48,22 @@ const ROUTINE_SLOTS = {
   },
   '8:00 AM': {
     activity: (dayNumber: number) => dayNumber === 7 ? '' : 'Breakfast & Vitamins',
-    category: '',
+    category: 'meal',
     timeRange: { startHour: 8, startMinute: 0, endHour: 8, endMinute: 29 }
   },
   '8:30 AM - 1:00 PM': {
     activity: 'Coding & Website',
-    category: '',
+    category: 'leisure',
     timeRange: { startHour: 8, startMinute: 30, endHour: 12, endMinute: 59 }
   },
   '1:00 PM': {
     activity: (dayNumber: number) => dayNumber === 7 ? '' : 'Lunch',
-    category: '',
+    category: 'meal',
     timeRange: { startHour: 13, startMinute: 0, endHour: 13, endMinute: 29 }
   },
   '1:30 PM - 5:00 PM': {
     activity: 'Art & Music',
-    category: '',
+    category: 'leisure',
     timeRange: { startHour: 13, startMinute: 30, endHour: 16, endMinute: 59 }
   },
   '5:00 PM': {
@@ -70,27 +73,27 @@ const ROUTINE_SLOTS = {
         2: 'Laundry', 
         3: 'Groceries',
         4: 'Cleaning',
-        5: 'Plants / mail',
+        5: 'Plants / Mail',
         6: 'Meal Prep'
       };
       return weeklyTasks[dayNumber as keyof typeof weeklyTasks] || '';
     },
-    category: '',
+    category: 'chores',
     timeRange: { startHour: 17, startMinute: 0, endHour: 17, endMinute: 59 }
   },
   '6:00 PM': {
     activity: 'Dinner',
-    category: '',
+    category: 'meal',
     timeRange: { startHour: 18, startMinute: 0, endHour: 18, endMinute: 29 }
   },
   '6:30 PM': {
     activity: 'Walk',
-    category: '',
+    category: 'health',
     timeRange: { startHour: 18, startMinute: 30, endHour: 18, endMinute: 59 }
   },
   '7:00 PM - 9:00 PM': {
     activity: 'Podcasts & Media',
-    category: '',
+    category: 'leisure',
     timeRange: { startHour: 19, startMinute: 0, endHour: 20, endMinute: 59 }
   },
   '9:00 PM': {
@@ -99,7 +102,7 @@ const ROUTINE_SLOTS = {
     timeRange: { startHour: 21, startMinute: 0, endHour: 21, endMinute: 59 }
   },
   '10:00 PM': {
-    activity: 'Brush teeth, pray, sleep',
+    activity: 'Brush teeth, Pray, Sleep',
     category: '',
     timeRange: { startHour: 22, startMinute: 0, endHour: 22, endMinute: 29 }
   }
@@ -121,10 +124,14 @@ export const getCurrentRoutine = (dayNumber: number): RoutineItem[] => {
       ? config.activity(dayNumber) 
       : config.activity;
     
+    const category = typeof config.category === 'function' 
+      ? config.category(dayNumber) 
+      : config.category;
+    
     return { 
       time, 
       activity, 
-      category: config.category 
+      category 
     };
   });
 };

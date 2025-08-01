@@ -93,15 +93,21 @@ const Routine: React.FC = () => {
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       'health': '#27ae60',
-      'work': '#3498db',
-      'creativity': '#9b59b6',
-      'learning': '#f39c12',
-      'planning': '#e74c3c',
-      'social': '#1abc9c',
-      'mindfulness': '#34495e',
-      'adventure': '#e67e22'
+      'leisure': '#3498db',
+      'meal': '#e74c3c', // Red color for meals
+      'chores': '#9b59b6' // Purple color for chores
     };
     return colors[category] || '#95a5a6';
+  };
+
+  const getCategoryBackgroundTint = (category: string) => {
+    const tints: { [key: string]: string } = {
+      'health': 'rgba(39, 174, 96, 0.05)', // Very light green
+      'leisure': 'rgba(52, 152, 219, 0.05)', // Very light blue
+      'meal': 'rgba(231, 76, 60, 0.05)', // Very light red
+      'chores': 'rgba(155, 89, 182, 0.05)' // Very light purple
+    };
+    return tints[category] || 'transparent';
   };
 
   const getDateForDay = (dayNumber: number): OrbitalDate => {
@@ -210,15 +216,13 @@ const Routine: React.FC = () => {
                         className={`routine-item ${processedRoutine.activity ? '' : 'empty-activity'}`}
                         style={{ 
                           borderLeftColor: processedRoutine.category ? getCategoryColor(processedRoutine.category) : '#e1e5e9',
+                          backgroundColor: processedRoutine.category ? getCategoryBackgroundTint(processedRoutine.category) : '#1a1a1a',
                           height: processedRoutine.isExtended ? `${(processedRoutine.rowSpan * 60) + ((processedRoutine.rowSpan - 1) * 10)}px` : 'auto'
                         }}
                       >
                         <div className="routine-activity">
                           {processedRoutine.activity || 'Add activity...'}
                         </div>
-                        {processedRoutine.category && (
-                          <div className="routine-category">{processedRoutine.category}</div>
-                        )}
                       </div>
                     </td>
                   );

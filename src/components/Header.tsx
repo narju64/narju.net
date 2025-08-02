@@ -88,9 +88,7 @@ const normalNavStructure = [
     children: [
       { label: 'Routine', href: '/lifestyle/routine' },
       { label: 'Exercise', href: '/lifestyle/exercise' },
-      { label: 'Diet', href: '/lifestyle/diet', children: [
-        { label: 'Recipe collection', href: '/lifestyle/diet/recipe-collection' },
-      ]},
+      { label: 'Diet', href: '/lifestyle/diet' },
       { label: 'Adventure', href: '/lifestyle/adventure', children: [
         { label: 'Car living', href: '/lifestyle/adventure/car-living' },
         { label: 'Hiking', href: '/lifestyle/adventure/hiking' },

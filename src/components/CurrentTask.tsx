@@ -64,13 +64,6 @@ const CurrentTask: React.FC = () => {
 
   // Render task activity with exercise links
   const renderTaskActivity = (activity: string) => {
-    if (isExerciseTask(activity)) {
-      return (
-        <a href="/lifestyle/exercise" style={{ color: '#ff7300', textDecoration: 'none', fontWeight: '600' }}>
-          {activity}
-        </a>
-      );
-    }
     return activity;
   };
 
@@ -117,11 +110,21 @@ const CurrentTask: React.FC = () => {
       </div>
 
       {current ? (
-        <div className="current-task">
-          <div className="task-label">Current Task:</div>
-          <div className="task-time">{current.time}</div>
-          <div className="task-activity">{renderTaskActivity(current.activity)}</div>
-        </div>
+        isExerciseTask(current.activity) ? (
+          <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
+            <div className="current-task" style={{ cursor: 'pointer' }}>
+              <div className="task-label">Current Task:</div>
+              <div className="task-time">{current.time}</div>
+              <div className="task-activity">{renderTaskActivity(current.activity)}</div>
+            </div>
+          </a>
+        ) : (
+          <div className="current-task">
+            <div className="task-label">Current Task:</div>
+            <div className="task-time">{current.time}</div>
+            <div className="task-activity">{renderTaskActivity(current.activity)}</div>
+          </div>
+        )
       ) : (
         <div className="current-task">
           <div className="task-label">Current Task:</div>
@@ -130,11 +133,21 @@ const CurrentTask: React.FC = () => {
       )}
 
       {next && (
-        <div className="next-task">
-          <div className="task-label">Next Task:</div>
-          <div className="task-time">{next.time}</div>
-          <div className="task-activity">{renderTaskActivity(next.activity)}</div>
-        </div>
+        isExerciseTask(next.activity) ? (
+          <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
+            <div className="next-task" style={{ cursor: 'pointer' }}>
+              <div className="task-label">Next Task:</div>
+              <div className="task-time">{next.time}</div>
+              <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+            </div>
+          </a>
+        ) : (
+          <div className="next-task">
+            <div className="task-label">Next Task:</div>
+            <div className="task-time">{next.time}</div>
+            <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+          </div>
+        )
       )}
     </div>
   );

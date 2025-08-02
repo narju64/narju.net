@@ -110,6 +110,27 @@ const Routine: React.FC = () => {
     return tints[category] || 'transparent';
   };
 
+  // Check if an activity is exercise-related
+  const isExerciseActivity = (activity: string): boolean => {
+    const exerciseKeywords = ['exercise', 'upper body', 'vert', 'core', 'workout'];
+    return exerciseKeywords.some(keyword => 
+      activity.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
+
+  // Check if an activity is meal-related
+  const isMealActivity = (activity: string): boolean => {
+    const mealKeywords = ['breakfast', 'lunch', 'dinner', 'meal', 'eat', 'food'];
+    return mealKeywords.some(keyword => 
+      activity.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
+
+  // Render activity with exercise links
+  const renderActivity = (activity: string) => {
+    return activity;
+  };
+
   const getDateForDay = (dayNumber: number): OrbitalDate => {
     // Calculate the orbital date for this specific day of the week
     const currentWeekStart = currentDate.day - currentDate.weekDay + 1;
@@ -207,24 +228,72 @@ const Routine: React.FC = () => {
                   }
                   
                   return (
-                    <td 
-                      key={day.day} 
-                      className={`routine-cell ${isCurrentCell(day.day, time) ? 'current-cell' : ''} ${processedRoutine.isExtended ? 'extended-cell' : ''}`}
-                      rowSpan={processedRoutine.rowSpan > 1 ? processedRoutine.rowSpan : undefined}
-                    >
-                      <div 
-                        className={`routine-item ${processedRoutine.activity ? '' : 'empty-activity'}`}
-                        style={{ 
-                          borderLeftColor: processedRoutine.category ? getCategoryColor(processedRoutine.category) : '#e1e5e9',
-                          backgroundColor: processedRoutine.category ? getCategoryBackgroundTint(processedRoutine.category) : '#1a1a1a',
-                          height: processedRoutine.isExtended ? `${(processedRoutine.rowSpan * 60) + ((processedRoutine.rowSpan - 1) * 10)}px` : 'auto'
-                        }}
-                      >
-                        <div className="routine-activity">
-                          {processedRoutine.activity || 'Add activity...'}
-                        </div>
-                      </div>
-                    </td>
+                                         <td 
+                       key={day.day} 
+                       className={`routine-cell ${isCurrentCell(day.day, time) ? 'current-cell' : ''} ${processedRoutine.isExtended ? 'extended-cell' : ''}`}
+                       rowSpan={processedRoutine.rowSpan > 1 ? processedRoutine.rowSpan : undefined}
+                     >
+                       {isExerciseActivity(processedRoutine.activity) ? (
+                         <a 
+                           href="/lifestyle/exercise" 
+                           style={{ 
+                             textDecoration: 'none', 
+                             display: 'block', 
+                             height: '100%',
+                             cursor: 'pointer'
+                           }}
+                         >
+                           <div 
+                             className={`routine-item ${processedRoutine.activity ? '' : 'empty-activity'}`}
+                             style={{ 
+                               borderLeftColor: processedRoutine.category ? getCategoryColor(processedRoutine.category) : '#e1e5e9',
+                               backgroundColor: processedRoutine.category ? getCategoryBackgroundTint(processedRoutine.category) : '#1a1a1a',
+                               height: processedRoutine.isExtended ? `${(processedRoutine.rowSpan * 60) + ((processedRoutine.rowSpan - 1) * 10)}px` : 'auto'
+                             }}
+                           >
+                             <div className="routine-activity">
+                               {processedRoutine.activity ? renderActivity(processedRoutine.activity) : 'Add activity...'}
+                             </div>
+                           </div>
+                         </a>
+                       ) : isMealActivity(processedRoutine.activity) ? (
+                         <a 
+                           href="/lifestyle/diet" 
+                           style={{ 
+                             textDecoration: 'none', 
+                             display: 'block', 
+                             height: '100%',
+                             cursor: 'pointer'
+                           }}
+                         >
+                           <div 
+                             className={`routine-item ${processedRoutine.activity ? '' : 'empty-activity'}`}
+                             style={{ 
+                               borderLeftColor: processedRoutine.category ? getCategoryColor(processedRoutine.category) : '#e1e5e9',
+                               backgroundColor: processedRoutine.category ? getCategoryBackgroundTint(processedRoutine.category) : '#1a1a1a',
+                               height: processedRoutine.isExtended ? `${(processedRoutine.rowSpan * 60) + ((processedRoutine.rowSpan - 1) * 10)}px` : 'auto'
+                             }}
+                           >
+                             <div className="routine-activity">
+                               {processedRoutine.activity ? renderActivity(processedRoutine.activity) : 'Add activity...'}
+                             </div>
+                           </div>
+                         </a>
+                       ) : (
+                         <div 
+                           className={`routine-item ${processedRoutine.activity ? '' : 'empty-activity'}`}
+                           style={{ 
+                             borderLeftColor: processedRoutine.category ? getCategoryColor(processedRoutine.category) : '#e1e5e9',
+                             backgroundColor: processedRoutine.category ? getCategoryBackgroundTint(processedRoutine.category) : '#1a1a1a',
+                             height: processedRoutine.isExtended ? `${(processedRoutine.rowSpan * 60) + ((processedRoutine.rowSpan - 1) * 10)}px` : 'auto'
+                           }}
+                         >
+                           <div className="routine-activity">
+                             {processedRoutine.activity ? renderActivity(processedRoutine.activity) : 'Add activity...'}
+                           </div>
+                         </div>
+                       )}
+                     </td>
                   );
                 })}
               </tr>

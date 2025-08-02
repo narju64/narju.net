@@ -62,6 +62,14 @@ const CurrentTask: React.FC = () => {
     );
   };
 
+  // Check if a task is meal-related
+  const isMealTask = (activity: string): boolean => {
+    const mealKeywords = ['breakfast', 'lunch', 'dinner'];
+    return mealKeywords.some(keyword => 
+      activity.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
+
   // Render task activity with exercise links
   const renderTaskActivity = (activity: string) => {
     return activity;
@@ -118,6 +126,14 @@ const CurrentTask: React.FC = () => {
               <div className="task-activity">{renderTaskActivity(current.activity)}</div>
             </div>
           </a>
+        ) : isMealTask(current.activity) ? (
+          <a href="/lifestyle/diet" style={{ textDecoration: 'none', display: 'block' }}>
+            <div className="current-task" style={{ cursor: 'pointer' }}>
+              <div className="task-label">Current Task:</div>
+              <div className="task-time">{current.time}</div>
+              <div className="task-activity">{renderTaskActivity(current.activity)}</div>
+            </div>
+          </a>
         ) : (
           <div className="current-task">
             <div className="task-label">Current Task:</div>
@@ -135,6 +151,14 @@ const CurrentTask: React.FC = () => {
       {next && (
         isExerciseTask(next.activity) ? (
           <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
+            <div className="next-task" style={{ cursor: 'pointer' }}>
+              <div className="task-label">Next Task:</div>
+              <div className="task-time">{next.time}</div>
+              <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+            </div>
+          </a>
+        ) : isMealTask(next.activity) ? (
+          <a href="/lifestyle/diet" style={{ textDecoration: 'none', display: 'block' }}>
             <div className="next-task" style={{ cursor: 'pointer' }}>
               <div className="task-label">Next Task:</div>
               <div className="task-time">{next.time}</div>

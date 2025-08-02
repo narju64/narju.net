@@ -25,9 +25,9 @@ const CurrentTask: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getDailyDescription = (weekDay: number): string => {
+  const getDailyDescription = (weekDay: number): { exerciseType: string; weeklyTask: string; isRestDay: boolean } => {
     if (weekDay === 7) {
-      return '24 Hour Fast, Rest Day';
+      return { exerciseType: 'Rest', weeklyTask: '24 Hour Fast', isRestDay: true };
     }
     
     const exerciseTypes = {
@@ -51,7 +51,27 @@ const CurrentTask: React.FC = () => {
     const exerciseType = exerciseTypes[weekDay as keyof typeof exerciseTypes];
     const weeklyTask = weeklyTasks[weekDay as keyof typeof weeklyTasks];
     
-    return `${exerciseType} Day • ${weeklyTask}`;
+    return { exerciseType, weeklyTask, isRestDay: false };
+  };
+
+  // Check if a task is exercise-related
+  const isExerciseTask = (activity: string): boolean => {
+    const exerciseKeywords = ['exercise', 'upper body', 'vert', 'core', 'workout'];
+    return exerciseKeywords.some(keyword => 
+      activity.toLowerCase().includes(keyword.toLowerCase())
+    );
+  };
+
+  // Render task activity with exercise links
+  const renderTaskActivity = (activity: string) => {
+    if (isExerciseTask(activity)) {
+      return (
+        <a href="/lifestyle/exercise" style={{ color: '#ff7300', textDecoration: 'none', fontWeight: '600' }}>
+          {activity}
+        </a>
+      );
+    }
+    return activity;
   };
 
   if (!currentDate) return null;
@@ -76,7 +96,23 @@ const CurrentTask: React.FC = () => {
       <div className="daily-description">
         <div className="description-label">Day Overview:</div>
         <div className="description-display">
-          {dailyDescription}
+          {dailyDescription.isRestDay ? (
+            <>
+              <a href="/lifestyle/exercise" style={{ color: '#ff7300', textDecoration: 'none', fontWeight: '600' }}>
+                {dailyDescription.exerciseType} Day
+              </a>
+              {' • '}
+              {dailyDescription.weeklyTask}
+            </>
+          ) : (
+            <>
+              <a href="/lifestyle/exercise" style={{ color: '#ff7300', textDecoration: 'none', fontWeight: '600' }}>
+                {dailyDescription.exerciseType} Day
+              </a>
+              <span style={{ marginLeft: '8px' }}>•</span>
+              <span style={{ marginLeft: '8px' }}>{dailyDescription.weeklyTask}</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -84,7 +120,7 @@ const CurrentTask: React.FC = () => {
         <div className="current-task">
           <div className="task-label">Current Task:</div>
           <div className="task-time">{current.time}</div>
-          <div className="task-activity">{current.activity}</div>
+          <div className="task-activity">{renderTaskActivity(current.activity)}</div>
         </div>
       ) : (
         <div className="current-task">
@@ -97,7 +133,7 @@ const CurrentTask: React.FC = () => {
         <div className="next-task">
           <div className="task-label">Next Task:</div>
           <div className="task-time">{next.time}</div>
-          <div className="task-activity">{next.activity}</div>
+          <div className="task-activity">{renderTaskActivity(next.activity)}</div>
         </div>
       )}
     </div>

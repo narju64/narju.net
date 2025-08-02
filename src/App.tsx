@@ -4,6 +4,7 @@ import Header from './components/Header'
 import Projects from './components/Projects'
 import OrbitalCalendarPage from './components/OrbitalCalendar'
 import Routine from './components/Routine'
+import Exercise from './components/Exercise'
 import CurrentTask from './components/CurrentTask'
 import BeatsPlayer from './components/BeatsPlayer'
 import TraditionalArt from './components/TraditionalArt'
@@ -32,6 +33,7 @@ const App: React.FC = () => {
               } />
               <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
               <Route path="/lifestyle/routine" element={<Routine />} />
+              <Route path="/lifestyle/exercise" element={<Exercise />} />
               <Route path="/creative/music/beats" element={<BeatsPlayer />} />
               <Route path="/creative/visual-art/traditional" element={<TraditionalArt />} />
               <Route path="/list" element={<Lists />} />

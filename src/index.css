@@ -896,10 +896,20 @@ html {
 }
 /* --- End nav-link parent hover/active text color --- */
 
+/* Widgets Container for Two-Column Layout */
+.widgets-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 2rem auto 0 auto;
+  padding: 0 2rem;
+}
+
 /* Current Task Widget */
 .current-task-widget {
   max-width: 700px;
-  margin: 2rem auto 2rem auto;
+  margin: 0;
   padding: 1.5rem;
   background: #1a1a1a;
   border-radius: 12px;
@@ -1029,8 +1039,14 @@ html {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .widgets-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+  
   .current-task-widget {
-    margin: 0 1rem 2rem 1rem;
+    margin: 0;
     padding: 1.5rem;
   }
   

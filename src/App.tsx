@@ -16,6 +16,7 @@ import FavoriteAlbums from './components/FavoriteAlbums'
 import NBAPlayerRankings from './components/NBAPlayerRankings'
 import SecretPage from './components/SecretPage'
 import Prayer from './components/Prayer'
+import DailyMealsWidget from './components/DailyMealsWidget'
 import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
 
@@ -29,10 +30,13 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={
                 <>
-                  <CurrentTask />
-                  <Projects />
+                  <div className="widgets-container">
+                    <CurrentTask />
+                    <DailyMealsWidget />
+                  </div>
                 </>
               } />
+              <Route path="/projects" element={<Projects />} />
               <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
               <Route path="/lifestyle/routine" element={<Routine />} />
               <Route path="/lifestyle/exercise" element={<Exercise />} />

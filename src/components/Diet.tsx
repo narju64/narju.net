@@ -22,7 +22,7 @@ interface SelectedIngredient {
 const Diet: React.FC = () => {
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
   const [mealName, setMealName] = useState('');
-  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner'>('breakfast');
+  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   const [activeTab, setActiveTab] = useState<'ingredients' | 'meals'>('ingredients');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [savedMeals, setSavedMeals] = useState<Array<{
@@ -34,110 +34,11 @@ const Diet: React.FC = () => {
   const [selectedDailyMeals, setSelectedDailyMeals] = useState<Array<{
     id: string;
     name: string;
-    mealType: 'breakfast' | 'lunch' | 'dinner';
+    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     ingredients: SelectedIngredient[];
     nutrition: ReturnType<typeof getTotalNutrition>;
   }>>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Load saved meals from localStorage on component mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('diet-saved-meals');
-      if (saved) {
-        const parsedMeals = JSON.parse(saved);
-        // Calculate nutrition for loaded meals (since nutrition is a function result)
-        const mealsWithNutrition = parsedMeals.map((meal: any) => ({
-          ...meal,
-          nutrition: calculateNutritionForMeal(meal.ingredients)
-        }));
-        setSavedMeals(mealsWithNutrition);
-      }
-    } catch (error) {
-      console.warn('Failed to load saved meals from localStorage:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Save meals to localStorage whenever savedMeals changes
-  useEffect(() => {
-    // Don't save while we're still loading
-    if (isLoading) return;
-    
-    try {
-      localStorage.setItem('diet-saved-meals', JSON.stringify(savedMeals));
-    } catch (error) {
-      console.warn('Failed to save meals to localStorage:', error);
-    }
-  }, [savedMeals, isLoading]);
-
-
-  
-  // Get available meal types (exclude already selected for today)
-  const getAvailableMealTypes = () => {
-    const selectedMealTypes = selectedDailyMeals.map(meal => meal.mealType);
-    const allMealTypes: Array<'breakfast' | 'lunch' | 'dinner'> = ['breakfast', 'lunch', 'dinner'];
-    return allMealTypes.filter(type => !selectedMealTypes.includes(type));
-  };
-  
-  // Update selected meal type if current selection is no longer available
-  React.useEffect(() => {
-    const availableTypes = getAvailableMealTypes();
-    if (availableTypes.length > 0 && !availableTypes.includes(selectedMealType)) {
-      setSelectedMealType(availableTypes[0]);
-    }
-  }, [selectedDailyMeals, selectedMealType]);
-
-  // Ingredient database
-  const ingredients: Ingredient[] = [
-    // Proteins
-    { id: 'steak', name: 'Steak', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'eggs', name: 'Eggs', calories: 70, protein: 6, fat: 5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 large' },
-    { id: 'bacon', name: 'Bacon', calories: 43, protein: 3, fat: 3, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 slice' },
-    { id: 'chicken', name: 'Chicken Breast', calories: 165, protein: 31, fat: 3.6, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'ground-beef', name: 'Ground Beef', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'tuna', name: 'Tuna', calories: 120, protein: 26, fat: 1, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'salmon', name: 'Salmon', calories: 206, protein: 22, fat: 12, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-   
-    // Vegetables
-    { id: 'avocado', name: 'Avocado', calories: 160, protein: 2, fat: 15, carbs: 9, sugar: 0.7, fiber: 6.7, category: 'vegetables', servingSize: '1 medium' },
-    { id: 'spinach', name: 'Spinach', calories: 7, protein: 0.9, fat: 0.1, carbs: 1.1, sugar: 0.1, fiber: 0.7, category: 'vegetables', servingSize: '1 cup' },
-    { id: 'kale', name: 'Kale', calories: 8, protein: 0.7, fat: 0.2, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'vegetables', servingSize: '1 cup' },
-    
-    // Nuts & Seeds
-    { id: 'rice', name: 'Rice', calories: 205, protein: 4.3, fat: 0.4, carbs: 45, sugar: 0.1, fiber: 0.6, category: 'nuts-seeds', servingSize: '1 cup cooked' },
-    { id: 'almonds', name: 'Almonds', calories: 164, protein: 6, fat: 14, carbs: 6, sugar: 1.2, fiber: 3.5, category: 'nuts-seeds', servingSize: '1 oz' },
-    { id: 'hemp-seeds', name: 'Hemp Seeds', calories: 166, protein: 9.5, fat: 14.6, carbs: 2.6, sugar: 0.5, fiber: 1.2, category: 'nuts-seeds', servingSize: '3 tbsp' },
-
-    // Fats
-    { id: 'sour-cream', name: 'Sour Cream', calories: 23, protein: 0.3, fat: 2.3, carbs: 0.4, sugar: 0.3, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'butter', name: 'Butter', calories: 102, protein: 0.1, fat: 11.5, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'avocado-oil', name: 'Avocado Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'coconut-oil', name: 'Coconut Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'mayonnaise', name: 'Mayonnaise', calories: 94, protein: 0.1, fat: 10.3, carbs: 0.1, sugar: 0.1, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    
-    // Dairy
-    { id: 'milk', name: 'Milk', calories: 103, protein: 8, fat: 2.4, carbs: 12, sugar: 12, fiber: 0, category: 'dairy', servingSize: '1 cup' },
-    { id: 'mozzarella', name: 'Shredded Mozzarella', calories: 85, protein: 6, fat: 6, carbs: 1, sugar: 0.5, fiber: 0, category: 'dairy', servingSize: '1/4 cup' },
-    { id: 'mexican-cheese', name: 'Mexican Blend Cheese', calories: 110, protein: 7, fat: 9, carbs: 1, sugar: 0.5, fiber: 0, category: 'dairy', servingSize: '1/4 cup' },
-      
-    // Seasonings
-    { id: 'chili-powder', name: 'Chili Powder', calories: 8, protein: 0.4, fat: 0.4, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'garlic', name: 'Garlic', calories: 4, protein: 0.2, fat: 0, carbs: 1, sugar: 0.1, fiber: 0.1, category: 'seasonings', servingSize: '1 clove' },
-    { id: 'onions', name: 'Onions', calories: 44, protein: 1.2, fat: 0.1, carbs: 10.3, sugar: 4.7, fiber: 1.9, category: 'seasonings', servingSize: '1 medium' },
-    { id: 'salt', name: 'Salt', calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'pepper', name: 'Pepper', calories: 6, protein: 0.3, fat: 0.1, carbs: 1.5, sugar: 0.1, fiber: 0.6, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'tajin', name: 'Tajin', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'lemon-juice', name: 'Lemon Juice', calories: 6, protein: 0.1, fat: 0, carbs: 1.8, sugar: 0.6, fiber: 0.1, category: 'seasonings', servingSize: '1 tbsp' },
-     
-    // Beverages
-    { id: 'black-coffee', name: 'Black Coffee', calories: 2, protein: 0.3, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'beverages', servingSize: '1 cup' },
-    { id: 'orange-juice', name: 'Orange Juice', calories: 111, protein: 1.7, fat: 0.5, carbs: 25.8, sugar: 20.8, fiber: 0.5, category: 'beverages', servingSize: '1 cup' },
-      
-    // Fruits
-    { id: 'mango', name: 'Mango', calories: 99, protein: 1.4, fat: 0.6, carbs: 24.7, sugar: 22.5, fiber: 2.6, category: 'fruits', servingSize: '1 cup sliced' },
-  ];
 
   // Helper function to calculate nutrition for a meal's ingredients
   const calculateNutritionForMeal = (mealIngredients: SelectedIngredient[]) => {
@@ -169,6 +70,177 @@ const Diet: React.FC = () => {
       carbPercent
     };
   };
+
+  // Load saved meals and daily meals from localStorage on component mount
+  useEffect(() => {
+    console.log('🔍 Starting to load meals from localStorage...');
+    try {
+      // Load saved meals (for the "Meals" tab)
+      const saved = localStorage.getItem('diet-saved-meals');
+      console.log('📦 Saved meals from localStorage:', saved);
+      if (saved) {
+        const parsedMeals = JSON.parse(saved);
+        console.log('📦 Parsed saved meals:', parsedMeals);
+        // Calculate nutrition for loaded meals (since nutrition is a function result)
+        const mealsWithNutrition = parsedMeals.map((meal: any) => ({
+          ...meal,
+          nutrition: calculateNutritionForMeal(meal.ingredients)
+        }));
+        console.log('📦 Saved meals with nutrition:', mealsWithNutrition);
+        setSavedMeals(mealsWithNutrition);
+      }
+
+      // Load daily meals (for the "Daily Meals" panel)
+      const savedDailyMeals = localStorage.getItem('diet-daily-meals');
+      console.log('🍽️ Daily meals from localStorage (raw):', savedDailyMeals);
+      console.log('🍽️ Daily meals from localStorage (type):', typeof savedDailyMeals);
+      console.log('🍽️ Daily meals from localStorage (length):', savedDailyMeals?.length);
+      
+      if (savedDailyMeals && savedDailyMeals !== 'null' && savedDailyMeals !== 'undefined') {
+        const parsedDailyMeals = JSON.parse(savedDailyMeals);
+        console.log('🍽️ Parsed daily meals:', parsedDailyMeals);
+        console.log('🍽️ Parsed daily meals type:', typeof parsedDailyMeals);
+        console.log('🍽️ Parsed daily meals length:', parsedDailyMeals?.length);
+        
+        if (Array.isArray(parsedDailyMeals) && parsedDailyMeals.length > 0) {
+          // Calculate nutrition for loaded daily meals
+          const dailyMealsWithNutrition = parsedDailyMeals.map((meal: any) => ({
+            ...meal,
+            nutrition: calculateNutritionForMeal(meal.ingredients)
+          }));
+          console.log('🍽️ Daily meals with nutrition:', dailyMealsWithNutrition);
+          setSelectedDailyMeals(dailyMealsWithNutrition);
+        } else {
+          console.log('🍽️ Parsed daily meals is empty or not an array');
+          setSelectedDailyMeals([]);
+        }
+      } else {
+        console.log('🍽️ No daily meals found in localStorage or invalid data');
+        setSelectedDailyMeals([]);
+      }
+    } catch (error) {
+      console.warn('❌ Failed to load meals from localStorage:', error);
+    } finally {
+      setIsLoading(false);
+      console.log('✅ Finished loading meals from localStorage');
+    }
+  }, []);
+
+  // Save meals to localStorage whenever savedMeals changes
+  useEffect(() => {
+    // Don't save while we're still loading
+    if (isLoading) return;
+    
+    try {
+      console.log('💾 Saving saved meals to localStorage:', savedMeals);
+      localStorage.setItem('diet-saved-meals', JSON.stringify(savedMeals));
+      console.log('✅ Saved meals saved successfully');
+    } catch (error) {
+      console.warn('❌ Failed to save meals to localStorage:', error);
+    }
+  }, [savedMeals, isLoading]);
+
+  // Save daily meals to localStorage and notify widget
+  useEffect(() => {
+    // Don't save while we're still loading
+    if (isLoading) return;
+    
+    try {
+      console.log('🍽️ Saving daily meals to localStorage:', selectedDailyMeals);
+      console.log('🍽️ Saving daily meals length:', selectedDailyMeals.length);
+      const jsonString = JSON.stringify(selectedDailyMeals);
+      console.log('🍽️ JSON string being saved:', jsonString);
+      localStorage.setItem('diet-daily-meals', jsonString);
+      console.log('✅ Daily meals saved successfully');
+      
+      // Verify what was actually saved
+      const verifySaved = localStorage.getItem('diet-daily-meals');
+      console.log('🍽️ Verification - what was actually saved:', verifySaved);
+      
+      // Dispatch custom event to notify the widget
+      window.dispatchEvent(new Event('dailyMealsUpdated'));
+    } catch (error) {
+      console.warn('❌ Failed to save daily meals to localStorage:', error);
+    }
+  }, [selectedDailyMeals, isLoading]);
+
+
+  
+  // Get available meal types (exclude already selected for today, but allow unlimited snacks)
+  const getAvailableMealTypes = () => {
+    const selectedMealTypes = selectedDailyMeals.map(meal => meal.mealType);
+    const allMealTypes: Array<'breakfast' | 'lunch' | 'dinner' | 'snack'> = ['breakfast', 'lunch', 'dinner', 'snack'];
+    
+    // Filter out main meals that are already selected, but always include snack
+    const availableMainMeals = allMealTypes.filter(type => 
+      type !== 'snack' && !selectedMealTypes.includes(type)
+    );
+    
+    // Always include snack as an option
+    return [...availableMainMeals, 'snack'];
+  };
+  
+  // Update selected meal type if current selection is no longer available
+  React.useEffect(() => {
+    const availableTypes = getAvailableMealTypes();
+    if (availableTypes.length > 0 && !availableTypes.includes(selectedMealType)) {
+      setSelectedMealType(availableTypes[0] as 'breakfast' | 'lunch' | 'dinner' | 'snack');
+    }
+  }, [selectedDailyMeals, selectedMealType]);
+
+  // Ingredient database
+  const ingredients: Ingredient[] = [
+    // Proteins
+    { id: 'steak', name: 'Steak', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+    { id: 'eggs', name: 'Eggs', calories: 70, protein: 6, fat: 5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 large' },
+    { id: 'bacon', name: 'Bacon', calories: 43, protein: 3, fat: 3, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 slice' },
+    { id: 'chicken', name: 'Chicken Breast', calories: 165, protein: 31, fat: 3.6, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+    { id: 'ground-beef', name: 'Ground Beef', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+    { id: 'tuna', name: 'Tuna', calories: 70, protein: 16, fat: 0.5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '2.6 oz' },
+    { id: 'porkchops', name: 'Porkchops', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+    { id: 'pork-loin', name: 'Pork Loin', calories: 160, protein: 25, fat: 5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+    { id: 'salmon', name: 'Salmon', calories: 206, protein: 22, fat: 12, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+   
+    // Vegetables
+    { id: 'avocado', name: 'Avocado', calories: 160, protein: 2, fat: 15, carbs: 9, sugar: 0.7, fiber: 6.7, category: 'vegetables', servingSize: '1 medium' },
+    { id: 'spinach', name: 'Spinach', calories: 7, protein: 0.9, fat: 0.1, carbs: 1.1, sugar: 0.1, fiber: 0.7, category: 'vegetables', servingSize: '1 cup' },
+    { id: 'kale', name: 'Kale', calories: 8, protein: 0.7, fat: 0.2, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'vegetables', servingSize: '1 cup' },
+    
+    // Nuts & Seeds
+    { id: 'rice', name: 'Rice', calories: 205, protein: 4.3, fat: 0.4, carbs: 45, sugar: 0.1, fiber: 0.6, category: 'nuts-seeds', servingSize: '1 cup cooked' },
+    { id: 'almonds', name: 'Almonds', calories: 82, protein: 3, fat: 7, carbs: 3, sugar: 0.6, fiber: 1.75, category: 'nuts-seeds', servingSize: '0.5 oz' },
+    { id: 'hemp-seeds', name: 'Hemp Seeds', calories: 166, protein: 9.5, fat: 14.6, carbs: 2.6, sugar: 0.5, fiber: 1.2, category: 'nuts-seeds', servingSize: '3 tbsp' },
+    { id: 'pecans', name: 'Pecans', calories: 98, protein: 1.3, fat: 10.2, carbs: 1.95, sugar: 0.55, fiber: 1.35, category: 'nuts-seeds', servingSize: '0.5 oz' },
+
+    // Fats
+    { id: 'sour-cream', name: 'Sour Cream', calories: 23, protein: 0.3, fat: 2.3, carbs: 0.4, sugar: 0.3, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
+    { id: 'butter', name: 'Butter', calories: 102, protein: 0.1, fat: 11.5, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
+    { id: 'avocado-oil', name: 'Avocado Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
+    { id: 'coconut-oil', name: 'Coconut Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
+    { id: 'mayonnaise', name: 'Mayonnaise', calories: 94, protein: 0.1, fat: 10.3, carbs: 0.1, sugar: 0.1, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
+    
+    // Dairy
+    { id: 'milk', name: 'Milk', calories: 103, protein: 8, fat: 2.4, carbs: 12, sugar: 12, fiber: 0, category: 'dairy', servingSize: '1 cup' },
+    { id: 'mozzarella', name: 'Shredded Mozzarella', calories: 85, protein: 6, fat: 6, carbs: 1, sugar: 0.5, fiber: 0, category: 'dairy', servingSize: '1/4 cup' },
+    { id: 'mexican-cheese', name: 'Mexican Blend Cheese', calories: 110, protein: 7, fat: 9, carbs: 1, sugar: 0.5, fiber: 0, category: 'dairy', servingSize: '1/4 cup' },
+      
+    // Seasonings
+    { id: 'chili-powder', name: 'Chili Powder', calories: 8, protein: 0.4, fat: 0.4, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'seasonings', servingSize: '1 tsp' },
+    { id: 'garlic', name: 'Garlic', calories: 4, protein: 0.2, fat: 0, carbs: 1, sugar: 0.1, fiber: 0.1, category: 'seasonings', servingSize: '1 clove' },
+    { id: 'onions', name: 'Onions', calories: 44, protein: 1.2, fat: 0.1, carbs: 10.3, sugar: 4.7, fiber: 1.9, category: 'seasonings', servingSize: '1 medium' },
+    { id: 'salt', name: 'Salt', calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'seasonings', servingSize: '1 tsp' },
+    { id: 'pepper', name: 'Pepper', calories: 6, protein: 0.3, fat: 0.1, carbs: 1.5, sugar: 0.1, fiber: 0.6, category: 'seasonings', servingSize: '1 tsp' },
+    { id: 'tajin', name: 'Tajin', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp' },
+    { id: 'lemon-juice', name: 'Lemon Juice', calories: 6, protein: 0.1, fat: 0, carbs: 1.8, sugar: 0.6, fiber: 0.1, category: 'seasonings', servingSize: '1 tbsp' },
+    { id: 'hot-sauce', name: 'Hot Sauce', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp' },
+     
+    // Beverages
+    { id: 'black-coffee', name: 'Black Coffee', calories: 2, protein: 0.3, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'beverages', servingSize: '1 cup' },
+    { id: 'orange-juice', name: 'Orange Juice', calories: 111, protein: 1.7, fat: 0.5, carbs: 25.8, sugar: 20.8, fiber: 0.5, category: 'beverages', servingSize: '1 cup' },
+      
+    // Fruits
+    { id: 'mango', name: 'Mango', calories: 99, protein: 1.4, fat: 0.6, carbs: 24.7, sugar: 22.5, fiber: 2.6, category: 'fruits', servingSize: '1 cup sliced' },
+  ];
 
   // Default preset meals (always show in localhost)
   const getPresetMeals = () => {
@@ -244,11 +316,13 @@ const Diet: React.FC = () => {
       return;
     }
     
-    // Check if this meal type is already selected for today
-    const existingMealOfType = selectedDailyMeals.find(meal => meal.mealType === selectedMealType);
-    if (existingMealOfType) {
-      alert(`You already have a ${selectedMealType} meal selected for today.`);
-      return;
+    // Check if this meal type is already selected for today (allow unlimited snacks)
+    if (selectedMealType !== 'snack') {
+      const existingMealOfType = selectedDailyMeals.find(meal => meal.mealType === selectedMealType);
+      if (existingMealOfType) {
+        alert(`You already have a ${selectedMealType} meal selected for today.`);
+        return;
+      }
     }
     
     // Check if this exact combination of ingredients already exists in saved meals or preset meals
@@ -280,7 +354,8 @@ const Diet: React.FC = () => {
       name: mealName.trim(),
       mealType: selectedMealType,
       ingredients: [...selectedIngredients],
-      nutrition: getTotalNutrition()
+      nutrition: getTotalNutrition(),
+      createdAt: new Date().toDateString()
     };
     
     // Always add to daily meals (Daily Meals section)

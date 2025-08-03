@@ -274,6 +274,14 @@ export function PhoneticProvider({ children }: PhoneticProviderProps) {
     
     function traverse(node: Node) {
       if (node.nodeType === Node.TEXT_NODE) {
+        // Check if this text node is inside an element with data-no-translate
+        let parent = node.parentElement;
+        while (parent) {
+          if (parent.hasAttribute('data-no-translate')) {
+            return; // Skip this text node
+          }
+          parent = parent.parentElement;
+        }
         textNodes.push(node as Text);
       } else {
         for (const child of Array.from(node.childNodes)) {

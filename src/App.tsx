@@ -15,6 +15,7 @@ import SportsLists from './components/SportsLists'
 import FavoriteAlbums from './components/FavoriteAlbums'
 import NBAPlayerRankings from './components/NBAPlayerRankings'
 import SecretPage from './components/SecretPage'
+import Prayer from './components/Prayer'
 import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
 
@@ -44,6 +45,7 @@ const App: React.FC = () => {
               <Route path="/lists/sports" element={<SportsLists />} />
               <Route path="/lists/sports/nba-player-rankings" element={<NBAPlayerRankings />} />
               <Route path="/projects/phonetic-alphabet" element={<PhoneticAlphabetPage />} />
+              <Route path="/content/personal-docs/prayer" element={<Prayer />} />
               <Route path="/najnimre" element={<SecretPage />} />
               <Route path="/najnimre/accounts" element={<SecretPage />} />
             </Routes>

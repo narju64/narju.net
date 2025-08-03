@@ -1,0 +1,70 @@
+@font-face {
+  font-family: 'nPA';
+  src: url('/fonts/nPAv1.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.prayer-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #ffffff;
+  background-color: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 4rem;
+  box-sizing: border-box;
+}
+
+.prayer-text {
+  font-family: 'nPA', 'Courier New', monospace !important;
+  font-size: 1.6rem;
+  line-height: 2.4;
+  color: #ff7300;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: center;
+  max-width: 1000px;
+}
+
+/* Ensure prayer text always uses nPA font, even when site-wide nPA mode is disabled */
+.prayer-page .prayer-text,
+.prayer-page .prayer-container,
+.prayer-page .prayer-container * {
+  font-family: 'nPA', 'Courier New', monospace !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .prayer-page {
+    padding: 1rem;
+    padding-top: 3rem;
+  }
+  
+  .prayer-text {
+    font-size: 1.5rem;
+    line-height: 2.2;
+    max-width: 700px;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 480px) {
+  .prayer-page {
+    padding: 0.5rem;
+    padding-top: 2rem;
+  }
+  
+  .prayer-text {
+    font-size: 1.3rem;
+    line-height: 2;
+    max-width: 500px;
+    font-weight: 700;
+  }
+} 

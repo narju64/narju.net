@@ -58,6 +58,7 @@ incel  IH1 N S EH0 L
 ipa  AY1 P IY0 EY0
 irl  AY1 AA0 R EH0 L
 iv  F AO1 R
+ive  AY1 V
 jewboy  JH UW1 B OY0
 jpeg  JH EY1 P EH0 G
 jpg  JH EY1 P EH0 G

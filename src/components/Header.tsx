@@ -73,6 +73,7 @@ const normalNavStructure = [
     children: [
       { label: 'Personal Docs', href: '/content/personal-docs', children: [
         { label: 'Speedcube algorithm', href: '/content/personal-docs/speedcube-algorithm' },
+        { label: 'Prayer', href: '/content/personal-docs/prayer' },
       ]},
       { label: 'Curated Media', href: '/content/curated-media', children: [
         { label: 'Podcasts', href: '/content/curated-media/podcasts' },

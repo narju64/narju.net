@@ -73,34 +73,24 @@ const Diet: React.FC = () => {
 
   // Load saved meals and daily meals from localStorage on component mount
   useEffect(() => {
-    console.log('🔍 Starting to load meals from localStorage...');
     try {
       // Load saved meals (for the "Meals" tab)
       const saved = localStorage.getItem('diet-saved-meals');
-      console.log('📦 Saved meals from localStorage:', saved);
       if (saved) {
         const parsedMeals = JSON.parse(saved);
-        console.log('📦 Parsed saved meals:', parsedMeals);
         // Calculate nutrition for loaded meals (since nutrition is a function result)
         const mealsWithNutrition = parsedMeals.map((meal: any) => ({
           ...meal,
           nutrition: calculateNutritionForMeal(meal.ingredients)
         }));
-        console.log('📦 Saved meals with nutrition:', mealsWithNutrition);
         setSavedMeals(mealsWithNutrition);
       }
 
       // Load daily meals (for the "Daily Meals" panel)
       const savedDailyMeals = localStorage.getItem('diet-daily-meals');
-      console.log('🍽️ Daily meals from localStorage (raw):', savedDailyMeals);
-      console.log('🍽️ Daily meals from localStorage (type):', typeof savedDailyMeals);
-      console.log('🍽️ Daily meals from localStorage (length):', savedDailyMeals?.length);
       
       if (savedDailyMeals && savedDailyMeals !== 'null' && savedDailyMeals !== 'undefined') {
         const parsedDailyMeals = JSON.parse(savedDailyMeals);
-        console.log('🍽️ Parsed daily meals:', parsedDailyMeals);
-        console.log('🍽️ Parsed daily meals type:', typeof parsedDailyMeals);
-        console.log('🍽️ Parsed daily meals length:', parsedDailyMeals?.length);
         
         if (Array.isArray(parsedDailyMeals) && parsedDailyMeals.length > 0) {
           // Calculate nutrition for loaded daily meals
@@ -108,21 +98,17 @@ const Diet: React.FC = () => {
             ...meal,
             nutrition: calculateNutritionForMeal(meal.ingredients)
           }));
-          console.log('🍽️ Daily meals with nutrition:', dailyMealsWithNutrition);
           setSelectedDailyMeals(dailyMealsWithNutrition);
         } else {
-          console.log('🍽️ Parsed daily meals is empty or not an array');
           setSelectedDailyMeals([]);
         }
       } else {
-        console.log('🍽️ No daily meals found in localStorage or invalid data');
         setSelectedDailyMeals([]);
       }
     } catch (error) {
       console.warn('❌ Failed to load meals from localStorage:', error);
     } finally {
       setIsLoading(false);
-      console.log('✅ Finished loading meals from localStorage');
     }
   }, []);
 
@@ -132,9 +118,7 @@ const Diet: React.FC = () => {
     if (isLoading) return;
     
     try {
-      console.log('💾 Saving saved meals to localStorage:', savedMeals);
       localStorage.setItem('diet-saved-meals', JSON.stringify(savedMeals));
-      console.log('✅ Saved meals saved successfully');
     } catch (error) {
       console.warn('❌ Failed to save meals to localStorage:', error);
     }
@@ -146,16 +130,7 @@ const Diet: React.FC = () => {
     if (isLoading) return;
     
     try {
-      console.log('🍽️ Saving daily meals to localStorage:', selectedDailyMeals);
-      console.log('🍽️ Saving daily meals length:', selectedDailyMeals.length);
-      const jsonString = JSON.stringify(selectedDailyMeals);
-      console.log('🍽️ JSON string being saved:', jsonString);
-      localStorage.setItem('diet-daily-meals', jsonString);
-      console.log('✅ Daily meals saved successfully');
-      
-      // Verify what was actually saved
-      const verifySaved = localStorage.getItem('diet-daily-meals');
-      console.log('🍽️ Verification - what was actually saved:', verifySaved);
+      localStorage.setItem('diet-daily-meals', JSON.stringify(selectedDailyMeals));
       
       // Dispatch custom event to notify the widget
       window.dispatchEvent(new Event('dailyMealsUpdated'));

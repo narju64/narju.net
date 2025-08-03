@@ -58,7 +58,7 @@ export function logDictionaryChange(change: DictionaryChange): Promise<void> {
 async function copyToClipboard(entry: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(entry);
-    console.log('Dictionary change copied to clipboard:', entry);
+    
   } catch (error) {
     console.error('Failed to copy to clipboard:', error);
     // Fallback to alert

@@ -69,7 +69,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
       
       for (const word of words) {
         const variations = await translationEngine.getWordNPAVariations(word);
-        console.log(`Variations for "${word}":`, variations);
+
         if (variations.length > 1) {
           newWordVariations.set(word, variations);
           // Set default selection to 0 if not already set
@@ -117,7 +117,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
 
   // Handle pronunciation selection for a specific word
   const handlePronunciationChange = async (word: string, index: number) => {
-    console.log(`Pronunciation changed for "${word}" to index ${index}`);
+    
     
     const newSelectedPronunciations = new Map(selectedPronunciations);
     newSelectedPronunciations.set(word, index);
@@ -125,11 +125,9 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
     
     // Re-translate with the new pronunciation
     try {
-      console.log('Re-translating with pronunciations:', Object.fromEntries(newSelectedPronunciations));
       const result = await translationEngine.translateToNPA(inputText, {
         wordPronunciations: newSelectedPronunciations
       });
-      console.log('Translation result:', result.npa);
       setOutputText(result.npa);
       setTranslationResult(result);
     } catch (error) {
@@ -179,7 +177,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
   const handlePronunciationSubmit = async (word: string, arpabet: string, npa: string) => {
     try {
       await addWordToDictionary(word, arpabet, npa);
-      console.log(`Pronunciation for "${word}" has been logged for review.`);
+
       // Refresh pending words after adding
       fetchPendingWords();
     } catch (error) {
@@ -198,7 +196,7 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
       const result = await response.json();
       
       if (result.success) {
-        console.log('Dictionary changes applied successfully:', result.output);
+
         alert('Dictionary changes applied successfully!');
         // Clear pending words and re-translate
         setPendingWords([]);

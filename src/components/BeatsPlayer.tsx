@@ -107,20 +107,15 @@ const BeatsPlayer: React.FC = () => {
     const trackPosition = urlParams.get('track');
     
     if (trackPosition) {
-      console.log('URL parameter found:', trackPosition);
-      
       // Convert position to index (1-based to 0-based)
       const trackIndex = parseInt(trackPosition) - 1;
-      console.log('Track index:', trackIndex);
       
       // Get the beat at that alphabetical position
       const beat = filteredBeats[trackIndex];
-      console.log('Found beat:', beat);
       
       if (beat) {
         // Store the beat ID for later playback after user interaction
         setPendingAutoPlay(beat.id);
-        console.log('Set pending autoplay for:', beat.title);
       }
     }
   }, [filteredBeats]);

@@ -47,14 +47,10 @@ const DailyMealsWidget: React.FC = () => {
   useEffect(() => {
     const loadMeals = () => {
       try {
-        console.log('🔄 DailyMealsWidget: Loading meals from localStorage...');
         const savedMeals = localStorage.getItem('diet-daily-meals');
-        
-        console.log('🔄 DailyMealsWidget: Raw saved meals:', savedMeals);
         
         if (savedMeals && savedMeals !== 'null' && savedMeals !== 'undefined') {
           const parsedMeals = JSON.parse(savedMeals);
-          console.log('🔄 DailyMealsWidget: Parsed meals:', parsedMeals);
           
           if (Array.isArray(parsedMeals) && parsedMeals.length > 0) {
             // Filter out meals from previous days
@@ -62,30 +58,22 @@ const DailyMealsWidget: React.FC = () => {
             const todayMeals = parsedMeals.filter((meal: any) => {
               // Handle meals that might not have createdAt field (backward compatibility)
               if (!meal.createdAt) {
-                console.log('🔄 DailyMealsWidget: Meal without createdAt, removing:', meal);
                 return false;
               }
               const isToday = meal.createdAt === today;
-              if (!isToday) {
-                console.log('🔄 DailyMealsWidget: Removing old meal from:', meal.createdAt);
-              }
               return isToday;
             });
             
-            console.log('🔄 DailyMealsWidget: Today\'s meals:', todayMeals);
             setDailyMeals(todayMeals);
             
             // If we filtered out old meals, save the updated list
             if (todayMeals.length !== parsedMeals.length) {
               localStorage.setItem('diet-daily-meals', JSON.stringify(todayMeals));
-              console.log('🔄 DailyMealsWidget: Updated localStorage with today\'s meals only');
             }
           } else {
-            console.log('🔄 DailyMealsWidget: No meals found or empty array');
             setDailyMeals([]);
           }
         } else {
-          console.log('🔄 DailyMealsWidget: No saved meals found');
           setDailyMeals([]);
         }
         
@@ -102,14 +90,11 @@ const DailyMealsWidget: React.FC = () => {
   useEffect(() => {
     const handleStorageChange = () => {
       try {
-        console.log('🔄 DailyMealsWidget: Event triggered, reloading meals...');
         const savedMeals = localStorage.getItem('diet-daily-meals');
         if (savedMeals && savedMeals !== 'null' && savedMeals !== 'undefined') {
           const parsedMeals = JSON.parse(savedMeals);
-          console.log('🔄 DailyMealsWidget: Event - parsed meals:', parsedMeals);
           if (Array.isArray(parsedMeals)) {
             setDailyMeals(parsedMeals);
-            console.log('🔄 DailyMealsWidget: Event - updated daily meals:', parsedMeals);
           }
         }
       } catch (error) {

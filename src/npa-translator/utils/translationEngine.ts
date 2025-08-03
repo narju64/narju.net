@@ -78,7 +78,7 @@ export class TranslationEngine {
             const wordData = getWordPronunciations(segment.content);
             if (wordData && wordData.pronunciations[selectedPronunciationIndex]) {
               specificPronunciation = wordData.pronunciations[selectedPronunciationIndex];
-              console.log(`Using pronunciation ${selectedPronunciationIndex} for "${segment.content}": ${specificPronunciation}`);
+      
             }
           }
           
@@ -254,7 +254,7 @@ export class TranslationEngine {
     const cleanWord = word.toLowerCase().trim();
     const wordData = getWordPronunciations(cleanWord);
     
-    console.log(`getWordNPAVariations for "${cleanWord}":`, wordData);
+    
     
     if (!wordData || wordData.pronunciations.length === 0) {
       return [];
@@ -267,7 +267,7 @@ export class TranslationEngine {
       const ipa = convertARPABETToIPA(arpabet);
       const npa = mapIPAToNPA(ipa);
       
-      console.log(`Variation ${i} for "${cleanWord}": ARPABET=${arpabet}, IPA=${ipa}, nPA=${npa}`);
+      
       
       variations.push({
         index: i,
@@ -609,12 +609,11 @@ export class TranslationEngine {
     ];
 
     for (const testCase of testCases) {
-      try {
-        const result = await this.translateWord(testCase);
-        console.log(`${testCase} → ${result}`);
-      } catch (error) {
-        console.error(`Test failed for "${testCase}":`, error);
-      }
+              try {
+          await this.translateWord(testCase);
+        } catch (error) {
+          console.error(`Test failed for "${testCase}":`, error);
+        }
     }
   }
 

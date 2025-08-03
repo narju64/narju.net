@@ -106,7 +106,7 @@ const NBAPlayerRankings: React.FC = () => {
       try {
         const response = await fetch('/data/nba-players.json');
         const data = await response.json();
-        console.log('Loaded players data:', data.slice(0, 2)); // Log first 2 players
+
         setPlayers(data);
       } catch (error) {
         console.error('Error loading NBA players data:', error);

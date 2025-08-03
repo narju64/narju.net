@@ -59,7 +59,7 @@ const normalNavStructure = [
     href: '/projects',
     children: [
       { label: 'Videogames', href: '/projects/videogames', children: [
-        { label: 'Echoes', href: '/projects/videogames/echoes' },
+        { label: 'Echoes', href: 'https://echoes.narju.net' },
       ]},
       { label: 'Orbital Calendar', href: '/projects/orbital-calendar' },
       { label: 'Phonetic Alphabet', href: '/projects/phonetic-alphabet' },
@@ -137,11 +137,6 @@ const Header: React.FC = () => {
 
   // Recursively translate navigation structure
   const translateNavItem = async (item: any): Promise<any> => {
-    // Debug: Log what we're translating
-    if (item.label === 'Lifestyle' || item.label === 'Elsewhere') {
-      console.log('Translating nav item:', item.label);
-    }
-    
     // Check if the label is already in nPA format (contains nPA characters)
     const npaChars = /[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]/;
     const isAlreadyNPA = npaChars.test(item.label) && !item.label.includes(' ');
@@ -150,16 +145,8 @@ const Header: React.FC = () => {
     if (isAlreadyNPA) {
       // Skip translation if already in nPA format
       translatedLabel = item.label;
-      if (item.label === 'Lifestyle' || item.label === 'Elsewhere') {
-        console.log('Skipping translation - already in nPA format:', item.label);
-      }
     } else {
       translatedLabel = await translateText(item.label);
-    }
-    
-    // Debug: Log the translation result
-    if (item.label === 'Lifestyle' || item.label === 'Elsewhere') {
-      console.log('Translation result for', item.label + ':', translatedLabel);
     }
     
     const translatedItem = { ...item, label: translatedLabel };
@@ -214,8 +201,24 @@ const Header: React.FC = () => {
               setOpenSubmenus((prev) => ({ ...prev, [parentLabel]: null }));
             }}
             style={{ position: 'relative' }}
-          >
-            <Link to={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>
+                     >
+             {item.href.startsWith('http') ? (
+               <a 
+                 href={item.href} 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                                   onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(item.href, '_blank', 'noopener,noreferrer');
+                    setMobileOpen(false);
+                  }}
+               >
+                 {item.label}
+               </a>
+             ) : (
+               <Link to={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>
+             )}
             {item.children && openSubmenus[parentLabel] === item.label && (
               renderDropdown(item.children, item.label, depth + 1, topLevelLabel)
             )}
@@ -239,23 +242,45 @@ const Header: React.FC = () => {
         </button>
         <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
           {currentNavStructure.map((item) => (
-            <Link
-              to={item.href}
-              onClick={() => setMobileOpen(false)}
-              className={`nav-link${isActive(item.href) ? ' active' : ''}`}
-              key={item.href}
-              ref={el => { navRefs.current[item.label] = el; }}
-              onMouseEnter={() => setOpenDropdown(item.label)}
-              onMouseLeave={() => setOpenDropdown(null)}
-              style={{ position: 'relative', display: 'inline-block' }}
-            >
-              {item.label}
-              {item.children && openDropdown === item.label && (
-                <div className="dropdown-container">
-                  {renderDropdown(item.children, item.label, 0, item.label)}
-                </div>
-              )}
-            </Link>
+            item.href.startsWith('http') ? (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                key={item.href}
+                ref={el => { navRefs.current[item.label] = el; }}
+                onMouseEnter={() => setOpenDropdown(item.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+                style={{ position: 'relative', display: 'inline-block' }}
+              >
+                {item.label}
+                {item.children && openDropdown === item.label && (
+                  <div className="dropdown-container">
+                    {renderDropdown(item.children, item.label, 0, item.label)}
+                  </div>
+                )}
+              </a>
+            ) : (
+              <Link
+                to={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                key={item.href}
+                ref={el => { navRefs.current[item.label] = el; }}
+                onMouseEnter={() => setOpenDropdown(item.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+                style={{ position: 'relative', display: 'inline-block' }}
+              >
+                {item.label}
+                {item.children && openDropdown === item.label && (
+                  <div className="dropdown-container">
+                    {renderDropdown(item.children, item.label, 0, item.label)}
+                  </div>
+                )}
+              </Link>
+            )
           ))}
         </div>
         <div className="npa-toggle-container">

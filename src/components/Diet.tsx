@@ -211,7 +211,7 @@ const Diet: React.FC = () => {
      
     // Beverages
     { id: 'black-coffee', name: 'Black Coffee', calories: 2, protein: 0.3, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'beverages', servingSize: '1 cup' },
-    { id: 'orange-juice', name: 'Orange Juice', calories: 111, protein: 1.7, fat: 0.5, carbs: 25.8, sugar: 20.8, fiber: 0.5, category: 'beverages', servingSize: '1 cup' },
+    { id: 'orange-juice', name: 'Orange Juice', calories: 28, protein: 0.4, fat: 0.1, carbs: 6.5, sugar: 5.2, fiber: 0.1, category: 'beverages', servingSize: '2 oz' },
       
     // Fruits
     { id: 'mango', name: 'Mango', calories: 99, protein: 1.4, fat: 0.6, carbs: 24.7, sugar: 22.5, fiber: 2.6, category: 'fruits', servingSize: '1 cup sliced' },

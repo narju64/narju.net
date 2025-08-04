@@ -339,8 +339,8 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
         </div>
       )}
 
-      {/* ARPABET Output Section */}
-      {translationResult && (
+      {/* ARPABET Output Section - Only show on localhost */}
+      {translationResult && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
         <div className="translator-section">
           <label htmlFor="arpabet-output" className="translator-label">
             ARPABET Translation
@@ -355,8 +355,8 @@ export function PhoneticTranslator({ className = '' }: PhoneticTranslatorProps) 
         </div>
       )}
 
-      {/* IPA Output Section */}
-      {translationResult && (
+      {/* IPA Output Section - Only show on localhost */}
+      {translationResult && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
         <div className="translator-section">
           <label htmlFor="ipa-output" className="translator-label">
             IPA Translation

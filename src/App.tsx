@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Projects from './components/Projects'
@@ -21,6 +21,12 @@ import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
 
 const App: React.FC = () => {
+  // Set page title based on environment for all pages
+  useEffect(() => {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const title = isLocalhost ? 'narju.net (local)' : 'narju.net';
+    document.title = title;
+  }, []);
   return (
     <PhoneticProvider>
       <Router>

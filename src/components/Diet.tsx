@@ -12,11 +12,32 @@ interface Ingredient {
   fiber: number;
   category: 'protein' | 'vegetables' | 'fats' | 'nuts-seeds' | 'seasonings' | 'beverages' | 'fruits' | 'dairy';
   servingSize: string;
+  servingSizeValue?: number; // Numerical value (e.g., 4)
+  servingSizeUnit?: string;  // Unit (e.g., "oz")
 }
 
 interface SelectedIngredient {
   ingredient: Ingredient;
   quantity: number;
+  servingSizeMultiplier?: number;
+}
+
+interface PresetMeal {
+  id: string;
+  name: string;
+  ingredients: (SelectedIngredient & { servingSizeMultiplier?: number })[];
+  nutrition: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+    sugar: number;
+    fiber: number;
+    netCarbs: number;
+    proteinPercent: number;
+    fatPercent: number;
+    carbPercent: number;
+  };
 }
 
 const Diet: React.FC = () => {
@@ -28,30 +49,35 @@ const Diet: React.FC = () => {
   const [savedMeals, setSavedMeals] = useState<Array<{
     id: string;
     name: string;
-    ingredients: SelectedIngredient[];
+    ingredients: (SelectedIngredient & { servingSizeMultiplier?: number })[];
     nutrition: ReturnType<typeof getTotalNutrition>;
   }>>([]);
   const [selectedDailyMeals, setSelectedDailyMeals] = useState<Array<{
     id: string;
     name: string;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    ingredients: SelectedIngredient[];
+    ingredients: (SelectedIngredient & { servingSizeMultiplier?: number })[];
     nutrition: ReturnType<typeof getTotalNutrition>;
   }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [ingredientServingSizes, setIngredientServingSizes] = useState<Record<string, number>>({});
+  const [currentMealServingSizes, setCurrentMealServingSizes] = useState<Record<string, number>>({});
 
   // Helper function to calculate nutrition for a meal's ingredients
-  const calculateNutritionForMeal = (mealIngredients: SelectedIngredient[]) => {
+  const calculateNutritionForMeal = (mealIngredients: (SelectedIngredient & { servingSizeMultiplier?: number })[]) => {
     const total = mealIngredients.reduce((acc, item) => {
       const ingredient = item.ingredient;
       const quantity = item.quantity;
+      // Use stored serving size multiplier if available, otherwise default to 1
+      const servingSizeMultiplier = item.servingSizeMultiplier || 1;
+      
       return {
-        calories: acc.calories + (ingredient.calories * quantity),
-        protein: acc.protein + (ingredient.protein * quantity),
-        fat: acc.fat + (ingredient.fat * quantity),
-        carbs: acc.carbs + (ingredient.carbs * quantity),
-        sugar: acc.sugar + (ingredient.sugar * quantity),
-        fiber: acc.fiber + (ingredient.fiber * quantity),
+        calories: acc.calories + (ingredient.calories * servingSizeMultiplier * quantity),
+        protein: acc.protein + (ingredient.protein * servingSizeMultiplier * quantity),
+        fat: acc.fat + (ingredient.fat * servingSizeMultiplier * quantity),
+        carbs: acc.carbs + (ingredient.carbs * servingSizeMultiplier * quantity),
+        sugar: acc.sugar + (ingredient.sugar * servingSizeMultiplier * quantity),
+        fiber: acc.fiber + (ingredient.fiber * servingSizeMultiplier * quantity),
       };
     }, { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
 
@@ -163,92 +189,261 @@ const Diet: React.FC = () => {
     }
   }, [selectedDailyMeals, selectedMealType]);
 
+  // Utility functions for serving size formatting
+  const formatServingSize = (value: number, unit: string): string => {
+    return `(${value} ${unit})`;
+  };
+
+  // Functions to handle serving size updates
+  const updateIngredientServingSize = (ingredientId: string, multiplier: number) => {
+    setIngredientServingSizes(prev => ({
+      ...prev,
+      [ingredientId]: multiplier
+    }));
+  };
+
+  const getIngredientServingSizeMultiplier = (ingredientId: string): number => {
+    return ingredientServingSizes[ingredientId] || 1;
+  };
+
+  const getCurrentMealServingSizeMultiplier = (ingredientId: string): number => {
+    return currentMealServingSizes[ingredientId] || 1;
+  };
+
+  const updateCurrentMealServingSize = (ingredientId: string, multiplier: number) => {
+    setCurrentMealServingSizes(prev => ({
+      ...prev,
+      [ingredientId]: multiplier
+    }));
+  };
+
+  const getAdjustedIngredientNutrition = (ingredient: Ingredient) => {
+    const multiplier = getIngredientServingSizeMultiplier(ingredient.id);
+    const baseValue = ingredient.servingSizeValue || 1;
+    
+    // The multiplier now directly represents the desired serving size value
+    const adjustedMultiplier = multiplier / baseValue;
+    
+    return {
+      calories: ingredient.calories * adjustedMultiplier,
+      protein: ingredient.protein * adjustedMultiplier,
+      fat: ingredient.fat * adjustedMultiplier,
+      carbs: ingredient.carbs * adjustedMultiplier,
+      sugar: ingredient.sugar * adjustedMultiplier,
+      fiber: ingredient.fiber * adjustedMultiplier,
+    };
+  };
+
+  // Serving Size Selector Component
+  const ServingSizeSelector: React.FC<{
+    ingredient: Ingredient;
+    onUpdate: (multiplier: number) => void;
+  }> = ({ ingredient, onUpdate }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const currentMultiplier = getIngredientServingSizeMultiplier(ingredient.id);
+    // Always use the current multiplier (defaults to 1)
+    const currentValue = currentMultiplier;
+    const unit = ingredient.servingSizeUnit || '';
+
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsOpen(!isOpen);
+    };
+
+    const handleOptionClick = (multiplier: number, e: React.MouseEvent) => {
+      e.stopPropagation();
+      onUpdate(multiplier);
+      setIsOpen(false);
+    };
+
+    const handleMouseLeave = () => {
+      setIsHovered(false);
+      setIsOpen(false);
+    };
+
+    return (
+      <div 
+        className="serving-size-selector"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div 
+          className={`serving-size-display ${isHovered ? 'hovered' : ''}`}
+          onClick={handleClick}
+        >
+          {formatServingSize(currentValue, unit)}
+        </div>
+        {isOpen && (
+          <div className="serving-size-dropdown">
+            {[0.25, 0.5, ...Array.from({ length: 20 }, (_, i) => i + 1)].map(multiplier => (
+              <div
+                key={multiplier}
+                className={`serving-size-option ${multiplier === currentValue ? 'selected' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOptionClick(multiplier, e);
+                }}
+              >
+                {formatServingSize(multiplier, unit)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const CurrentMealServingSizeSelector: React.FC<{
+    ingredient: Ingredient;
+    onUpdate: (multiplier: number) => void;
+  }> = ({ ingredient, onUpdate }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const currentMultiplier = getCurrentMealServingSizeMultiplier(ingredient.id);
+    // Always use the current multiplier (defaults to 1)
+    const currentValue = currentMultiplier;
+    const unit = ingredient.servingSizeUnit || '';
+
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsOpen(!isOpen);
+    };
+
+    const handleOptionClick = (multiplier: number, e: React.MouseEvent) => {
+      e.stopPropagation();
+      onUpdate(multiplier);
+      setIsOpen(false);
+    };
+
+    const handleMouseLeave = () => {
+      setIsHovered(false);
+      setIsOpen(false);
+    };
+
+    return (
+      <div 
+        className="serving-size-selector"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div 
+          className={`serving-size-display ${isHovered ? 'hovered' : ''}`}
+          onClick={handleClick}
+        >
+          {formatServingSize(currentValue, unit)}
+        </div>
+        {isOpen && (
+          <div className="serving-size-dropdown">
+            {[0.25, 0.5, ...Array.from({ length: 20 }, (_, i) => i + 1)].map(multiplier => (
+              <div
+                key={multiplier}
+                className={`serving-size-option ${multiplier === currentValue ? 'selected' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOptionClick(multiplier, e);
+                }}
+              >
+                {formatServingSize(multiplier, unit)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Ingredient database
   const ingredients: Ingredient[] = [
     // Proteins
-    { id: 'steak', name: 'Steak', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'eggs', name: 'Eggs', calories: 70, protein: 6, fat: 5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 large' },
-    { id: 'bacon', name: 'Bacon', calories: 43, protein: 3, fat: 3, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 slice' },
-    { id: 'chicken', name: 'Chicken Breast', calories: 165, protein: 31, fat: 3.6, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'ground-beef', name: 'Ground Beef', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'tuna', name: 'Tuna', calories: 70, protein: 16, fat: 0.5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '2.6 oz' },
-    { id: 'porkchops', name: 'Porkchops', calories: 250, protein: 26, fat: 15, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'pork-loin', name: 'Pork Loin', calories: 160, protein: 25, fat: 5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
-    { id: 'salmon', name: 'Salmon', calories: 206, protein: 22, fat: 12, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '4 oz' },
+    { id: 'steak', name: 'Steak', calories: 62.5, protein: 6.5, fat: 3.75, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'eggs', name: 'Eggs', calories: 70, protein: 6, fat: 5, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 large', servingSizeValue: 1, servingSizeUnit: 'large' },
+    { id: 'bacon', name: 'Bacon', calories: 43, protein: 3, fat: 3, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 slice', servingSizeValue: 1, servingSizeUnit: 'slice' },
+    { id: 'chicken', name: 'Chicken Breast', calories: 41.25, protein: 7.75, fat: 0.9, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'ground-beef', name: 'Ground Beef', calories: 62.5, protein: 6.5, fat: 3.75, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'tuna', name: 'Tuna', calories: 26.92, protein: 6.15, fat: 0.19, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'porkchops', name: 'Porkchops', calories: 62.5, protein: 6.5, fat: 3.75, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'pork-loin', name: 'Pork Loin', calories: 40, protein: 6.25, fat: 1.25, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'salmon', name: 'Salmon', calories: 51.5, protein: 5.5, fat: 3, carbs: 0, sugar: 0, fiber: 0, category: 'protein', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
    
     // Vegetables
-    { id: 'avocado', name: 'Avocado', calories: 160, protein: 2, fat: 15, carbs: 9, sugar: 0.7, fiber: 6.7, category: 'vegetables', servingSize: '1 medium' },
-    { id: 'spinach', name: 'Spinach', calories: 7, protein: 0.9, fat: 0.1, carbs: 1.1, sugar: 0.1, fiber: 0.7, category: 'vegetables', servingSize: '1 cup' },
-    { id: 'kale', name: 'Kale', calories: 8, protein: 0.7, fat: 0.2, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'vegetables', servingSize: '1 cup' },
+    { id: 'avocado', name: 'Avocado', calories: 160, protein: 2, fat: 15, carbs: 9, sugar: 0.7, fiber: 6.7, category: 'vegetables', servingSize: '1 medium', servingSizeValue: 1, servingSizeUnit: 'medium' },
+    { id: 'spinach', name: 'Spinach', calories: 7, protein: 0.9, fat: 0.1, carbs: 1.1, sugar: 0.1, fiber: 0.7, category: 'vegetables', servingSize: '1 cup', servingSizeValue: 1, servingSizeUnit: 'cup' },
+    { id: 'kale', name: 'Kale', calories: 8, protein: 0.7, fat: 0.2, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'vegetables', servingSize: '1 cup', servingSizeValue: 1, servingSizeUnit: 'cup' },
     
     // Nuts & Seeds
-    { id: 'rice', name: 'Rice', calories: 205, protein: 4.3, fat: 0.4, carbs: 45, sugar: 0.1, fiber: 0.6, category: 'nuts-seeds', servingSize: '1 cup cooked' },
-    { id: 'almonds', name: 'Almonds', calories: 82, protein: 3, fat: 7, carbs: 3, sugar: 0.6, fiber: 1.75, category: 'nuts-seeds', servingSize: '0.5 oz' },
-    { id: 'hemp-seeds', name: 'Hemp Seeds', calories: 166, protein: 9.5, fat: 14.6, carbs: 2.6, sugar: 0.5, fiber: 1.2, category: 'nuts-seeds', servingSize: '3 tbsp' },
-    { id: 'pecans', name: 'Pecans', calories: 98, protein: 1.3, fat: 10.2, carbs: 1.95, sugar: 0.55, fiber: 1.35, category: 'nuts-seeds', servingSize: '0.5 oz' },
+    { id: 'rice', name: 'Rice', calories: 205, protein: 4.3, fat: 0.4, carbs: 45, sugar: 0.1, fiber: 0.6, category: 'nuts-seeds', servingSize: '1 cup cooked', servingSizeValue: 1, servingSizeUnit: 'cup cooked' },
+    { id: 'almonds', name: 'Almonds', calories: 164, protein: 6, fat: 14, carbs: 6, sugar: 1.2, fiber: 3.5, category: 'nuts-seeds', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
+    { id: 'hemp-seeds', name: 'Hemp Seeds', calories: 55.33, protein: 3.17, fat: 4.87, carbs: 0.87, sugar: 0.17, fiber: 0.4, category: 'nuts-seeds', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
+    { id: 'pecans', name: 'Pecans', calories: 196, protein: 2.6, fat: 20.4, carbs: 3.9, sugar: 1.1, fiber: 2.7, category: 'nuts-seeds', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
 
     // Fats
-    { id: 'sour-cream', name: 'Sour Cream', calories: 23, protein: 0.3, fat: 2.3, carbs: 0.4, sugar: 0.3, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'butter', name: 'Butter', calories: 102, protein: 0.1, fat: 11.5, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'avocado-oil', name: 'Avocado Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'coconut-oil', name: 'Coconut Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
-    { id: 'mayonnaise', name: 'Mayonnaise', calories: 94, protein: 0.1, fat: 10.3, carbs: 0.1, sugar: 0.1, fiber: 0, category: 'fats', servingSize: '1 tbsp' },
+    { id: 'sour-cream', name: 'Sour Cream', calories: 23, protein: 0.3, fat: 2.3, carbs: 0.4, sugar: 0.3, fiber: 0, category: 'fats', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
+    { id: 'butter', name: 'Butter', calories: 102, protein: 0.1, fat: 11.5, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
+    { id: 'avocado-oil', name: 'Avocado Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
+    { id: 'coconut-oil', name: 'Coconut Oil', calories: 120, protein: 0, fat: 14, carbs: 0, sugar: 0, fiber: 0, category: 'fats', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
+    { id: 'mayonnaise', name: 'Mayonnaise', calories: 94, protein: 0.1, fat: 10.3, carbs: 0.1, sugar: 0.1, fiber: 0, category: 'fats', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
     
     // Dairy
-    { id: 'milk', name: 'Milk', calories: 103, protein: 8, fat: 2.4, carbs: 12, sugar: 12, fiber: 0, category: 'dairy', servingSize: '1 cup' },
-    { id: 'mozzarella', name: 'Shredded Mozzarella', calories: 85, protein: 6, fat: 6, carbs: 1, sugar: 0.5, fiber: 0, category: 'dairy', servingSize: '1/4 cup' },
-    { id: 'mexican-cheese', name: 'Mexican Blend Cheese', calories: 110, protein: 7, fat: 9, carbs: 1, sugar: 0.5, fiber: 0, category: 'dairy', servingSize: '1/4 cup' },
+    { id: 'milk', name: 'Milk', calories: 103, protein: 8, fat: 2.4, carbs: 12, sugar: 12, fiber: 0, category: 'dairy', servingSize: '1 cup', servingSizeValue: 1, servingSizeUnit: 'cup' },
+    { id: 'mozzarella', name: 'Shredded Mozzarella', calories: 340, protein: 24, fat: 24, carbs: 4, sugar: 2, fiber: 0, category: 'dairy', servingSize: '1 cup', servingSizeValue: 1, servingSizeUnit: 'cup' },
+    { id: 'mexican-cheese', name: 'Mexican Blend Cheese', calories: 440, protein: 28, fat: 36, carbs: 4, sugar: 2, fiber: 0, category: 'dairy', servingSize: '1 cup', servingSizeValue: 1, servingSizeUnit: 'cup' },
       
     // Seasonings
-    { id: 'chili-powder', name: 'Chili Powder', calories: 8, protein: 0.4, fat: 0.4, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'garlic', name: 'Garlic', calories: 4, protein: 0.2, fat: 0, carbs: 1, sugar: 0.1, fiber: 0.1, category: 'seasonings', servingSize: '1 clove' },
-    { id: 'onions', name: 'Onions', calories: 44, protein: 1.2, fat: 0.1, carbs: 10.3, sugar: 4.7, fiber: 1.9, category: 'seasonings', servingSize: '1 medium' },
-    { id: 'salt', name: 'Salt', calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'pepper', name: 'Pepper', calories: 6, protein: 0.3, fat: 0.1, carbs: 1.5, sugar: 0.1, fiber: 0.6, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'tajin', name: 'Tajin', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp' },
-    { id: 'lemon-juice', name: 'Lemon Juice', calories: 6, protein: 0.1, fat: 0, carbs: 1.8, sugar: 0.6, fiber: 0.1, category: 'seasonings', servingSize: '1 tbsp' },
-    { id: 'hot-sauce', name: 'Hot Sauce', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp' },
+    { id: 'chili-powder', name: 'Chili Powder', calories: 8, protein: 0.4, fat: 0.4, carbs: 1.4, sugar: 0.2, fiber: 0.8, category: 'seasonings', servingSize: '1 tsp', servingSizeValue: 1, servingSizeUnit: 'tsp' },
+    { id: 'garlic', name: 'Garlic', calories: 4, protein: 0.2, fat: 0, carbs: 1, sugar: 0.1, fiber: 0.1, category: 'seasonings', servingSize: '1 clove', servingSizeValue: 1, servingSizeUnit: 'clove' },
+    { id: 'onions', name: 'Onions', calories: 44, protein: 1.2, fat: 0.1, carbs: 10.3, sugar: 4.7, fiber: 1.9, category: 'seasonings', servingSize: '1 medium', servingSizeValue: 1, servingSizeUnit: 'medium' },
+    { id: 'salt', name: 'Salt', calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'seasonings', servingSize: '1 tsp', servingSizeValue: 1, servingSizeUnit: 'tsp' },
+    { id: 'pepper', name: 'Pepper', calories: 6, protein: 0.3, fat: 0.1, carbs: 1.5, sugar: 0.1, fiber: 0.6, category: 'seasonings', servingSize: '1 tsp', servingSizeValue: 1, servingSizeUnit: 'tsp' },
+    { id: 'tajin', name: 'Tajin', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp', servingSizeValue: 1, servingSizeUnit: 'tsp' },
+    { id: 'lemon-juice', name: 'Lemon Juice', calories: 6, protein: 0.1, fat: 0, carbs: 1.8, sugar: 0.6, fiber: 0.1, category: 'seasonings', servingSize: '1 tbsp', servingSizeValue: 1, servingSizeUnit: 'tbsp' },
+    { id: 'hot-sauce', name: 'Hot Sauce', calories: 5, protein: 0.1, fat: 0, carbs: 1.2, sugar: 0.8, fiber: 0.2, category: 'seasonings', servingSize: '1 tsp', servingSizeValue: 1, servingSizeUnit: 'tsp' },
      
     // Beverages
-    { id: 'black-coffee', name: 'Black Coffee', calories: 2, protein: 0.3, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'beverages', servingSize: '1 cup' },
-    { id: 'orange-juice', name: 'Orange Juice', calories: 28, protein: 0.4, fat: 0.1, carbs: 6.5, sugar: 5.2, fiber: 0.1, category: 'beverages', servingSize: '2 oz' },
+    { id: 'black-coffee', name: 'Black Coffee', calories: 2, protein: 0.3, fat: 0, carbs: 0, sugar: 0, fiber: 0, category: 'beverages', servingSize: '1 cup', servingSizeValue: 1, servingSizeUnit: 'cup' },
+    { id: 'orange-juice', name: 'Orange Juice', calories: 14, protein: 0.2, fat: 0.05, carbs: 3.25, sugar: 2.6, fiber: 0.05, category: 'beverages', servingSize: '1 oz', servingSizeValue: 1, servingSizeUnit: 'oz' },
       
     // Fruits
-    { id: 'mango', name: 'Mango', calories: 99, protein: 1.4, fat: 0.6, carbs: 24.7, sugar: 22.5, fiber: 2.6, category: 'fruits', servingSize: '1 cup sliced' },
+    { id: 'mango', name: 'Mango', calories: 99, protein: 1.4, fat: 0.6, carbs: 24.7, sugar: 22.5, fiber: 2.6, category: 'fruits', servingSize: '1 cup sliced', servingSizeValue: 1, servingSizeUnit: 'cup sliced' },
   ];
 
   // Default preset meals (always show in localhost)
-  const getPresetMeals = () => {
+  const getPresetMeals = (): PresetMeal[] => {
     // Hardcoded presets - these are always available to all users
     return [
       {
-        id: 'preset-1754140594795',
+        id: 'preset-1754355207462',
         name: 'Eggs & Almonds',
         ingredients: [
-          { ingredient: ingredients.find(i => i.id === 'eggs')!, quantity: 4 },
-          { ingredient: ingredients.find(i => i.id === 'almonds')!, quantity: 1 },
-          { ingredient: ingredients.find(i => i.id === 'hemp-seeds')!, quantity: 1 },
-          { ingredient: ingredients.find(i => i.id === 'sour-cream')!, quantity: 1 },
-          { ingredient: ingredients.find(i => i.id === 'coconut-oil')!, quantity: 1 },
-          { ingredient: ingredients.find(i => i.id === 'pepper')!, quantity: 1 },
-          { ingredient: ingredients.find(i => i.id === 'salt')!, quantity: 1 },
-          { ingredient: ingredients.find(i => i.id === 'garlic')!, quantity: 1 }
+          { ingredient: ingredients.find(i => i.id === 'almonds')!, quantity: 1, servingSizeMultiplier: 0.5 },
+          { ingredient: ingredients.find(i => i.id === 'coconut-oil')!, quantity: 1, servingSizeMultiplier: 1 },
+          { ingredient: ingredients.find(i => i.id === 'eggs')!, quantity: 1, servingSizeMultiplier: 4 },
+          { ingredient: ingredients.find(i => i.id === 'garlic')!, quantity: 1, servingSizeMultiplier: 0.25 },
+          { ingredient: ingredients.find(i => i.id === 'hemp-seeds')!, quantity: 1, servingSizeMultiplier: 1 },
+          { ingredient: ingredients.find(i => i.id === 'hot-sauce')!, quantity: 1, servingSizeMultiplier: 1 },
+          { ingredient: ingredients.find(i => i.id === 'pepper')!, quantity: 1, servingSizeMultiplier: 1 },
+          { ingredient: ingredients.find(i => i.id === 'salt')!, quantity: 1, servingSizeMultiplier: 1 }
         ],
-        nutrition: { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0, netCarbs: 0, proteinPercent: 0, fatPercent: 0, carbPercent: 0 }
+        nutrition: { calories: 549, protein: 30.6, fat: 46.0, carbs: 6.8, sugar: 1.7, fiber: 3.0, netCarbs: 3.8, proteinPercent: 22.2, fatPercent: 75.0, carbPercent: 2.8 }
       }
     ];
   };
 
   const addIngredient = (ingredient: Ingredient) => {
+    const currentMultiplier = getIngredientServingSizeMultiplier(ingredient.id);
+
     const existing = selectedIngredients.find(item => item.ingredient.id === ingredient.id);
+    
     if (existing) {
-      setSelectedIngredients(selectedIngredients.map(item => 
-        item.ingredient.id === ingredient.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
+      // If the ingredient already exists, do nothing as per the user's latest request.
+      return; 
     } else {
-      setSelectedIngredients([...selectedIngredients, { ingredient, quantity: 1 }]);
+      // Store the original ingredient in selectedIngredients.
+      setSelectedIngredients([...selectedIngredients, { ingredient: ingredient, quantity: 1 }]);
+      // Set the current meal serving size to match what was selected in the ingredients panel
+      updateCurrentMealServingSize(ingredient.id, currentMultiplier);
     }
   };
 
@@ -268,12 +463,22 @@ const Diet: React.FC = () => {
   const clearMeal = () => {
     setSelectedIngredients([]);
     setMealName('');
+    setCurrentMealServingSizes({});
   };
 
   const addSavedMeal = (savedMeal: typeof savedMeals[0]) => {
     // Clear current ingredients and add the saved meal's ingredients
     setSelectedIngredients([...savedMeal.ingredients]);
     setMealName(savedMeal.name);
+    
+    // Restore serving size multipliers for the loaded ingredients
+    const newServingSizes: { [key: string]: number } = {};
+    savedMeal.ingredients.forEach(item => {
+      if (item.servingSizeMultiplier) {
+        newServingSizes[item.ingredient.id] = item.servingSizeMultiplier;
+      }
+    });
+    setCurrentMealServingSizes(newServingSizes);
   };
 
   const removeFromDailyMeals = (mealId: string) => {
@@ -324,11 +529,17 @@ const Diet: React.FC = () => {
       return mealIngredientsKey === ingredientsKey;
     });
     
+    // Create ingredients with serving size multipliers stored
+    const ingredientsWithServingSizes = selectedIngredients.map(item => ({
+      ...item,
+      servingSizeMultiplier: getCurrentMealServingSizeMultiplier(item.ingredient.id)
+    }));
+    
     const dailyMeal = {
       id: Date.now().toString(),
       name: mealName.trim(),
       mealType: selectedMealType,
-      ingredients: [...selectedIngredients],
+      ingredients: ingredientsWithServingSizes,
       nutrition: getTotalNutrition(),
       createdAt: new Date().toDateString()
     };
@@ -341,7 +552,7 @@ const Diet: React.FC = () => {
       const savedMeal = {
         id: Date.now().toString(),
         name: mealName.trim(),
-        ingredients: [...selectedIngredients],
+        ingredients: ingredientsWithServingSizes,
         nutrition: getTotalNutrition()
       };
       setSavedMeals([...savedMeals, savedMeal]);
@@ -349,6 +560,7 @@ const Diet: React.FC = () => {
     
     setSelectedIngredients([]);
     setMealName('');
+    setCurrentMealServingSizes({});
   };
 
   const saveAsPreset = () => {
@@ -371,12 +583,42 @@ const Diet: React.FC = () => {
 
     setSelectedIngredients([]);
     setMealName('');
+    setCurrentMealServingSizes({});
   };
 
   const generatePresetCode = (name: string, ingredients: SelectedIngredient[]) => {
-    const ingredientCode = ingredients.map(item => 
-      `{ ingredient: ingredients.find(i => i.id === '${item.ingredient.id}')!, quantity: ${item.quantity} }`
-    ).join(',\n                 ');
+    const ingredientCode = ingredients.map(item => {
+      const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
+      return `{ ingredient: ingredients.find(i => i.id === '${item.ingredient.id}')!, quantity: ${item.quantity}, servingSizeMultiplier: ${currentMultiplier} }`;
+    }).join(',\n                 ');
+
+    // Calculate nutrition using current meal serving size multipliers
+    const nutrition = ingredients.reduce((total, item) => {
+      const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
+      
+      return {
+        calories: total.calories + (item.ingredient.calories * currentMultiplier * item.quantity),
+        protein: total.protein + (item.ingredient.protein * currentMultiplier * item.quantity),
+        fat: total.fat + (item.ingredient.fat * currentMultiplier * item.quantity),
+        carbs: total.carbs + (item.ingredient.carbs * currentMultiplier * item.quantity),
+        sugar: total.sugar + (item.ingredient.sugar * currentMultiplier * item.quantity),
+        fiber: total.fiber + (item.ingredient.fiber * currentMultiplier * item.quantity),
+      };
+    }, { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
+    
+    // Calculate net carbs (total carbs - fiber)
+    const netCarbs = Math.max(0, nutrition.carbs - nutrition.fiber);
+    
+    // Calculate calorie distribution percentages
+    const proteinCalories = nutrition.protein * 4; // 4 calories per gram of protein
+    const fatCalories = nutrition.fat * 9; // 9 calories per gram of fat
+    const netCarbCalories = netCarbs * 4; // 4 calories per gram of net carbs
+    
+    const totalCalories = proteinCalories + fatCalories + netCarbCalories;
+    
+    const proteinPercent = totalCalories > 0 ? (proteinCalories / totalCalories) * 100 : 0;
+    const fatPercent = totalCalories > 0 ? (fatCalories / totalCalories) * 100 : 0;
+    const carbPercent = totalCalories > 0 ? (netCarbCalories / totalCalories) * 100 : 0;
 
     return `{
                id: 'preset-${Date.now()}',
@@ -384,21 +626,25 @@ const Diet: React.FC = () => {
                ingredients: [
                  ${ingredientCode}
                ],
-               nutrition: { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0, netCarbs: 0, proteinPercent: 0, fatPercent: 0, carbPercent: 0 }
+               nutrition: { calories: ${Math.round(nutrition.calories)}, protein: ${nutrition.protein.toFixed(1)}, fat: ${nutrition.fat.toFixed(1)}, carbs: ${nutrition.carbs.toFixed(1)}, sugar: ${nutrition.sugar.toFixed(1)}, fiber: ${nutrition.fiber.toFixed(1)}, netCarbs: ${netCarbs.toFixed(1)}, proteinPercent: ${proteinPercent.toFixed(1)}, fatPercent: ${fatPercent.toFixed(1)}, carbPercent: ${carbPercent.toFixed(1)} }
              }`;
   };
 
 
 
   const getTotalNutrition = () => {
-    const totals = selectedIngredients.reduce((total, item) => ({
-      calories: total.calories + (item.ingredient.calories * item.quantity),
-      protein: total.protein + (item.ingredient.protein * item.quantity),
-      fat: total.fat + (item.ingredient.fat * item.quantity),
-      carbs: total.carbs + (item.ingredient.carbs * item.quantity),
-      sugar: total.sugar + (item.ingredient.sugar * item.quantity),
-      fiber: total.fiber + (item.ingredient.fiber * item.quantity),
-    }), { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
+    const totals = selectedIngredients.reduce((total, item) => {
+      const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
+      
+      return {
+        calories: total.calories + (item.ingredient.calories * currentMultiplier * item.quantity),
+        protein: total.protein + (item.ingredient.protein * currentMultiplier * item.quantity),
+        fat: total.fat + (item.ingredient.fat * currentMultiplier * item.quantity),
+        carbs: total.carbs + (item.ingredient.carbs * currentMultiplier * item.quantity),
+        sugar: total.sugar + (item.ingredient.sugar * currentMultiplier * item.quantity),
+        fiber: total.fiber + (item.ingredient.fiber * currentMultiplier * item.quantity),
+      };
+    }, { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
     
     // Calculate net carbs (total carbs - fiber)
     const netCarbs = Math.max(0, totals.carbs - totals.fiber);
@@ -496,10 +742,16 @@ const Diet: React.FC = () => {
 
   // Filter ingredients based on selected categories
   const getFilteredIngredients = () => {
-    if (selectedCategories.length === 0) {
-      return ingredients; // Show all ingredients if no categories selected
+    // First filter by category
+    let filteredIngredients = ingredients;
+    if (selectedCategories.length > 0) {
+      filteredIngredients = ingredients.filter(ingredient => selectedCategories.includes(ingredient.category));
     }
-    return ingredients.filter(ingredient => selectedCategories.includes(ingredient.category));
+    
+    // Then filter out ingredients that are already in the current meal
+    return filteredIngredients.filter(ingredient => 
+      !selectedIngredients.some(item => item.ingredient.id === ingredient.id)
+    );
   };
 
   // Toggle category selection
@@ -574,25 +826,33 @@ const Diet: React.FC = () => {
                   )}
                 </div>
                 <div className="ingredients-grid">
-                  {getFilteredIngredients().map(ingredient => (
-                    <button
-                      key={ingredient.id}
-                      className="ingredient-button"
-                      onClick={() => addIngredient(ingredient)}
-                      style={{ borderLeftColor: getCategoryColor(ingredient.category) }}
-                    >
-                      <div className="ingredient-name">{ingredient.name}</div>
-                      <div className="ingredient-serving">{ingredient.servingSize}</div>
-                      <div className="ingredient-nutrition">
-                        <span>{ingredient.calories} cal</span>
-                        <span>P: {ingredient.protein}g</span>
-                        <span>F: {ingredient.fat}g</span>
-                        <span>C: {ingredient.carbs}g</span>
-                        <span>S: {ingredient.sugar}g</span>
-                        <span>Fi: {ingredient.fiber}g</span>
-                      </div>
-                    </button>
-                  ))}
+                  {getFilteredIngredients().map(ingredient => {
+                    const adjustedNutrition = getAdjustedIngredientNutrition(ingredient);
+                    return (
+                      <button
+                        key={ingredient.id}
+                        className="ingredient-button"
+                        onClick={() => addIngredient(ingredient)}
+                        style={{ borderLeftColor: getCategoryColor(ingredient.category) }}
+                      >
+                        <div className="ingredient-name">{ingredient.name}</div>
+                        <div className="ingredient-serving">
+                          <ServingSizeSelector
+                            ingredient={ingredient}
+                            onUpdate={(multiplier) => updateIngredientServingSize(ingredient.id, multiplier)}
+                          />
+                        </div>
+                        <div className="ingredient-nutrition">
+                          <span>{adjustedNutrition.calories.toFixed(0)} cal</span>
+                          <span>P: {adjustedNutrition.protein.toFixed(1)}g</span>
+                          <span>F: {adjustedNutrition.fat.toFixed(1)}g</span>
+                          <span>C: {adjustedNutrition.carbs.toFixed(1)}g</span>
+                          <span>S: {adjustedNutrition.sugar.toFixed(1)}g</span>
+                          <span>Fi: {adjustedNutrition.fiber.toFixed(1)}g</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -610,7 +870,7 @@ const Diet: React.FC = () => {
                      <div className="meal-ingredients">
                        {preset.ingredients.map(item => (
                          <span key={item.ingredient.id} className="meal-ingredient">
-                           {item.ingredient.name} x{item.quantity}
+                           {item.ingredient.name} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
                          </span>
                        ))}
                      </div>
@@ -636,7 +896,7 @@ const Diet: React.FC = () => {
                      <div className="meal-ingredients">
                        {meal.ingredients.map(item => (
                          <span key={item.ingredient.id} className="meal-ingredient">
-                           {item.ingredient.name} x{item.quantity}
+                           {item.ingredient.name} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
                          </span>
                        ))}
                      </div>
@@ -725,28 +985,46 @@ const Diet: React.FC = () => {
               {selectedIngredients.length === 0 ? (
                 <p className="no-ingredients">No ingredients selected. Click on ingredients above to build your meal.</p>
               ) : (
-                selectedIngredients.map(item => (
-                  <div key={item.ingredient.id} className="selected-ingredient">
-                    <div className="ingredient-info">
-                      <span className="ingredient-name">{item.ingredient.name}</span>
-                      <span className="ingredient-quantity">x{item.quantity}</span>
+                selectedIngredients.map(item => {
+                  const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
+                  
+                  const adjustedNutrition = {
+                    calories: item.ingredient.calories * currentMultiplier * item.quantity,
+                    protein: item.ingredient.protein * currentMultiplier * item.quantity,
+                    fat: item.ingredient.fat * currentMultiplier * item.quantity,
+                    carbs: item.ingredient.carbs * currentMultiplier * item.quantity,
+                    sugar: item.ingredient.sugar * currentMultiplier * item.quantity,
+                    fiber: item.ingredient.fiber * currentMultiplier * item.quantity,
+                  };
+
+                  return (
+                    <div key={item.ingredient.id} className="selected-ingredient">
+                      <div className="ingredient-info">
+                        <span className="ingredient-name">{item.ingredient.name}</span>
+                        <span className="ingredient-quantity">
+                          <CurrentMealServingSizeSelector
+                            ingredient={item.ingredient}
+                            onUpdate={(multiplier) => updateCurrentMealServingSize(item.ingredient.id, multiplier)}
+                          />
+                        </span>
+                      </div>
+                      <div className="ingredient-nutrition">
+                        <span>{adjustedNutrition.calories.toFixed(0)} cal</span>
+                        <span>P: {adjustedNutrition.protein.toFixed(1)}g</span>
+                        <span>F: {adjustedNutrition.fat.toFixed(1)}g</span>
+                        <span>C: {adjustedNutrition.carbs.toFixed(1)}g</span>
+                        <span>S: {adjustedNutrition.sugar.toFixed(1)}g</span>
+                        <span>Fi: {adjustedNutrition.fiber.toFixed(1)}g</span>
+                      </div>
+                      <button 
+                        onClick={() => removeIngredient(item.ingredient.id)}
+                        className="remove-button"
+                      >
+                        -
+                      </button>
                     </div>
-                                       <div className="ingredient-nutrition">
-                      <span>{(item.ingredient.calories * item.quantity).toFixed(0)} cal</span>
-                      <span>P: {(item.ingredient.protein * item.quantity).toFixed(1)}g</span>
-                      <span>F: {(item.ingredient.fat * item.quantity).toFixed(1)}g</span>
-                      <span>C: {(item.ingredient.carbs * item.quantity).toFixed(1)}g</span>
-                      <span>S: {(item.ingredient.sugar * item.quantity).toFixed(1)}g</span>
-                      <span>Fi: {(item.ingredient.fiber * item.quantity).toFixed(1)}g</span>
-                    </div>
-                    <button 
-                      onClick={() => removeIngredient(item.ingredient.id)}
-                      className="remove-button"
-                    >
-                      -
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -964,7 +1242,7 @@ const Diet: React.FC = () => {
                      <div className="saved-meal-ingredients">
                        {meal.ingredients.map(item => (
                          <span key={item.ingredient.id} className="saved-ingredient">
-                           {item.ingredient.name} x{item.quantity}
+                           {item.ingredient.name} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
                          </span>
                        ))}
                      </div>

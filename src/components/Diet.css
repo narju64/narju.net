@@ -244,6 +244,57 @@
   margin-bottom: 0.5rem;
 }
 
+/* Serving Size Selector Styles */
+.serving-size-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.serving-size-display {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.serving-size-display:hover,
+.serving-size-display.hovered {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.serving-size-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #2c3e50;
+  border: 1px solid #34495e;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  min-width: 80px;
+  max-height: 110px;
+  overflow-y: auto;
+}
+
+.serving-size-option {
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.8rem;
+  color: #ecf0f1;
+}
+
+.serving-size-option:hover {
+  background-color: #34495e;
+}
+
+.serving-size-option.selected {
+  background-color: #3498db;
+  color: white;
+}
+
 .ingredient-nutrition {
   display: flex;
   flex-wrap: wrap;

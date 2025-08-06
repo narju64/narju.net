@@ -126,7 +126,7 @@ const Header: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: string | null }>({});
   const [translatedNavStructure, setTranslatedNavStructure] = useState(normalNavStructure);
-  const navRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
+  const navRefs = useRef<{ [key: string]: HTMLAnchorElement | HTMLButtonElement | null }>({});
 
   // Helper to check if a path is active or a parent of the current path
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
@@ -177,17 +177,31 @@ const Header: React.FC = () => {
 
   // Recursive dropdown rendering for desktop
   const renderDropdown = (items: any[], parentLabel: string, depth = 0, topLevelLabel?: string) => {
-    const shouldOpenLeft = depth > 0 && ["Content", "Lifestyle", "Elsewhere"].includes(topLevelLabel || "");
+    const isMobile = window.innerWidth <= 900;
+    const shouldOpenLeft = !isMobile && depth > 0 && ["Content", "Lifestyle", "Elsewhere"].includes(topLevelLabel || "");
+    
     let style: React.CSSProperties = { position: 'absolute', zIndex: 1000 };
-    if (depth === 0 && parentLabel === 'Elsewhere') {
-      style = { ...style, top: '100%', left: -52, right: 'auto' };
-    } else if (depth === 0) {
-      style = { ...style, top: '100%', left: 0, right: 'auto' };
-    } else if (shouldOpenLeft) {
-      style = { ...style, top: 0, right: '100%', left: 'auto' };
+    
+    if (isMobile) {
+      // Mobile: Simple vertical stacking, all dropdowns open the same way
+      if (depth === 0) {
+        style = { ...style, top: '100%', left: 0, right: 'auto' };
+      } else {
+        style = { ...style, top: 0, left: '100%', right: 'auto' };
+      }
     } else {
-      style = { ...style, top: 0, left: '100%', right: 'auto' };
+      // Desktop: Complex directional logic for horizontal layout
+      if (depth === 0 && parentLabel === 'Elsewhere') {
+        style = { ...style, top: '100%', left: -52, right: 'auto' };
+      } else if (depth === 0) {
+        style = { ...style, top: '100%', left: 0, right: 'auto' };
+      } else if (shouldOpenLeft) {
+        style = { ...style, top: 0, right: '100%', left: 'auto' };
+      } else {
+        style = { ...style, top: 0, left: '100%', right: 'auto' };
+      }
     }
+    
     return (
       <ul className={`dropdown-menu depth-${depth}${shouldOpenLeft ? ' open-left' : ''}`} style={style}>
         {items.map((item) => (
@@ -195,30 +209,55 @@ const Header: React.FC = () => {
             key={item.href}
             className={isActive(item.href) ? 'active' : ''}
             onMouseEnter={() => {
-              setOpenSubmenus((prev) => ({ ...prev, [parentLabel]: item.label }));
+              // Only handle hover on desktop (non-mobile)
+              if (window.innerWidth > 900) {
+                setOpenSubmenus((prev) => ({ ...prev, [parentLabel]: item.label }));
+              }
             }}
             onMouseLeave={() => {
-              setOpenSubmenus((prev) => ({ ...prev, [parentLabel]: null }));
+              // Only handle hover on desktop (non-mobile)
+              if (window.innerWidth > 900) {
+                setOpenSubmenus((prev) => ({ ...prev, [parentLabel]: null }));
+              }
             }}
             style={{ position: 'relative' }}
-                     >
-             {item.href.startsWith('http') ? (
-               <a 
-                 href={item.href} 
-                 target="_blank" 
-                 rel="noopener noreferrer" 
-                                   onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.open(item.href, '_blank', 'noopener,noreferrer');
-                    setMobileOpen(false);
-                  }}
-               >
-                 {item.label}
-               </a>
-             ) : (
-               <Link to={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>
-             )}
+          >
+            {item.href.startsWith('http') ? (
+              <a 
+                href={item.href} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(item.href, '_blank', 'noopener,noreferrer');
+                  setMobileOpen(false);
+                }}
+              >
+                {item.label}
+              </a>
+            ) : item.children ? (
+              // If item has children, handle mobile click to expand
+              <button
+                className="dropdown-item-button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // On mobile, toggle the submenu
+                  if (window.innerWidth <= 900) {
+                    setOpenSubmenus((prev) => ({ 
+                      ...prev, 
+                      [parentLabel]: openSubmenus[parentLabel] === item.label ? null : item.label 
+                    }));
+                  }
+                }}
+              >
+                {item.label}
+              </button>
+            ) : (
+              // If no children, navigate normally
+              <Link to={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>
+            )}
             {item.children && openSubmenus[parentLabel] === item.label && (
               renderDropdown(item.children, item.label, depth + 1, topLevelLabel)
             )}
@@ -231,58 +270,84 @@ const Header: React.FC = () => {
   return (
     <header className="header">
       <nav className="nav">
-        <div className="nav-brand">
-          <Link to="/" className="logo">
-            <img src="/favicon.png" alt="narju.net" className="logo-icon" />
-            narju.net
-          </Link>
-        </div>
+                 <div className="nav-brand">
+           <Link to="/" className="logo" onClick={() => setMobileOpen(false)}>
+             <img src="/favicon.png" alt="narju.net" className="logo-icon" />
+             narju.net
+           </Link>
+         </div>
         <button className="nav-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
           <span className="hamburger" />
         </button>
-        <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
-          {currentNavStructure.map((item) => (
-            item.href.startsWith('http') ? (
-              <a
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMobileOpen(false)}
-                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
-                key={item.href}
-                ref={el => { navRefs.current[item.label] = el; }}
-                onMouseEnter={() => setOpenDropdown(item.label)}
-                onMouseLeave={() => setOpenDropdown(null)}
-                style={{ position: 'relative', display: 'inline-block' }}
-              >
-                {item.label}
-                {item.children && openDropdown === item.label && (
-                  <div className="dropdown-container">
-                    {renderDropdown(item.children, item.label, 0, item.label)}
-                  </div>
-                )}
-              </a>
-            ) : (
-              <Link
-                to={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
-                key={item.href}
-                ref={el => { navRefs.current[item.label] = el; }}
-                onMouseEnter={() => setOpenDropdown(item.label)}
-                onMouseLeave={() => setOpenDropdown(null)}
-                style={{ position: 'relative', display: 'inline-block' }}
-              >
-                {item.label}
-                {item.children && openDropdown === item.label && (
-                  <div className="dropdown-container">
-                    {renderDropdown(item.children, item.label, 0, item.label)}
-                  </div>
-                )}
-              </Link>
-            )
-          ))}
-        </div>
+                 <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
+           {currentNavStructure.map((item) => (
+             item.href.startsWith('http') ? (
+               <a
+                 href={item.href}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 onClick={() => setMobileOpen(false)}
+                 className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                 key={item.href}
+                 ref={el => { navRefs.current[item.label] = el; }}
+                 onMouseEnter={() => setOpenDropdown(item.label)}
+                 onMouseLeave={() => setOpenDropdown(null)}
+                 style={{ position: 'relative', display: 'inline-block' }}
+               >
+                 {item.label}
+                 {item.children && openDropdown === item.label && (
+                   <div className="dropdown-container">
+                     {renderDropdown(item.children, item.label, 0, item.label)}
+                   </div>
+                 )}
+               </a>
+                           ) : item.children ? (
+                // If item has children, handle mobile click to expand
+                <button
+                  className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                  key={item.href}
+                  ref={el => { navRefs.current[item.label] = el; }}
+                  onMouseEnter={() => setOpenDropdown(item.label)}
+                  onMouseLeave={() => setOpenDropdown(null)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // On mobile, toggle the dropdown instead of navigating
+                    if (window.innerWidth <= 900) {
+                      setOpenDropdown(openDropdown === item.label ? null : item.label);
+                    }
+                    // On desktop, do nothing - let hover handle it
+                  }}
+                  style={{ position: 'relative', display: 'inline-block' }}
+                >
+                  {item.label}
+                  {item.children && openDropdown === item.label && (
+                    <div className="dropdown-container">
+                      {renderDropdown(item.children, item.label, 0, item.label)}
+                    </div>
+                  )}
+                </button>
+             ) : (
+               <Link
+                 to={item.href}
+                 onClick={() => setMobileOpen(false)}
+                 className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                 key={item.href}
+                 ref={el => { navRefs.current[item.label] = el; }}
+                 onMouseEnter={() => setOpenDropdown(item.label)}
+                 onMouseLeave={() => setOpenDropdown(null)}
+                 style={{ position: 'relative', display: 'inline-block' }}
+               >
+                 {item.label}
+                 {item.children && openDropdown === item.label && (
+                   <div className="dropdown-container">
+                     {renderDropdown(item.children, item.label, 0, item.label)}
+                   </div>
+                 )}
+               </Link>
+             )
+           ))}
+         </div>
         <div className="npa-toggle-container">
           <SiteToggle />
         </div>

@@ -6,7 +6,6 @@ import OrbitalCalendarPage from './components/OrbitalCalendar'
 import Routine from './components/Routine'
 import Exercise from './components/Exercise'
 import Diet from './components/Diet'
-import CurrentTask from './components/CurrentTask'
 import BeatsPlayer from './components/BeatsPlayer'
 import TraditionalArt from './components/TraditionalArt'
 import Lists from './components/Lists'
@@ -16,7 +15,7 @@ import FavoriteAlbums from './components/FavoriteAlbums'
 import NBAPlayerRankings from './components/NBAPlayerRankings'
 import SecretPage from './components/SecretPage'
 import Prayer from './components/Prayer'
-import DailyMealsWidget from './components/DailyMealsWidget'
+import SwipeableWidgets from './components/SwipeableWidgets'
 import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
 
@@ -36,10 +35,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={
                 <>
-                  <div className="widgets-container">
-                    <CurrentTask />
-                    <DailyMealsWidget />
-                  </div>
+                  <SwipeableWidgets />
                 </>
               } />
               <Route path="/projects" element={<Projects />} />

@@ -1,0 +1,180 @@
+/* Swipeable Widgets Container */
+.swipeable-widgets {
+  width: 100%;
+}
+
+/* Mobile Swipeable Interface */
+.swipeable-widgets-mobile {
+  display: none;
+  padding-top: 2rem;
+}
+
+/* Widget Indicators */
+.widget-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
+.widget-indicator {
+  padding: 0.5rem 1rem;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-borders);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-titles);
+}
+
+.widget-indicator:hover {
+  background: var(--color-border-hover);
+  color: #fff;
+}
+
+.widget-indicator.active {
+  background: var(--color-titles);
+  color: #fff;
+  border-color: var(--color-titles);
+}
+
+/* Swipe Container */
+.widget-swipe-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  touch-action: pan-y pinch-zoom;
+}
+
+.widget-swipe-content {
+  display: flex;
+  width: 200%; /* 2 widgets = 200% width */
+  height: 100%;
+}
+
+.widget-slide {
+  width: 50%; /* Each widget takes 50% of the container */
+  flex-shrink: 0;
+  padding: 0 1rem;
+  min-width: 50%; /* Ensure minimum width */
+}
+
+/* Desktop Layout */
+.widgets-container-desktop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 2rem auto 0 auto;
+  padding: 0 2rem;
+}
+
+.widgets-container-desktop > * {
+  max-width: 700px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .swipeable-widgets-mobile {
+    display: block;
+  }
+  
+  .widgets-container-desktop {
+    display: none;
+  }
+  
+  .widget-indicators {
+    margin-bottom: 0.5rem;
+  }
+  
+  .widget-indicator {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .widget-slide {
+    padding: 0 0.5rem;
+  }
+  
+  /* Ensure widgets in swipeable interface have proper mobile styling */
+  .widget-slide .current-task-widget,
+  .widget-slide .daily-meals-widget {
+    margin: 0;
+    padding: 1.5rem;
+  }
+  
+  .widget-slide .current-task-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .widget-slide .current-task-header h3 {
+    font-size: 1.5rem;
+  }
+  
+  .widget-slide .current-time {
+    font-size: 1.2rem;
+  }
+  
+  .widget-slide .task-activity {
+    font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 901px) {
+  .swipeable-widgets-mobile {
+    display: none;
+  }
+  
+  .widgets-container-desktop {
+    display: grid;
+  }
+}
+
+/* Touch feedback */
+.widget-swipe-container:active {
+  cursor: grabbing;
+}
+
+/* Small screen optimizations */
+@media (max-width: 480px) {
+  .widget-indicators {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .widget-indicator {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .widget-slide {
+    padding: 0 0.25rem;
+  }
+  
+  .widget-slide .current-task-widget,
+  .widget-slide .daily-meals-widget {
+    padding: 1rem;
+  }
+}
+
+/* Prevent text selection during swipe */
+.widget-swipe-container * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in widget content when not dragging */
+.widget-slide * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+} 

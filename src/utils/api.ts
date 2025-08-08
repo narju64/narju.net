@@ -6,14 +6,13 @@ const getApiBaseUrl = (): string => {
   }
   
   // Production - use Railway backend URL from environment variable
-  // If not set, use a default that the user will need to update
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) {
+  if (envUrl && envUrl.trim() !== '') {
     return envUrl;
   }
   
   // Fallback - this should be updated with the actual Railway URL
-  console.warn('VITE_API_BASE_URL not set. Please set it to your Railway backend URL.');
+  console.warn('VITE_API_BASE_URL not set. Using fallback URL: https://narjunet-production.up.railway.app');
   return 'https://narjunet-production.up.railway.app';
 };
 

@@ -228,7 +228,8 @@ const Header: React.FC = () => {
         setLoginError(data.error || 'Login failed');
       }
     } catch (error) {
-      setLoginError('Network error - make sure the backend is running');
+      console.error('Login error:', error);
+      setLoginError('Network error - check if backend is accessible at https://narjunet-production.up.railway.app');
     } finally {
       setIsLoggingIn(false);
     }

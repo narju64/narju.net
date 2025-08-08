@@ -1,5 +1,6 @@
-import React from 'react'
-import './FavoriteAlbums.css'
+import React from 'react';
+import './FavoriteAlbums.css';
+import { buildApiUrl } from '../utils/api';
 
 interface Album {
   id: number
@@ -1698,7 +1699,7 @@ const FavoriteAlbums: React.FC = () => {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('http://localhost:3001/api/lists/albums')
+      const response = await fetch(buildApiUrl('/api/lists/albums'))
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

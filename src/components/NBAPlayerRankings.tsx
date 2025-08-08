@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './NBAPlayerRankings.css';
+import { buildApiUrl } from '../utils/api';
 
 interface Player {
   id?: number;
@@ -83,7 +84,7 @@ const NBAPlayerRankings: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3001/api/lists/nba-players');
+      const response = await fetch(buildApiUrl('/api/lists/nba-players'));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../utils/api';
 
 interface ListItem {
   id?: number;
@@ -57,7 +58,7 @@ const GenericList: React.FC<GenericListProps> = ({
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:3001/api/lists/${category}`);
+      const response = await fetch(buildApiUrl(`/api/lists/${category}`));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

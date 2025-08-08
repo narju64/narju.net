@@ -1,6 +1,7 @@
 import React from 'react';
 import './Exercise.css';
 import { orbitalCalendar } from '../utils/orbitalCalendar';
+import { buildApiUrl } from '../utils/api';
 
 interface Exercise {
   name: string;
@@ -51,7 +52,7 @@ const Exercise: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3001/api/lists/exercise');
+      const response = await fetch(buildApiUrl('/api/lists/exercise'));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -60,7 +61,6 @@ const Exercise: React.FC = () => {
       const data: ApiResponse = await response.json();
       console.log('API Response:', data);
       
-      // Use API data if available, otherwise fall back to hardcoded
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
         setWorkouts(data.list.items_json);
       } else {
@@ -70,7 +70,6 @@ const Exercise: React.FC = () => {
     } catch (err) {
       console.error('Error fetching workouts from API:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      // Fall back to hardcoded data on error
       loadHardcodedWorkouts();
     } finally {
       setLoading(false);

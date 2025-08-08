@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { SiteToggle } from '../npa-translator/components/SiteToggle';
 import { usePhoneticContext } from '../npa-translator/context/PhoneticContext';
+import { buildApiUrl } from '../utils/api';
 
 // Normal navigation structure
 const normalNavStructure = [
@@ -206,7 +207,7 @@ const Header: React.FC = () => {
     setLoginError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(buildApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,7 +228,7 @@ const Header: React.FC = () => {
         setLoginError(data.error || 'Login failed');
       }
     } catch (error) {
-      setLoginError('Network error - make sure the backend is running on localhost:3001');
+      setLoginError('Network error - make sure the backend is running');
     } finally {
       setIsLoggingIn(false);
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Diet.css';
+import { buildApiUrl } from '../utils/api';
 
 interface Ingredient {
   id: string;
@@ -151,7 +152,7 @@ const Diet: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3001/api/lists/diet');
+      const response = await fetch(buildApiUrl('/api/lists/diet'));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

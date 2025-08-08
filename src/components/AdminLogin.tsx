@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { buildApiUrl } from '../utils/api';
 import './AdminLogin.css';
 
 interface LoginResponse {
@@ -27,7 +28,7 @@ const AdminLogin: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(buildApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ const AdminLogin: React.FC = () => {
         setError(data.error || 'Login failed');
       }
     } catch (error) {
-      setError('Network error - make sure the backend is running on localhost:3001');
+      setError('Network error - make sure the backend is running');
     } finally {
       setIsLoading(false);
     }

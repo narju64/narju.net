@@ -10,6 +10,7 @@ import {
   DayRoutine
 } from '../utils/routineLogic';
 import './Routine.css';
+import { buildApiUrl } from '../utils/api';
 
 // Interface for processed routine data with row spans
 interface ProcessedRoutine {
@@ -61,7 +62,7 @@ const Routine: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3001/api/lists/routine');
+      const response = await fetch(buildApiUrl('/api/lists/routine'));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -70,13 +71,8 @@ const Routine: React.FC = () => {
       const data: ApiResponse = await response.json();
       console.log('API Response:', data);
       
-      // Use API data if available, otherwise fall back to hardcoded
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
-        const apiRoutines: DayRoutine[] = data.list.items_json.map(item => ({
-          day: item.day,
-          routines: item.routines
-        }));
-        setRoutineData(apiRoutines);
+        setRoutineData(data.list.items_json);
       } else {
         console.log('No API data available, using hardcoded data');
         loadHardcodedRoutine();
@@ -84,7 +80,6 @@ const Routine: React.FC = () => {
     } catch (err) {
       console.error('Error fetching routine from API:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      // Fall back to hardcoded data on error
       loadHardcodedRoutine();
     } finally {
       setLoading(false);

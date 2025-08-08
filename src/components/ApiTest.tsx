@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl } from '../utils/api';
 
 interface Album {
   id: number;
@@ -33,16 +34,11 @@ const ApiTest: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await fetch('http://localhost:3001/api/lists/albums');
-        
+        const response = await fetch(buildApiUrl('/api/lists/albums'));
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const data: ApiResponse = await response.json();
-        console.log('API Response:', data);
-        
         setAlbums(data.list.items_json);
       } catch (err) {
         console.error('Error fetching albums:', err);

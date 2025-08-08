@@ -3,8 +3,4 @@
   publish = "dist"
 
 [build.environment]
-  SECRETS_SCAN_ENABLED = "false"
-
-# Or alternatively, specify which keys to ignore:
-# [build.environment]
-#   SECRETS_SCAN_OMIT_KEYS = "VITE_SECRET_PASSWORD" 
+  SECRETS_SCAN_ENABLED = "false" 

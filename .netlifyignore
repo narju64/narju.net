@@ -1,0 +1,2 @@
+# Ignore backend directory - this is deployed separately on Railway
+backend/

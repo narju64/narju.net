@@ -11,8 +11,7 @@ const getApiBaseUrl = (): string => {
     return envUrl;
   }
   
-  // Fallback - this should be updated with the actual Railway URL
-  console.warn('VITE_API_BASE_URL not set. Using fallback URL: https://narjunet-production.up.railway.app');
+  // Fallback - hardcoded for now to test
   return 'https://narjunet-production.up.railway.app';
 };
 

@@ -18,6 +18,15 @@ interface Album {
   youtubeMusicId?: string
 }
 
+interface ApiResponse {
+  list: {
+    id: number;
+    name: string;
+    category: string;
+    items_json: Album[];
+  };
+}
+
 // Complete album data with all 100 albums - genres, categories, Spotify IDs, and YouTube playlist IDs
 const favoriteAlbums: Album[] = [
   {
@@ -1668,13 +1677,61 @@ const FavoriteAlbums: React.FC = () => {
   const [selectedGenre, setSelectedGenre] = React.useState<string>('All')
   const [selectedDecade, setSelectedDecade] = React.useState<string>('All')
   const [sortBy, setSortBy] = React.useState<'rank' | 'year' | 'title' | 'artist'>('rank')
+  const [albums, setAlbums] = React.useState<Album[]>(favoriteAlbums)
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false)
 
-  // Get unique genres and decades
-  const genres = ['All', ...Array.from(new Set(favoriteAlbums.map(album => album.genre).filter(genre => genre !== 'Unknown')))]
-  const decades = ['All', ...Array.from(new Set(favoriteAlbums.map(album => Math.floor(album.year / 10) * 10).sort()))]
+  // Check if user is logged in
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('adminUser')
+    const storedToken = localStorage.getItem('adminToken')
+    const loggedIn = !!(storedUser && storedToken)
+    setIsLoggedIn(loggedIn)
+
+    // If logged in, fetch from API
+    if (loggedIn) {
+      fetchAlbumsFromApi()
+    }
+  }, [])
+
+  const fetchAlbumsFromApi = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('http://localhost:3001/api/lists/albums')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data: ApiResponse = await response.json()
+      console.log('API Response:', data)
+      
+      // Use API data if available, otherwise fall back to hardcoded
+      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
+        setAlbums(data.list.items_json)
+      } else {
+        console.log('No API data available, using hardcoded data')
+        setAlbums(favoriteAlbums)
+      }
+    } catch (err) {
+      console.error('Error fetching albums from API:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error')
+      // Fall back to hardcoded data on error
+      setAlbums(favoriteAlbums)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Get unique genres and decades from current albums
+  const genres = ['All', ...Array.from(new Set(albums.map(album => album.genre).filter(genre => genre !== 'Unknown')))]
+  const decades = ['All', ...Array.from(new Set(albums.map(album => Math.floor(album.year / 10) * 10).sort()))]
 
   // Filter and sort albums
-  const filteredAlbums = favoriteAlbums
+  const filteredAlbums = albums
     .filter(album => {
       const genreMatch = selectedGenre === 'All' || album.genre === selectedGenre
       const decadeMatch = selectedDecade === 'All' || Math.floor(album.year / 10) * 10 === parseInt(selectedDecade)
@@ -1697,7 +1754,26 @@ const FavoriteAlbums: React.FC = () => {
     <div className="favorite-albums-page">
       <div className="container">
         <h1 className="page-title">Top Albums</h1>
-        <p className="page-description">My personal collection of favorite albums</p>
+        <p className="page-description">
+          My personal collection of favorite albums
+          {loading && (
+            <span style={{ color: '#e67e22', fontWeight: 'bold' }}>
+              {' '}(Loading from database)
+            </span>
+          )}
+        </p>
+        
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#e67e22' }}>
+            Loading albums from database...
+          </div>
+        )}
+        
+        {error && (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#e53e3e' }}>
+            Error loading from database: {error}. Using hardcoded data.
+          </div>
+        )}
         
         {/* Filter and Sort Controls */}
         <div className="filter-controls">
@@ -1742,7 +1818,7 @@ const FavoriteAlbums: React.FC = () => {
           </div>
           
           <div className="filter-stats">
-            Showing {filteredAlbums.length} of {favoriteAlbums.length} albums
+            Showing {filteredAlbums.length} of {albums.length} albums
           </div>
         </div>
         

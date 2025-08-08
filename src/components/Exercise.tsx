@@ -2,8 +2,6 @@ import React from 'react';
 import './Exercise.css';
 import { orbitalCalendar } from '../utils/orbitalCalendar';
 
-
-
 interface Exercise {
   name: string;
   reps: string;
@@ -21,7 +19,115 @@ interface ExerciseWorkout {
   schedule: string;
 }
 
+interface ApiResponse {
+  list: {
+    id: number;
+    name: string;
+    category: string;
+    items_json: ExerciseWorkout[];
+  };
+}
+
 const Exercise: React.FC = () => {
+  const [workouts, setWorkouts] = React.useState<ExerciseWorkout[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
+  // Check if user is logged in
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('adminUser');
+    const storedToken = localStorage.getItem('adminToken');
+    const loggedIn = !!(storedUser && storedToken);
+    setIsLoggedIn(loggedIn);
+
+    // If logged in, fetch from API
+    if (loggedIn) {
+      fetchWorkoutsFromApi();
+    } else {
+      // Load hardcoded data
+      loadHardcodedWorkouts();
+    }
+  }, []);
+
+  const fetchWorkoutsFromApi = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('http://localhost:3001/api/lists/exercise');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: ApiResponse = await response.json();
+      console.log('API Response:', data);
+      
+      // Use API data if available, otherwise fall back to hardcoded
+      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
+        setWorkouts(data.list.items_json);
+      } else {
+        console.log('No API data available, using hardcoded data');
+        loadHardcodedWorkouts();
+      }
+    } catch (err) {
+      console.error('Error fetching workouts from API:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      // Fall back to hardcoded data on error
+      loadHardcodedWorkouts();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadHardcodedWorkouts = () => {
+    // Actual exercise routine - just the two workout types
+    const hardcodedWorkouts: ExerciseWorkout[] = [
+      {
+        name: 'Upper Body Strength',
+        type: 'hypertrophy',
+        duration: '~45 min',
+        exercises: [
+          { name: 'Pushups', reps: 'to failure', sets: '3', rest: '90s', targetMuscles: ['Chest', 'Triceps'] },
+          { name: 'Dumbbell Bent-Over Rows', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Back', 'Biceps'] },
+          { name: 'Dumbbell Overhead Press', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Shoulders', 'Triceps'] },
+          { name: 'Lateral Raises', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Shoulders'] },
+          { name: 'Curls', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Biceps'] },
+          { name: 'Rear Delt Flyes', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Rear Delts'] },
+          { name: 'Skull Crushers', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Triceps'] }
+        ],
+        equipment: ['Dumbbells'],
+        schedule: 'Unyom, Triyom, Phiyom'
+      },
+      {
+        name: 'Vertical Training / Core',
+        type: 'strength',
+        duration: '~60 min',
+        exercises: [
+          { name: 'Weighted Squat Jumps', reps: '5', sets: '4', rest: '120s', targetMuscles: ['Quads', 'Glutes'] },
+          { name: 'Split Squat Jumps', reps: '5', sets: '4', rest: '120s', targetMuscles: ['Quads', 'Glutes'] },
+          { name: 'Kneeling Jump', reps: '5', sets: '4', rest: '90s', targetMuscles: ['Quads', 'Glutes',] },
+          { name: 'Dumbbell Swing', reps: '8-10', sets: '3', rest: '90s', targetMuscles: ['Hamstrings', 'Glutes'] },
+          { name: 'Dumbbell Romanian Deadlift', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Hamstrings', 'Glutes', 'Lower Back'] },
+          { name: 'Calf Raises', reps: '12-15', sets: '3', rest: '60s', targetMuscles: ['Calves'] },
+          { name: 'Weighted Sit-ups', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Abs'] },
+          { name: 'Russian Twist', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Obliques'] },
+          { name: 'Leg Raise', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Lower Abs'] }
+        ],
+        equipment: ['Dumbbells'],
+        schedule: 'Tuyom, Foyom, Seyom'
+      },
+      {
+        name: 'Rest Day',
+        type: 'rest',
+        duration: 'Sabbath',
+        schedule: 'Sabbath'
+      }
+    ];
+    setWorkouts(hardcodedWorkouts);
+  };
+
   // Get current orbital day of the week
   const getCurrentDay = () => {
     const currentOrbitalDate = orbitalCalendar.getCurrentOrbitalDate();
@@ -37,50 +143,6 @@ const Exercise: React.FC = () => {
     }
     return workout.schedule.includes(currentDay);
   };
-
-  // Actual exercise routine - just the two workout types
-  const workouts: ExerciseWorkout[] = [
-         {
-       name: 'Upper Body Strength',
-       type: 'hypertrophy',
-       duration: '~45 min',
-      exercises: [
-        { name: 'Pushups', reps: 'to failure', sets: '3', rest: '90s', targetMuscles: ['Chest', 'Triceps'] },
-        { name: 'Dumbbell Bent-Over Rows', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Back', 'Biceps'] },
-        { name: 'Dumbbell Overhead Press', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Shoulders', 'Triceps'] },
-        { name: 'Lateral Raises', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Shoulders'] },
-        { name: 'Curls', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Biceps'] },
-        { name: 'Rear Delt Flyes', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Rear Delts'] },
-        { name: 'Skull Crushers', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Triceps'] }
-      ],
-             equipment: ['Dumbbells'],
-       schedule: 'Unyom, Triyom, Phiyom'
-    },
-         {
-       name: 'Vertical Training / Core',
-       type: 'strength',
-       duration: '~60 min',
-      exercises: [
-        { name: 'Weighted Squat Jumps', reps: '5', sets: '4', rest: '120s', targetMuscles: ['Quads', 'Glutes'] },
-        { name: 'Split Squat Jumps', reps: '5', sets: '4', rest: '120s', targetMuscles: ['Quads', 'Glutes'] },
-        { name: 'Kneeling Jump', reps: '5', sets: '4', rest: '90s', targetMuscles: ['Quads', 'Glutes',] },
-        { name: 'Dumbbell Swing', reps: '8-10', sets: '3', rest: '90s', targetMuscles: ['Hamstrings', 'Glutes'] },
-        { name: 'Dumbbell Romanian Deadlift', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Hamstrings', 'Glutes', 'Lower Back'] },
-        { name: 'Calf Raises', reps: '12-15', sets: '3', rest: '60s', targetMuscles: ['Calves'] },
-        { name: 'Weighted Sit-ups', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Abs'] },
-        { name: 'Russian Twist', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Obliques'] },
-        { name: 'Leg Raise', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Lower Abs'] }
-      ],
-                           equipment: ['Dumbbells'],
-        schedule: 'Tuyom, Foyom, Seyom'
-     },
-           {
-        name: 'Rest Day',
-        type: 'rest',
-        duration: 'Sabbath',
-        schedule: 'Sabbath'
-      }
-   ];
 
   const getTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
@@ -111,6 +173,16 @@ const Exercise: React.FC = () => {
           <span>Total time: ~5.5 hours</span>
           <span>Focus: Upper Body, Vertical Training, Core</span>
         </div>
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '10px', color: '#e67e22', fontWeight: 'bold' }}>
+            Loading workouts from database...
+          </div>
+        )}
+        {error && (
+          <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
+            Error loading from database: {error}. Using hardcoded data.
+          </div>
+        )}
       </div>
 
       

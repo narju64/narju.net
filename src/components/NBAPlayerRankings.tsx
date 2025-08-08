@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './NBAPlayerRankings.css';
 
 interface Player {
+  id?: number;
   rank: number;
   name: string;
   era: string;
@@ -48,9 +49,80 @@ interface Player {
   teams: string[];
 }
 
+interface ApiResponse {
+  list: {
+    id: number;
+    name: string;
+    category: string;
+    items_json: Player[];
+  };
+}
+
 const NBAPlayerRankings: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem('adminUser');
+    const storedToken = localStorage.getItem('adminToken');
+    const loggedIn = !!(storedUser && storedToken);
+    setIsLoggedIn(loggedIn);
+
+    // If logged in, fetch from API
+    if (loggedIn) {
+      fetchPlayersFromApi();
+    } else {
+      // Load hardcoded data
+      fetchHardcodedPlayers();
+    }
+  }, []);
+
+  const fetchPlayersFromApi = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('http://localhost:3001/api/lists/nba-players');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: ApiResponse = await response.json();
+      console.log('API Response:', data);
+      
+      // Use API data if available, otherwise fall back to hardcoded
+      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
+        setPlayers(data.list.items_json);
+      } else {
+        console.log('No API data available, using hardcoded data');
+        fetchHardcodedPlayers();
+      }
+    } catch (err) {
+      console.error('Error fetching players from API:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      // Fall back to hardcoded data on error
+      fetchHardcodedPlayers();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchHardcodedPlayers = async () => {
+    try {
+      const response = await fetch('/data/nba-players.json');
+      const data = await response.json();
+      setPlayers(data);
+    } catch (error) {
+      console.error('Error loading hardcoded NBA players data:', error);
+      setError('Failed to load players data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getFlagColor = (nationality: string): string => {
     const colors: { [key: string]: string } = {
@@ -101,23 +173,6 @@ const NBAPlayerRankings: React.FC = () => {
     return colors[nationality] || '#666666';
   };
 
-  useEffect(() => {
-    const fetchPlayers = async () => {
-      try {
-        const response = await fetch('/data/nba-players.json');
-        const data = await response.json();
-
-        setPlayers(data);
-      } catch (error) {
-        console.error('Error loading NBA players data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlayers();
-  }, []);
-
   if (loading) {
     return (
       <div className="nba-rankings-page">
@@ -129,11 +184,41 @@ const NBAPlayerRankings: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="nba-rankings-page">
+        <div className="container">
+          <h1 className="page-title">NBA Player Rankings</h1>
+          <p className="page-description">Error: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="nba-rankings-page">
       <div className="container">
         <h1 className="page-title">NBA Player Rankings</h1>
-        <p className="page-description">The greatest basketball players of all time, ranked by impact, achievements, and legacy</p>
+        <p className="page-description">
+          The greatest basketball players of all time, ranked by impact, achievements, and legacy
+          {loading && (
+            <span style={{ color: '#e67e22', fontWeight: 'bold' }}>
+              {' '}(Loading from database)
+            </span>
+          )}
+        </p>
+        
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#e67e22' }}>
+            Loading players from database...
+          </div>
+        )}
+        
+        {error && (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#e53e3e' }}>
+            Error loading from database: {error}. Using hardcoded data.
+          </div>
+        )}
         
         <div className="rankings-list">
           {players.map((player) => (

@@ -16,6 +16,7 @@ import NBAPlayerRankings from './components/NBAPlayerRankings'
 import SecretPage from './components/SecretPage'
 import Prayer from './components/Prayer'
 import SwipeableWidgets from './components/SwipeableWidgets'
+import ApiTest from './components/ApiTest'
 import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
 
@@ -54,6 +55,7 @@ const App: React.FC = () => {
               <Route path="/content/personal-docs/prayer" element={<Prayer />} />
               <Route path="/najnimre" element={<SecretPage />} />
               <Route path="/najnimre/accounts" element={<SecretPage />} />
+              <Route path="/api-test" element={<ApiTest />} />
             </Routes>
           </main>
         </div>

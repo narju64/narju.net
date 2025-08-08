@@ -127,6 +127,30 @@ const Header: React.FC = () => {
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: string | null }>({});
   const [translatedNavStructure, setTranslatedNavStructure] = useState(normalNavStructure);
   const navRefs = useRef<{ [key: string]: HTMLAnchorElement | HTMLButtonElement | null }>({});
+  
+  // Authentication state
+  const [user, setUser] = useState<{ id: number; email: string; username: string; role: string } | null>(null);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
+  // Check if user is already logged in on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('adminUser');
+    const storedToken = localStorage.getItem('adminToken');
+    
+    if (storedUser && storedToken) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        // Clear invalid stored data
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+      }
+    }
+  }, []);
 
   // Helper to check if a path is active or a parent of the current path
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
@@ -175,6 +199,48 @@ const Header: React.FC = () => {
 
   const currentNavStructure = isNPAMode ? translatedNavStructure : baseNavStructure;
 
+  // Handle login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError('');
+
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser', JSON.stringify(data.user));
+        setShowLoginForm(false);
+        setLoginEmail('');
+        setLoginPassword('');
+      } else {
+        setLoginError(data.error || 'Login failed');
+      }
+    } catch (error) {
+      setLoginError('Network error - make sure the backend is running on localhost:3001');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    setShowLoginForm(false);
+  };
+
   // Recursive dropdown rendering for desktop
   const renderDropdown = (items: any[], parentLabel: string, depth = 0, topLevelLabel?: string) => {
     const isMobile = window.innerWidth <= 900;
@@ -220,43 +286,23 @@ const Header: React.FC = () => {
                 setOpenSubmenus((prev) => ({ ...prev, [parentLabel]: null }));
               }
             }}
-            style={{ position: 'relative' }}
           >
             {item.href.startsWith('http') ? (
-              <a 
-                href={item.href} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.open(item.href, '_blank', 'noopener,noreferrer');
-                  setMobileOpen(false);
-                }}
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
               >
                 {item.label}
               </a>
-            ) : item.children ? (
-              // If item has children, handle mobile click to expand
-              <button
-                className="dropdown-item-button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // On mobile, toggle the submenu
-                  if (window.innerWidth <= 900) {
-                    setOpenSubmenus((prev) => ({ 
-                      ...prev, 
-                      [parentLabel]: openSubmenus[parentLabel] === item.label ? null : item.label 
-                    }));
-                  }
-                }}
+            ) : (
+              <Link
+                to={item.href}
+                onClick={() => setMobileOpen(false)}
               >
                 {item.label}
-              </button>
-            ) : (
-              // If no children, navigate normally
-              <Link to={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>
+              </Link>
             )}
             {item.children && openSubmenus[parentLabel] === item.label && (
               renderDropdown(item.children, item.label, depth + 1, topLevelLabel)
@@ -270,84 +316,138 @@ const Header: React.FC = () => {
   return (
     <header className="header">
       <nav className="nav">
-                 <div className="nav-brand">
-           <Link to="/" className="logo" onClick={() => setMobileOpen(false)}>
-             <img src="/favicon.png" alt="narju.net" className="logo-icon" />
-             narju.net
-           </Link>
-         </div>
+        <div className="nav-brand">
+          <Link to="/" className="logo" onClick={() => setMobileOpen(false)}>
+            <img src="/favicon.png" alt="narju.net" className="logo-icon" />
+            narju.net
+          </Link>
+        </div>
         <button className="nav-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
           <span className="hamburger" />
         </button>
-                 <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
-           {currentNavStructure.map((item) => (
-             item.href.startsWith('http') ? (
-               <a
-                 href={item.href}
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 onClick={() => setMobileOpen(false)}
-                 className={`nav-link${isActive(item.href) ? ' active' : ''}`}
-                 key={item.href}
-                 ref={el => { navRefs.current[item.label] = el; }}
-                 onMouseEnter={() => setOpenDropdown(item.label)}
-                 onMouseLeave={() => setOpenDropdown(null)}
-                 style={{ position: 'relative', display: 'inline-block' }}
-               >
-                 {item.label}
-                 {item.children && openDropdown === item.label && (
-                   <div className="dropdown-container">
-                     {renderDropdown(item.children, item.label, 0, item.label)}
-                   </div>
-                 )}
-               </a>
-                           ) : item.children ? (
-                // If item has children, handle mobile click to expand
-                <button
-                  className={`nav-link${isActive(item.href) ? ' active' : ''}`}
-                  key={item.href}
-                  ref={el => { navRefs.current[item.label] = el; }}
-                  onMouseEnter={() => setOpenDropdown(item.label)}
-                  onMouseLeave={() => setOpenDropdown(null)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // On mobile, toggle the dropdown instead of navigating
-                    if (window.innerWidth <= 900) {
-                      setOpenDropdown(openDropdown === item.label ? null : item.label);
-                    }
-                    // On desktop, do nothing - let hover handle it
-                  }}
-                  style={{ position: 'relative', display: 'inline-block' }}
+        <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
+          {currentNavStructure.map((item) => (
+            item.href.startsWith('http') ? (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                key={item.href}
+                ref={el => { navRefs.current[item.label] = el; }}
+                onMouseEnter={() => setOpenDropdown(item.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+                style={{ position: 'relative', display: 'inline-block' }}
+              >
+                {item.label}
+                {item.children && openDropdown === item.label && (
+                  <div className="dropdown-container">
+                    {renderDropdown(item.children, item.label, 0, item.label)}
+                  </div>
+                )}
+              </a>
+            ) : item.children ? (
+              // If item has children, handle mobile click to expand
+              <button
+                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                key={item.href}
+                ref={el => { navRefs.current[item.label] = el; }}
+                onMouseEnter={() => setOpenDropdown(item.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // On mobile, toggle the dropdown instead of navigating
+                  if (window.innerWidth <= 900) {
+                    setOpenDropdown(openDropdown === item.label ? null : item.label);
+                  }
+                  // On desktop, do nothing - let hover handle it
+                }}
+                style={{ position: 'relative', display: 'inline-block' }}
+              >
+                {item.label}
+                {item.children && openDropdown === item.label && (
+                  <div className="dropdown-container">
+                    {renderDropdown(item.children, item.label, 0, item.label)}
+                  </div>
+                )}
+              </button>
+            ) : (
+              <Link
+                to={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={`nav-link${isActive(item.href) ? ' active' : ''}`}
+                key={item.href}
+                ref={el => { navRefs.current[item.label] = el; }}
+                onMouseEnter={() => setOpenDropdown(item.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+                style={{ position: 'relative', display: 'inline-block' }}
+              >
+                {item.label}
+                {item.children && openDropdown === item.label && (
+                  <div className="dropdown-container">
+                    {renderDropdown(item.children, item.label, 0, item.label)}
+                  </div>
+                )}
+              </Link>
+            )
+          ))}
+        </div>
+        
+        {/* User Account Section */}
+        <div className="user-account-section">
+          {user ? (
+            <div className="user-info">
+              <span className="username">{user.username}</span>
+              <button onClick={handleLogout} className="logout-btn">
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="login-section">
+              {showLoginForm ? (
+                <form onSubmit={handleLogin} className="login-form">
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    required
+                    className="login-input"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                    className="login-input"
+                  />
+                  <button type="submit" disabled={isLoggingIn} className="login-btn">
+                    {isLoggingIn ? 'Logging in...' : 'Login'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowLoginForm(false)}
+                    className="cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                  {loginError && <div className="login-error">{loginError}</div>}
+                </form>
+              ) : (
+                <button 
+                  onClick={() => setShowLoginForm(true)}
+                  className="login-toggle-btn"
                 >
-                  {item.label}
-                  {item.children && openDropdown === item.label && (
-                    <div className="dropdown-container">
-                      {renderDropdown(item.children, item.label, 0, item.label)}
-                    </div>
-                  )}
+                  Login
                 </button>
-             ) : (
-               <Link
-                 to={item.href}
-                 onClick={() => setMobileOpen(false)}
-                 className={`nav-link${isActive(item.href) ? ' active' : ''}`}
-                 key={item.href}
-                 ref={el => { navRefs.current[item.label] = el; }}
-                 onMouseEnter={() => setOpenDropdown(item.label)}
-                 onMouseLeave={() => setOpenDropdown(null)}
-                 style={{ position: 'relative', display: 'inline-block' }}
-               >
-                 {item.label}
-                 {item.children && openDropdown === item.label && (
-                   <div className="dropdown-container">
-                     {renderDropdown(item.children, item.label, 0, item.label)}
-                   </div>
-                 )}
-               </Link>
-             )
-           ))}
-         </div>
+              )}
+            </div>
+          )}
+        </div>
+        
         <div className="npa-toggle-container">
           <SiteToggle />
         </div>

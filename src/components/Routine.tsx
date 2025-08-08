@@ -20,9 +20,91 @@ interface ProcessedRoutine {
   isExtended: boolean;
 }
 
+interface RoutineData {
+  day: number;
+  routines: {
+    time: string;
+    activity: string;
+    category: string;
+  }[];
+}
+
+interface ApiResponse {
+  list: {
+    id: number;
+    name: string;
+    category: string;
+    items_json: RoutineData[];
+  };
+}
+
 const Routine: React.FC = () => {
   const [currentDate] = React.useState<OrbitalDate>(orbitalCalendar.getCurrentOrbitalDate());
   const [currentTime, setCurrentTime] = React.useState<string>('');
+  const [routineData, setRoutineData] = React.useState<DayRoutine[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
+  // Check if user is logged in
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('adminUser');
+    const storedToken = localStorage.getItem('adminToken');
+    const loggedIn = !!(storedUser && storedToken);
+    setIsLoggedIn(loggedIn);
+
+    // If logged in, fetch from API
+    if (loggedIn) {
+      fetchRoutineFromApi();
+    } else {
+      // Load hardcoded data
+      loadHardcodedRoutine();
+    }
+  }, []);
+
+  const fetchRoutineFromApi = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('http://localhost:3001/api/lists/routine');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: ApiResponse = await response.json();
+      console.log('API Response:', data);
+      
+      // Use API data if available, otherwise fall back to hardcoded
+      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
+        const apiRoutines: DayRoutine[] = data.list.items_json.map(item => ({
+          day: item.day,
+          routines: item.routines
+        }));
+        setRoutineData(apiRoutines);
+      } else {
+        console.log('No API data available, using hardcoded data');
+        loadHardcodedRoutine();
+      }
+    } catch (err) {
+      console.error('Error fetching routine from API:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      // Fall back to hardcoded data on error
+      loadHardcodedRoutine();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadHardcodedRoutine = () => {
+    // Generate weekly routine using shared logic
+    const weeklyRoutine: DayRoutine[] = Array.from({ length: 7 }, (_, index) => ({
+      day: index + 1,
+      routines: getCurrentRoutine(index + 1)
+    }));
+    setRoutineData(weeklyRoutine);
+  };
 
   // Update current time every minute
   React.useEffect(() => {
@@ -78,11 +160,13 @@ const Routine: React.FC = () => {
     return processed;
   };
 
-  // Generate weekly routine using shared logic
-  const weeklyRoutine: DayRoutine[] = Array.from({ length: 7 }, (_, index) => ({
-    day: index + 1,
-    routines: getCurrentRoutine(index + 1)
-  }));
+  // Use routineData if available, otherwise fall back to hardcoded
+  const weeklyRoutine: DayRoutine[] = routineData.length > 0 
+    ? routineData 
+    : Array.from({ length: 7 }, (_, index) => ({
+        day: index + 1,
+        routines: getCurrentRoutine(index + 1)
+      }));
 
   // Process each day's routine for visual extension
   const processedWeeklyRoutine = weeklyRoutine.map(day => ({
@@ -194,6 +278,16 @@ const Routine: React.FC = () => {
           <span>{formatGregorianDate(currentDate)}</span>
           <span>Time: {currentTime}</span>
         </div>
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '10px', color: '#e67e22', fontWeight: 'bold' }}>
+            Loading routine from database...
+          </div>
+        )}
+        {error && (
+          <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
+            Error loading from database: {error}. Using hardcoded data.
+          </div>
+        )}
       </div>
 
       <div className="month-week-header">

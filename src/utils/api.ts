@@ -14,7 +14,7 @@ const getApiBaseUrl = (): string => {
   
   // Fallback - this should be updated with the actual Railway URL
   console.warn('VITE_API_BASE_URL not set. Please set it to your Railway backend URL.');
-  return 'https://narju-backend-production.up.railway.app';
+  return 'https://narjunet-production.up.railway.app';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

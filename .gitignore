@@ -60,4 +60,8 @@ jspm_packages/
 .env
 
 # Secret configuration files
-src/config/secret.ts 
+src/config/secret.ts
+
+# Environment setup scripts with credentials
+backend/update-env.js
+backend/setup-env.js 

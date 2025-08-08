@@ -76,7 +76,6 @@ const Diet: React.FC = () => {
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Helper function to calculate nutrition for a meal's ingredients
   const calculateNutritionForMeal = (mealIngredients: (SelectedIngredient & { servingSizeMultiplier?: number })[]) => {
@@ -139,7 +138,6 @@ const Diet: React.FC = () => {
     const storedUser = localStorage.getItem('adminUser');
     const storedToken = localStorage.getItem('adminToken');
     const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
 
     if (loggedIn) {
       fetchIngredientsFromApi();

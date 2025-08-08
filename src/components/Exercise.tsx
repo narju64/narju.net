@@ -32,15 +32,11 @@ const Exercise: React.FC = () => {
   const [workouts, setWorkouts] = React.useState<ExerciseWorkout[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   // Check if user is logged in
   React.useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
-    const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
-
+    const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
+    
     // If logged in, fetch from API
     if (loggedIn) {
       fetchWorkoutsFromApi();

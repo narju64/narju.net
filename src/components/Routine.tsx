@@ -44,20 +44,14 @@ const Routine: React.FC = () => {
   const [routineData, setRoutineData] = React.useState<DayRoutine[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   // Check if user is logged in
   React.useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
-    const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
-
-    // If logged in, fetch from API
+    const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
+    
     if (loggedIn) {
       fetchRoutineFromApi();
     } else {
-      // Load hardcoded data
       loadHardcodedRoutine();
     }
   }, []);

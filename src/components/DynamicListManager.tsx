@@ -22,13 +22,10 @@ const DynamicListManager: React.FC<DynamicListManagerProps> = ({
   defaultCategory
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory || listConfigs[0]?.category || '');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
-    const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
+    // Check if user is logged in - can be used for future features
+    // const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
   }, []);
 
   const selectedConfig = listConfigs.find(config => config.category === selectedCategory);

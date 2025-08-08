@@ -62,15 +62,13 @@ const NBAPlayerRankings: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
     const storedUser = localStorage.getItem('adminUser');
     const storedToken = localStorage.getItem('adminToken');
     const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
-
+    
     // If logged in, fetch from API
     if (loggedIn) {
       fetchPlayersFromApi();

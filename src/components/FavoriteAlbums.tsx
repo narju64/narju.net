@@ -24,8 +24,26 @@ import { CSS } from '@dnd-kit/utilities';
 import './FavoriteAlbums.css';
 import { buildApiUrl } from '../utils/api';
 
-// Simple sortable album item component
-const SortableAlbumItem: React.FC<{ album: Album }> = ({ album }) => {
+// Sortable album item component with mobile support
+const SortableAlbumItem: React.FC<{ 
+  album: Album; 
+  isMobile: boolean; 
+  isEditingRank: boolean;
+  newRankValue: string;
+  onRankClick: (album: Album) => void;
+  onRankChange: (value: string) => void;
+  onRankSubmit: (albumId: number) => void;
+  onRankCancel: () => void;
+}> = ({ 
+  album, 
+  isMobile, 
+  isEditingRank, 
+  newRankValue, 
+  onRankClick, 
+  onRankChange, 
+  onRankSubmit, 
+  onRankCancel 
+}) => {
   const {
     attributes,
     listeners,
@@ -33,7 +51,10 @@ const SortableAlbumItem: React.FC<{ album: Album }> = ({ album }) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: album.id.toString() });
+  } = useSortable({ 
+    id: album.id.toString(),
+    disabled: isMobile // Disable dragging on mobile
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -44,12 +65,49 @@ const SortableAlbumItem: React.FC<{ album: Album }> = ({ album }) => {
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
+      style={{ 
+        ...style, 
+        cursor: isMobile ? 'pointer' : (isDragging ? 'grabbing' : 'grab') 
+      }}
+      {...(!isMobile ? attributes : {})}
+      {...(!isMobile ? listeners : {})}
       className={`album-item-compact ${isDragging ? 'dragging' : ''}`}
+      onClick={isMobile ? () => onRankClick(album) : undefined}
     >
-      <div className="album-rank">#{album.rank}</div>
+      {isEditingRank ? (
+        <div className="album-rank editing">
+          <input
+            type="number"
+            value={newRankValue}
+            onChange={(e) => onRankChange(e.target.value)}
+            onBlur={() => onRankSubmit(album.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') onRankSubmit(album.id);
+              if (e.key === 'Escape') onRankCancel();
+            }}
+            min="1"
+            max="100"
+            autoFocus
+            style={{
+              width: '24px',
+              height: '24px',
+              fontSize: '0.6rem',
+              textAlign: 'center',
+              border: 'none',
+              borderRadius: '50%',
+              background: '#3498db',
+              color: 'white'
+            }}
+          />
+        </div>
+      ) : (
+        <div 
+          className="album-rank" 
+          style={{ cursor: isMobile ? 'pointer' : 'inherit' }}
+        >
+          #{album.rank}
+        </div>
+      )}
       <div className="album-cover-compact">
         <img 
           src={album.cover_image} 
@@ -104,6 +162,9 @@ const FavoriteAlbums: React.FC = () => {
   const [isEditMode, setIsEditMode] = React.useState(false)
   const [originalAlbums, setOriginalAlbums] = React.useState<Album[]>([])
   const [activeId, setActiveId] = React.useState<string | null>(null)
+  const [editingRankId, setEditingRankId] = React.useState<number | null>(null)
+  const [newRankValue, setNewRankValue] = React.useState<string>('')
+  const [isMobile, setIsMobile] = React.useState(false)
 
   // Check if user is logged in
   React.useEffect(() => {
@@ -117,6 +178,34 @@ const FavoriteAlbums: React.FC = () => {
       fetchAlbumsFromApi()
     }
   }, [])
+
+  // Mobile detection
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Handle body scroll lock for mobile edit mode
+  React.useEffect(() => {
+    if (isMobile && isEditMode) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.height = '100vh'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.height = ''
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.height = ''
+    }
+  }, [isMobile, isEditMode])
 
   const fetchAlbumsFromApi = async () => {
     try {
@@ -209,6 +298,58 @@ const FavoriteAlbums: React.FC = () => {
     setAlbums([...originalAlbums]) // Restore original state
     setIsEditMode(false)
     setExpandedAlbum(null)
+    setEditingRankId(null)
+    setNewRankValue('')
+  }
+
+  // Mobile rank editing functions
+  const handleRankClick = (album: Album) => {
+    if (isMobile && isEditMode) {
+      setEditingRankId(album.id)
+      setNewRankValue(album.rank.toString())
+    }
+  }
+
+  const handleRankChange = (value: string) => {
+    setNewRankValue(value)
+  }
+
+  const handleRankSubmit = (albumId: number) => {
+    const newRank = parseInt(newRankValue)
+    if (isNaN(newRank) || newRank < 1 || newRank > filteredAlbums.length) {
+      setEditingRankId(null)
+      setNewRankValue('')
+      return
+    }
+
+    // Find the album being moved
+    const albumToMove = albums.find(a => a.id === albumId)
+    if (!albumToMove) return
+
+    // Create a copy of albums without the moved album
+    const otherAlbums = albums.filter(a => a.id !== albumId)
+    
+    // Sort other albums by current rank
+    otherAlbums.sort((a, b) => a.rank - b.rank)
+    
+    // Insert the moved album at the new position
+    const updatedAlbums = [...otherAlbums]
+    updatedAlbums.splice(newRank - 1, 0, { ...albumToMove, rank: newRank })
+    
+    // Update ranks for all albums
+    const rerankedAlbums = updatedAlbums.map((album, index) => ({
+      ...album,
+      rank: index + 1
+    }))
+
+    setAlbums(rerankedAlbums)
+    setEditingRankId(null)
+    setNewRankValue('')
+  }
+
+  const handleRankCancel = () => {
+    setEditingRankId(null)
+    setNewRankValue('')
   }
 
   const sensors = useSensors(
@@ -295,7 +436,7 @@ const FavoriteAlbums: React.FC = () => {
 
   return (
     <div className="favorite-albums-page">
-      <div className="container">
+      <div className={`container ${isEditMode ? 'edit-mode' : ''}`}>
 
 
         
@@ -313,60 +454,9 @@ const FavoriteAlbums: React.FC = () => {
         
         {/* Filter and Sort Controls */}
         <div className="filter-controls">
-          <div className="filter-group">
-            <label>Genre:</label>
-            <select 
-              value={selectedGenre} 
-              onChange={(e) => setSelectedGenre(e.target.value)}
-              className="filter-select"
-            >
-              {genres.map(genre => (
-                <option key={genre} value={genre}>{genre}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="filter-group">
-            <label>Decade:</label>
-            <select 
-              value={selectedDecade} 
-              onChange={(e) => setSelectedDecade(e.target.value)}
-              className="filter-select"
-            >
-              {decades.map(decade => (
-                <option key={decade} value={decade}>{decade}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="filter-group">
-            <label>Sort by:</label>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value as 'rank' | 'year' | 'title' | 'artist')}
-              className="filter-select"
-            >
-              <option value="rank">Rank</option>
-              <option value="year">Year</option>
-              <option value="title">Title</option>
-              <option value="artist">Artist</option>
-            </select>
-          </div>
-          
-          <div className="filter-stats">
-            Showing {filteredAlbums.length} of {albums.length} albums
-          </div>
-          
-          {/* Edit Mode Controls */}
-          <div className="edit-controls">
-            {!isEditMode ? (
-              <button 
-                onClick={handleEditMode}
-                className="edit-button"
-              >
-                Edit Rankings
-              </button>
-            ) : (
+          {isEditMode ? (
+            <div className="edit-mode-header">
+              <h3>Editing Albums - {isMobile ? 'Click album to edit' : 'Drag to reorder'}</h3>
               <div className="edit-actions">
                 <button 
                   onClick={handleSaveChanges}
@@ -381,8 +471,63 @@ const FavoriteAlbums: React.FC = () => {
                   Cancel
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="filter-group">
+                <label>Genre:</label>
+                <select 
+                  value={selectedGenre} 
+                  onChange={(e) => setSelectedGenre(e.target.value)}
+                  className="filter-select"
+                >
+                  {genres.map(genre => (
+                    <option key={genre} value={genre}>{genre}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="filter-group">
+                <label>Decade:</label>
+                <select 
+                  value={selectedDecade} 
+                  onChange={(e) => setSelectedDecade(e.target.value)}
+                  className="filter-select"
+                >
+                  {decades.map(decade => (
+                    <option key={decade} value={decade}>{decade}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="filter-group">
+                <label>Sort by:</label>
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value as 'rank' | 'year' | 'title' | 'artist')}
+                  className="filter-select"
+                >
+                  <option value="rank">Rank</option>
+                  <option value="year">Year</option>
+                  <option value="title">Title</option>
+                  <option value="artist">Artist</option>
+                </select>
+              </div>
+              
+              <div className="filter-stats">
+                Showing {filteredAlbums.length} of {albums.length} albums
+              </div>
+              
+              <div className="edit-controls">
+                <button 
+                  onClick={handleEditMode}
+                  className="edit-button"
+                >
+                  Edit Rankings
+                </button>
+              </div>
+            </>
+          )}
         </div>
         
         {isEditMode ? (
@@ -400,7 +545,17 @@ const FavoriteAlbums: React.FC = () => {
             >
               <div className="albums-list edit-mode">
                 {filteredAlbums.map((album) => (
-                  <SortableAlbumItem key={album.id} album={album} />
+                  <SortableAlbumItem 
+                    key={album.id} 
+                    album={album}
+                    isMobile={isMobile}
+                    isEditingRank={editingRankId === album.id}
+                    newRankValue={newRankValue}
+                    onRankClick={handleRankClick}
+                    onRankChange={handleRankChange}
+                    onRankSubmit={handleRankSubmit}
+                    onRankCancel={handleRankCancel}
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -434,10 +589,15 @@ const FavoriteAlbums: React.FC = () => {
               const isLastInRow = album.rank % 5 === 0
               const isSecondToLastInRow = album.rank % 5 === 4
               
+              // On mobile, always expand right; on desktop, use position logic
+              const expandDirection = isMobile 
+                ? 'expand-right' 
+                : (isLastInRow || isSecondToLastInRow ? 'expand-left' : 'expand-right')
+              
               return (
                 <div 
                   key={album.id} 
-                  className={`album-item ${isExpanded ? 'expanded' : ''} ${isExpanded ? (isLastInRow || isSecondToLastInRow ? 'expand-left' : 'expand-right') : ''}`}
+                  className={`album-item ${isExpanded ? 'expanded' : ''} ${isExpanded ? expandDirection : ''}`}
                   onClick={() => setExpandedAlbum(isExpanded ? null : album.id)}
                 >
                 <div className="album-rank">#{album.rank}</div>

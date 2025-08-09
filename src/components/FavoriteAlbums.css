@@ -696,4 +696,137 @@
   transform: rotate(5deg) scale(1.05);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
   z-index: 1000;
+}
+
+/* Mobile Edit Mode */
+@media (max-width: 768px) {
+  .favorite-albums-page {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  
+  .filter-controls {
+    margin-bottom: 0.25rem; /* Reduce gap to album grid */
+    padding-bottom: 0;
+  }
+  
+  /* Only apply viewport lock in edit mode */
+  .container.edit-mode {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .container.edit-mode .filter-controls {
+    flex-shrink: 0; /* Don't shrink the controls */
+  }
+  
+  .albums-list.edit-mode {
+    /* Use remaining viewport height minus header space */
+    height: calc(100vh - 180px); /* More space for header, padding, etc. */
+    overflow-y: auto;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-grow: 1;
+    padding-top: 15px; /* Space for rank badges */
+  }
+  
+  .albums-list:not(.edit-mode) {
+    /* Normal scrolling behavior - no fixed height */
+    gap: 1rem;
+    justify-content: center;
+  }
+  
+  .album-item-compact {
+    width: 120px;
+    height: 120px;
+    cursor: pointer;
+  }
+  
+  .album-item-compact .album-rank {
+    width: 28px;
+    height: 28px;
+    font-size: 0.65rem;
+    top: -8px;
+    left: -8px;
+    cursor: pointer;
+  }
+  
+  /* Click to edit rank indicator */
+  .album-item-compact .album-rank:hover {
+    background: #3498db;
+    transform: scale(1.1);
+  }
+  
+  .albums-list:not(.edit-mode) .album-item {
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  /* Mobile expanded content adjustments */
+  .album-item.expanded .album-expanded-content {
+    width: calc(100vw - 2rem); /* Use most of viewport width */
+    max-width: 350px; /* But don't exceed reasonable size */
+  }
+}
+
+/* Edit Mode Header */
+.edit-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 0;
+  border-bottom: 2px solid #3498db;
+  margin-bottom: 1rem;
+}
+
+.edit-mode-header h3 {
+  margin: 0;
+  color: #3498db;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.edit-mode-header .edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .edit-mode-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0;
+    margin-bottom: 0.25rem;
+    border-bottom: none; /* Remove underline */
+  }
+  
+  .edit-mode-header h3 {
+    font-size: 0.85rem;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  
+  .edit-mode-header .edit-actions {
+    gap: 0.5rem;
+  }
+  
+  .edit-mode-header .save-button,
+  .edit-mode-header .cancel-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: auto;
+    border-radius: 4px;
+  }
+  
+  /* Hide Add New Album section on mobile */
+  .add-album-section {
+    display: none;
+  }
 } 

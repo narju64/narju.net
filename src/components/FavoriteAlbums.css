@@ -552,4 +552,148 @@
   .page-title {
     font-size: 1.8rem;
   }
+}
+
+/* Edit Mode Styles */
+.edit-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.edit-button,
+.save-button,
+.cancel-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-button {
+  background: var(--color-titles);
+  color: white;
+}
+
+.edit-button:hover {
+  background: #e67e22;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(230, 126, 34, 0.3);
+}
+
+.save-button {
+  background: #48bb78;
+  color: white;
+}
+
+.save-button:hover {
+  background: #38a169;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+}
+
+.cancel-button {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-borders);
+}
+
+.cancel-button:hover {
+  background: var(--color-borders);
+  color: white;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Compact Album View for Edit Mode */
+.albums-list.edit-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.album-item-compact {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  transition: transform 0.2s ease;
+  cursor: grab;
+}
+
+/* Smooth transitions for reordering */
+.albums-list.edit-mode .album-item-compact {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.album-item-compact:active {
+  cursor: grabbing;
+}
+
+.album-item-compact:hover {
+  transform: scale(1.05);
+}
+
+.album-item-compact .album-rank {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: var(--color-titles);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.7rem;
+  z-index: 2;
+  border: 2px solid var(--color-bg);
+}
+
+.album-cover-compact {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.album-cover-compact img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-cover-compact .album-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--color-card-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-borders);
+}
+
+.album-cover-compact .placeholder-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Dragging States */
+.album-item-compact.dragging {
+  opacity: 0.8;
+  transform: rotate(5deg) scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
 } 

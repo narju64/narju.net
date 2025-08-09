@@ -176,8 +176,19 @@ router.put('/reorder', authenticateToken, async (req: Request, res: Response): P
     try {
       await client.query('BEGIN');
       
-      // Update all rankings
-      for (const { albumId, rank } of rankings) {
+      // First, set all ranks to negative values to avoid unique constraint violations
+      for (let i = 0; i < rankings.length; i++) {
+        const { albumId } = rankings[i];
+        await client.query(`
+          UPDATE user_album_rankings 
+          SET rank = $1, updated_at = CURRENT_TIMESTAMP 
+          WHERE user_id = $2 AND album_id = $3
+        `, [-(i + 1), userId, albumId]);
+      }
+      
+      // Then, update to the final rank values
+      for (let i = 0; i < rankings.length; i++) {
+        const { albumId, rank } = rankings[i];
         await client.query(`
           UPDATE user_album_rankings 
           SET rank = $1, updated_at = CURRENT_TIMESTAMP 

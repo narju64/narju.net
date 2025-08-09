@@ -1,6 +1,72 @@
 import React from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverEvent,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import './FavoriteAlbums.css';
 import { buildApiUrl } from '../utils/api';
+
+// Simple sortable album item component
+const SortableAlbumItem: React.FC<{ album: Album }> = ({ album }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: album.id.toString() });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`album-item-compact ${isDragging ? 'dragging' : ''}`}
+    >
+      <div className="album-rank">#{album.rank}</div>
+      <div className="album-cover-compact">
+        <img 
+          src={album.cover_image} 
+          alt={`${album.title} by ${album.artist}`}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            target.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+        <div className="album-cover-placeholder hidden">
+          <div className="placeholder-icon">🎵</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface Album {
   id: number
@@ -35,6 +101,9 @@ const FavoriteAlbums: React.FC = () => {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
+  const [isEditMode, setIsEditMode] = React.useState(false)
+  const [originalAlbums, setOriginalAlbums] = React.useState<Album[]>([])
+  const [activeId, setActiveId] = React.useState<string | null>(null)
 
   // Check if user is logged in
   React.useEffect(() => {
@@ -89,6 +158,106 @@ const FavoriteAlbums: React.FC = () => {
     }
   }
 
+  // Edit mode functions
+  const handleEditMode = () => {
+    setOriginalAlbums([...albums]) // Save current state for cancel
+    setIsEditMode(true)
+  }
+
+  const handleSaveChanges = async () => {
+    try {
+      setLoading(true)
+      
+      // Create rankings array with albumId and rank
+      const rankings = albums.map((album, index) => ({
+        albumId: album.id,
+        rank: index + 1
+      }))
+      
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(buildApiUrl('/api/albums/reorder'), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ rankings })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to save album order: ${response.status} - ${errorText}`)
+      }
+
+      setIsEditMode(false)
+      setExpandedAlbum(null)
+      
+      // Refresh the data from the server to ensure consistency
+      await fetchAlbumsFromApi()
+      
+    } catch (error) {
+      console.error('Error saving album order:', error)
+      setError('Failed to save changes. Please try again.')
+      // Restore original order on error
+      setAlbums([...originalAlbums])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setAlbums([...originalAlbums]) // Restore original state
+    setIsEditMode(false)
+    setExpandedAlbum(null)
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+    
+    if (!over || active.id === over.id) {
+      return
+    }
+
+    const oldIndex = filteredAlbums.findIndex(album => album.id.toString() === active.id)
+    const newIndex = filteredAlbums.findIndex(album => album.id.toString() === over.id)
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reorderedAlbums = arrayMove(filteredAlbums, oldIndex, newIndex)
+      
+      // Update ranks based on new positions for live preview
+      const updatedAlbums = reorderedAlbums.map((album, index) => ({
+        ...album,
+        rank: index + 1
+      }))
+
+      setAlbums(updatedAlbums)
+    }
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null)
+    
+    const { active, over } = event
+    
+    if (!over || active.id === over.id) {
+      return
+    }
+
+    // The reordering was already handled in handleDragOver
+    // This just finalizes the drag operation
+  }
+
   // Get unique genres and decades from current albums
   const genres = ['All', ...Array.from(new Set(albums.map(album => album.genre).filter(genre => genre !== 'Unknown')))]
   const decades = ['All', ...Array.from(new Set(albums.map(album => Math.floor(album.year / 10) * 10).sort()))]
@@ -118,7 +287,6 @@ const FavoriteAlbums: React.FC = () => {
     return (
       <div className="favorite-albums-page">
         <div className="container">
-          <h1 className="page-title">Top Albums</h1>
           <p className="page-description">Please log in to view the album collection.</p>
         </div>
       </div>
@@ -128,15 +296,8 @@ const FavoriteAlbums: React.FC = () => {
   return (
     <div className="favorite-albums-page">
       <div className="container">
-        <h1 className="page-title">Top Albums</h1>
-        <p className="page-description">
-          My personal collection of favorite albums
-          {loading && (
-            <span style={{ color: '#e67e22', fontWeight: 'bold' }}>
-              {' '}(Loading from database)
-            </span>
-          )}
-        </p>
+
+
         
         {loading && (
           <div style={{ textAlign: 'center', padding: '20px', color: '#e67e22' }}>
@@ -195,20 +356,90 @@ const FavoriteAlbums: React.FC = () => {
           <div className="filter-stats">
             Showing {filteredAlbums.length} of {albums.length} albums
           </div>
+          
+          {/* Edit Mode Controls */}
+          <div className="edit-controls">
+            {!isEditMode ? (
+              <button 
+                onClick={handleEditMode}
+                className="edit-button"
+              >
+                Edit Rankings
+              </button>
+            ) : (
+              <div className="edit-actions">
+                <button 
+                  onClick={handleSaveChanges}
+                  className="save-button"
+                >
+                  Save Changes
+                </button>
+                <button 
+                  onClick={handleCancelEdit}
+                  className="cancel-button"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         
-        <div className="albums-list">
-          {filteredAlbums.map((album) => {
-            const isExpanded = expandedAlbum === album.id
-            const isLastInRow = album.rank % 5 === 0
-            const isSecondToLastInRow = album.rank % 5 === 4
-            
-            return (
-              <div 
-                key={album.id} 
-                className={`album-item ${isExpanded ? 'expanded' : ''} ${isExpanded ? (isLastInRow || isSecondToLastInRow ? 'expand-left' : 'expand-right') : ''}`}
-                onClick={() => setExpandedAlbum(isExpanded ? null : album.id)}
-              >
+        {isEditMode ? (
+          // Edit mode with drag and drop
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext 
+              items={filteredAlbums.map(album => album.id.toString())}
+              strategy={rectSortingStrategy}
+            >
+              <div className="albums-list edit-mode">
+                {filteredAlbums.map((album) => (
+                  <SortableAlbumItem key={album.id} album={album} />
+                ))}
+              </div>
+            </SortableContext>
+            <DragOverlay>
+              {activeId ? (
+                <div className="album-item-compact dragging">
+                  {(() => {
+                    const draggedAlbum = filteredAlbums.find(album => album.id.toString() === activeId)
+                    if (!draggedAlbum) return null
+                    return (
+                      <>
+                        <div className="album-rank">#{draggedAlbum.rank}</div>
+                        <div className="album-cover-compact">
+                          <img 
+                            src={draggedAlbum.cover_image} 
+                            alt={`${draggedAlbum.title} by ${draggedAlbum.artist}`}
+                          />
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        ) : (
+          // Normal view without drag and drop
+          <div className="albums-list">
+            {filteredAlbums.map((album) => {
+              const isExpanded = expandedAlbum === album.id
+              const isLastInRow = album.rank % 5 === 0
+              const isSecondToLastInRow = album.rank % 5 === 4
+              
+              return (
+                <div 
+                  key={album.id} 
+                  className={`album-item ${isExpanded ? 'expanded' : ''} ${isExpanded ? (isLastInRow || isSecondToLastInRow ? 'expand-left' : 'expand-right') : ''}`}
+                  onClick={() => setExpandedAlbum(isExpanded ? null : album.id)}
+                >
                 <div className="album-rank">#{album.rank}</div>
                 
                 <div className="album-cover">
@@ -326,9 +557,10 @@ const FavoriteAlbums: React.FC = () => {
                   )}
                 </div>
               </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
         
         <div className="add-album-section">
           <h2>Add New Album</h2>

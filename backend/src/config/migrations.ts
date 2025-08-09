@@ -1,5 +1,4 @@
 import pool from './database';
-import { seedData } from './seed-data';
 
 // Create Users table
 export const createUsersTable = async () => {
@@ -86,7 +85,7 @@ export const runMigrations = async () => {
     await createUsersTable();
     await createListsTable();
     await createAdminUser();
-    await seedData(); // Add seed data
+    // Note: Data has been manually uploaded to Railway database
     console.log('✅ All migrations completed successfully');
   } catch (error) {
     console.error('❌ Migration failed:', error);

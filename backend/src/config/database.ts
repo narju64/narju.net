@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 // Load environment variables first
-dotenv.config();
+dotenv.config({ path: '.env' });
 
 // Debug: Log the DATABASE_URL (without password for security)
 const dbUrl = process.env.DATABASE_URL;

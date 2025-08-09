@@ -13,7 +13,7 @@ interface Player {
   height: string;
   weight: string;
   wingspan: string;
-  peakSeason?: {
+  peak_season?: {
     year: string;
     stats: {
       ppg: number;
@@ -26,6 +26,9 @@ interface Player {
     achievements: string;
     context: string;
   };
+  personal_notes?: string;
+  created_at?: string;
+  updated_at?: string;
   stats: {
     ppg: number;
     apg: number;
@@ -51,31 +54,25 @@ interface Player {
 }
 
 interface ApiResponse {
-  list: {
-    id: number;
-    name: string;
-    category: string;
-    items_json: Player[];
-  };
+  players: Player[];
 }
 
 const NBAPlayerRankings: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
     const storedUser = localStorage.getItem('adminUser');
     const storedToken = localStorage.getItem('adminToken');
     const loggedIn = !!(storedUser && storedToken);
+    setIsLoggedIn(loggedIn);
     
     // If logged in, fetch from API
     if (loggedIn) {
       fetchPlayersFromApi();
-    } else {
-      // Load hardcoded data
-      fetchHardcodedPlayers();
     }
   }, []);
 
@@ -84,44 +81,42 @@ const NBAPlayerRankings: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(buildApiUrl('/api/lists/nba-players'));
+      const storedToken = localStorage.getItem('adminToken');
+      if (!storedToken) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch(buildApiUrl('/api/nba-players'), {
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data: ApiResponse = await response.json();
-      console.log('API Response:', data);
       
-      // Use API data if available, otherwise fall back to hardcoded
-      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
-        setPlayers(data.list.items_json);
+      // Use API data if available
+      if (data.players && data.players.length > 0) {
+        setPlayers(data.players);
       } else {
-        console.log('No API data available, using hardcoded data');
-        fetchHardcodedPlayers();
+        setError('No players data available');
       }
     } catch (err) {
       console.error('Error fetching players from API:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      // Fall back to hardcoded data on error
-      fetchHardcodedPlayers();
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchHardcodedPlayers = async () => {
-    try {
-      const response = await fetch('/data/nba-players.json');
-      const data = await response.json();
-      setPlayers(data);
-    } catch (error) {
-      console.error('Error loading hardcoded NBA players data:', error);
-      setError('Failed to load players data');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const getFlagColor = (nationality: string): string => {
     const colors: { [key: string]: string } = {
@@ -171,6 +166,18 @@ const NBAPlayerRankings: React.FC = () => {
     };
     return colors[nationality] || '#666666';
   };
+
+  // Show login required message if not logged in
+  if (!isLoggedIn) {
+    return (
+      <div className="nba-rankings-page">
+        <div className="container">
+          <h1 className="page-title">NBA Player Rankings</h1>
+          <p className="page-description">Please log in to view the NBA player rankings.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -318,43 +325,43 @@ const NBAPlayerRankings: React.FC = () => {
                     )}
                   </div>
                 </div>
-                {player.peakSeason && (
+                {player.peak_season && player.peak_season.stats && (
                   <div className="peak-season-section">
-                    <h3 className="stats-category-title">Peak Season: {player.peakSeason.year}</h3>
+                    <h3 className="stats-category-title">Peak Season: {player.peak_season.year}</h3>
                     <div className="peak-season-stats">
                       <div className="peak-stats-grid">
                         <div className="stat">
                           <span className="stat-label">PPG:</span>
-                          <span className="stat-value">{player.peakSeason.stats.ppg}</span>
+                          <span className="stat-value">{player.peak_season.stats.ppg}</span>
                         </div>
                         <div className="stat">
                           <span className="stat-label">APG:</span>
-                          <span className="stat-value">{player.peakSeason.stats.apg}</span>
+                          <span className="stat-value">{player.peak_season.stats.apg}</span>
                         </div>
                         <div className="stat">
                           <span className="stat-label">RPG:</span>
-                          <span className="stat-value">{player.peakSeason.stats.rpg}</span>
+                          <span className="stat-value">{player.peak_season.stats.rpg}</span>
                         </div>
                         <div className="stat">
                           <span className="stat-label">FG%:</span>
-                          <span className="stat-value">{player.peakSeason.stats.fgp}%</span>
+                          <span className="stat-value">{player.peak_season.stats.fgp}%</span>
                         </div>
                         <div className="stat">
                           <span className="stat-label">3PT%:</span>
                           <span className="stat-value">
-                            {typeof player.peakSeason.stats.threeptp === 'string' ? player.peakSeason.stats.threeptp : `${player.peakSeason.stats.threeptp}%`}
+                            {typeof player.peak_season.stats.threeptp === 'string' ? player.peak_season.stats.threeptp : `${player.peak_season.stats.threeptp}%`}
                           </span>
                         </div>
                         <div className="stat">
                           <span className="stat-label">FT%:</span>
-                          <span className="stat-value">{player.peakSeason.stats.ftp}%</span>
+                          <span className="stat-value">{player.peak_season.stats.ftp}%</span>
                         </div>
                       </div>
                       <div className="peak-achievements">
-                        <strong>Achievements:</strong> {player.peakSeason.achievements}
+                        <strong>Achievements:</strong> {player.peak_season.achievements}
                       </div>
                       <div className="peak-context">
-                        {player.peakSeason.context}
+                        {player.peak_season.context}
                       </div>
                     </div>
                   </div>

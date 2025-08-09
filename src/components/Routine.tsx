@@ -45,15 +45,15 @@ const Routine: React.FC = () => {
   const [routineData, setRoutineData] = React.useState<DayRoutine[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   // Check if user is logged in
   React.useEffect(() => {
     const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
+    setIsLoggedIn(loggedIn);
     
     if (loggedIn) {
       fetchRoutineFromApi();
-    } else {
-      loadHardcodedRoutine();
     }
   }, []);
 
@@ -74,26 +74,17 @@ const Routine: React.FC = () => {
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
         setRoutineData(data.list.items_json);
       } else {
-        console.log('No API data available, using hardcoded data');
-        loadHardcodedRoutine();
+        setError('No routine data available');
       }
     } catch (err) {
       console.error('Error fetching routine from API:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      loadHardcodedRoutine();
     } finally {
       setLoading(false);
     }
   };
 
-  const loadHardcodedRoutine = () => {
-    // Generate weekly routine using shared logic
-    const weeklyRoutine: DayRoutine[] = Array.from({ length: 7 }, (_, index) => ({
-      day: index + 1,
-      routines: getCurrentRoutine(index + 1)
-    }));
-    setRoutineData(weeklyRoutine);
-  };
+
 
   // Update current time every minute
   React.useEffect(() => {
@@ -258,6 +249,18 @@ const Routine: React.FC = () => {
     return isCurrentDay(dayNumber) && isCurrentTime(time);
   };
 
+  // Show login required message if not logged in
+  if (!isLoggedIn) {
+    return (
+      <div className="routine-page">
+        <div className="routine-header">
+          <h1>Weekly Routine</h1>
+          <p>Please log in to view your weekly routine.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="routine-page">
       <div className="routine-header">
@@ -274,7 +277,7 @@ const Routine: React.FC = () => {
         )}
         {error && (
           <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
-            Error loading from database: {error}. Using hardcoded data.
+            Error loading routine: {error}
           </div>
         )}
       </div>

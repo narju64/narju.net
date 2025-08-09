@@ -33,17 +33,16 @@ const Exercise: React.FC = () => {
   const [workouts, setWorkouts] = React.useState<ExerciseWorkout[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   // Check if user is logged in
   React.useEffect(() => {
     const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
+    setIsLoggedIn(loggedIn);
     
     // If logged in, fetch from API
     if (loggedIn) {
       fetchWorkoutsFromApi();
-    } else {
-      // Load hardcoded data
-      loadHardcodedWorkouts();
     }
   }, []);
 
@@ -64,64 +63,17 @@ const Exercise: React.FC = () => {
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
         setWorkouts(data.list.items_json);
       } else {
-        console.log('No API data available, using hardcoded data');
-        loadHardcodedWorkouts();
+        setError('No exercise data available');
       }
     } catch (err) {
       console.error('Error fetching workouts from API:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      loadHardcodedWorkouts();
     } finally {
       setLoading(false);
     }
   };
 
-  const loadHardcodedWorkouts = () => {
-    // Actual exercise routine - just the two workout types
-    const hardcodedWorkouts: ExerciseWorkout[] = [
-      {
-        name: 'Upper Body Strength',
-        type: 'hypertrophy',
-        duration: '~45 min',
-        exercises: [
-          { name: 'Pushups', reps: 'to failure', sets: '3', rest: '90s', targetMuscles: ['Chest', 'Triceps'] },
-          { name: 'Dumbbell Bent-Over Rows', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Back', 'Biceps'] },
-          { name: 'Dumbbell Overhead Press', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Shoulders', 'Triceps'] },
-          { name: 'Lateral Raises', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Shoulders'] },
-          { name: 'Curls', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Biceps'] },
-          { name: 'Rear Delt Flyes', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Rear Delts'] },
-          { name: 'Skull Crushers', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Triceps'] }
-        ],
-        equipment: ['Dumbbells'],
-        schedule: 'Unyom, Triyom, Phiyom'
-      },
-      {
-        name: 'Vertical Training / Core',
-        type: 'strength',
-        duration: '~60 min',
-        exercises: [
-          { name: 'Weighted Squat Jumps', reps: '5', sets: '4', rest: '120s', targetMuscles: ['Quads', 'Glutes'] },
-          { name: 'Split Squat Jumps', reps: '5', sets: '4', rest: '120s', targetMuscles: ['Quads', 'Glutes'] },
-          { name: 'Kneeling Jump', reps: '5', sets: '4', rest: '90s', targetMuscles: ['Quads', 'Glutes',] },
-          { name: 'Dumbbell Swing', reps: '8-10', sets: '3', rest: '90s', targetMuscles: ['Hamstrings', 'Glutes'] },
-          { name: 'Dumbbell Romanian Deadlift', reps: '8-12', sets: '3', rest: '90s', targetMuscles: ['Hamstrings', 'Glutes', 'Lower Back'] },
-          { name: 'Calf Raises', reps: '12-15', sets: '3', rest: '60s', targetMuscles: ['Calves'] },
-          { name: 'Weighted Sit-ups', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Abs'] },
-          { name: 'Russian Twist', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Obliques'] },
-          { name: 'Leg Raise', reps: '8-12', sets: '3', rest: '60s', targetMuscles: ['Core', 'Lower Abs'] }
-        ],
-        equipment: ['Dumbbells'],
-        schedule: 'Tuyom, Foyom, Seyom'
-      },
-      {
-        name: 'Rest Day',
-        type: 'rest',
-        duration: 'Sabbath',
-        schedule: 'Sabbath'
-      }
-    ];
-    setWorkouts(hardcodedWorkouts);
-  };
+
 
   // Get current orbital day of the week
   const getCurrentDay = () => {
@@ -159,6 +111,18 @@ const Exercise: React.FC = () => {
     return tints[type] || 'transparent';
   };
 
+  // Show login required message if not logged in
+  if (!isLoggedIn) {
+    return (
+      <div className="exercise-page">
+        <div className="exercise-header">
+          <h1>Exercise Routine</h1>
+          <p>Please log in to view your exercise routine.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="exercise-page">
       <div className="exercise-header">
@@ -175,7 +139,7 @@ const Exercise: React.FC = () => {
         )}
         {error && (
           <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
-            Error loading from database: {error}. Using hardcoded data.
+            Error loading exercise data: {error}
           </div>
         )}
       </div>

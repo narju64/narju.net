@@ -6,6 +6,8 @@ import { runMigrations } from './config/migrations';
 import { testConnection } from './config/database';
 import authRoutes from './routes/auth';
 import listRoutes from './routes/lists';
+import albumRoutes from './routes/albums';
+import nbaPlayerRoutes from './routes/nba-players';
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +32,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lists', listRoutes);
+app.use('/api/albums', albumRoutes);
+app.use('/api/nba-players', nbaPlayerRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

@@ -411,8 +411,8 @@ const Header: React.FC = () => {
               {showLoginForm ? (
                 <form onSubmit={handleLogin} className="login-form">
                   <input
-                    type="email"
-                    placeholder="Email"
+                    type="text"
+                    placeholder="Email or Username"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
@@ -436,6 +436,13 @@ const Header: React.FC = () => {
                   >
                     Cancel
                   </button>
+                  <Link 
+                    to="/register" 
+                    className="register-link"
+                    onClick={() => setShowLoginForm(false)}
+                  >
+                    Create Account
+                  </Link>
                   {loginError && <div className="login-error">{loginError}</div>}
                 </form>
               ) : (

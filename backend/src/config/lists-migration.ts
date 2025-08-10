@@ -100,78 +100,82 @@ export const migrateListsData = async () => {
     const { albumsData } = await import('../data/albums-data');
     const { nbaPlayersData } = await import('../data/nba-players-data');
 
-    // 1. Migrate albums (remove rank, add to albums table)
+    // 1. Migrate albums (current structure doesn't have rank)
     console.log('📀 Migrating albums...');
     for (const album of albumsData) {
-      const { rank, ...albumWithoutRank } = album;
+      // Handle albums that might not have all fields
+      const albumData = {
+        title: album.title,
+        artist: album.artist,
+        year: album.year,
+        genre: album.genre || '',
+        displayGenre: album.displayGenre || album.genre || '',
+        categories: album.categories || [],
+        coverImage: album.coverImage || '',
+        description: '', // No description field in current data
+        youtubePlaylistId: album.youtubePlaylistId || '',
+        spotifyAlbumId: album.spotifyAlbumId || ''
+      };
       
       await pool.query(`
         INSERT INTO albums (
           title, artist, year, genre, display_genre, categories, 
           cover_image, description, youtube_playlist_id, spotify_album_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (title, artist, year) DO NOTHING
       `, [
-        albumWithoutRank.title,
-        albumWithoutRank.artist,
-        albumWithoutRank.year,
-        albumWithoutRank.genre,
-        albumWithoutRank.displayGenre || albumWithoutRank.genre,
-        JSON.stringify(albumWithoutRank.categories || []),
-        albumWithoutRank.coverImage,
-        albumWithoutRank.description,
-        albumWithoutRank.youtubePlaylistId,
-        albumWithoutRank.spotifyAlbumId
+        albumData.title,
+        albumData.artist,
+        albumData.year,
+        albumData.genre,
+        albumData.displayGenre,
+        JSON.stringify(albumData.categories),
+        albumData.coverImage,
+        albumData.description,
+        albumData.youtubePlaylistId,
+        albumData.spotifyAlbumId
       ]);
-
-      // Add admin's ranking for this album
-      await pool.query(`
-        INSERT INTO user_album_rankings (user_id, album_id, rank)
-        VALUES (
-          (SELECT id FROM users WHERE role = 'admin' LIMIT 1),
-          (SELECT id FROM albums WHERE title = $1 AND artist = $2),
-          $3
-        )
-        ON CONFLICT (user_id, rank) DO NOTHING
-      `, [albumWithoutRank.title, albumWithoutRank.artist, rank]);
     }
 
-    // 2. Migrate NBA players
+    // 2. Migrate NBA players (current structure doesn't have rank)
     console.log('🏀 Migrating NBA players...');
     for (const player of nbaPlayersData) {
-      const { rank, ...playerWithoutRank } = player;
+      // Handle players that might not have all fields
+      const playerData = {
+        name: player.name,
+        era: player.era || '',
+        nationality: player.nationality || '',
+        position: player.position || '',
+        teams: player.teams || [],
+        photo: player.photo || '',
+        height: player.height || '',
+        weight: player.weight || '',
+        wingspan: player.wingspan || '',
+        stats: player.stats || {},
+        achievements: player.achievements || [],
+        peakSeason: player.peakSeason || {}
+      };
       
       await pool.query(`
         INSERT INTO nba_players (
           name, era, nationality, position, teams, photo, height, weight, 
           wingspan, stats, achievements, peak_season
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (name) DO NOTHING
       `, [
-        playerWithoutRank.name,
-        playerWithoutRank.era,
-        playerWithoutRank.nationality,
-        playerWithoutRank.position,
-        JSON.stringify(playerWithoutRank.teams || []),
-        playerWithoutRank.photo,
-        playerWithoutRank.height,
-        playerWithoutRank.weight,
-        playerWithoutRank.wingspan,
-        JSON.stringify(playerWithoutRank.stats || {}),
-        JSON.stringify(playerWithoutRank.achievements || []),
-        JSON.stringify(playerWithoutRank.peakSeason || {})
+        playerData.name,
+        playerData.era,
+        playerData.nationality,
+        playerData.position,
+        JSON.stringify(playerData.teams),
+        playerData.photo,
+        playerData.height,
+        playerData.weight,
+        playerData.wingspan,
+        JSON.stringify(playerData.stats),
+        JSON.stringify(playerData.achievements),
+        JSON.stringify(playerData.peakSeason)
       ]);
-
-      // Add admin's ranking for this player
-      await pool.query(`
-        INSERT INTO user_nba_rankings (user_id, player_id, rank)
-        VALUES (
-          (SELECT id FROM users WHERE role = 'admin' LIMIT 1),
-          (SELECT id FROM nba_players WHERE name = $1),
-          $2
-        )
-        ON CONFLICT (user_id, rank) DO NOTHING
-      `, [playerWithoutRank.name, rank]);
     }
 
     console.log('🎉 Lists data migration completed successfully!');

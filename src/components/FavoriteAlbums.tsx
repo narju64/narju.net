@@ -425,9 +425,9 @@ const FavoriteAlbums: React.FC = () => {
 
   // Show login required message if not logged in
   if (!isLoggedIn) {
-    return (
-      <div className="favorite-albums-page">
-        <div className="container">
+  return (
+    <div className="favorite-albums-page">
+      <div className="container">
           <p className="page-description">Please log in to view the album collection.</p>
         </div>
       </div>
@@ -474,49 +474,49 @@ const FavoriteAlbums: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="filter-group">
-                <label>Genre:</label>
-                <select 
-                  value={selectedGenre} 
-                  onChange={(e) => setSelectedGenre(e.target.value)}
-                  className="filter-select"
-                >
-                  {genres.map(genre => (
-                    <option key={genre} value={genre}>{genre}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="filter-group">
-                <label>Decade:</label>
-                <select 
-                  value={selectedDecade} 
-                  onChange={(e) => setSelectedDecade(e.target.value)}
-                  className="filter-select"
-                >
-                  {decades.map(decade => (
-                    <option key={decade} value={decade}>{decade}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="filter-group">
-                <label>Sort by:</label>
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value as 'rank' | 'year' | 'title' | 'artist')}
-                  className="filter-select"
-                >
-                  <option value="rank">Rank</option>
-                  <option value="year">Year</option>
-                  <option value="title">Title</option>
-                  <option value="artist">Artist</option>
-                </select>
-              </div>
-              
-              <div className="filter-stats">
-                Showing {filteredAlbums.length} of {albums.length} albums
-              </div>
+          <div className="filter-group">
+            <label>Genre:</label>
+            <select 
+              value={selectedGenre} 
+              onChange={(e) => setSelectedGenre(e.target.value)}
+              className="filter-select"
+            >
+              {genres.map(genre => (
+                <option key={genre} value={genre}>{genre}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label>Decade:</label>
+            <select 
+              value={selectedDecade} 
+              onChange={(e) => setSelectedDecade(e.target.value)}
+              className="filter-select"
+            >
+              {decades.map(decade => (
+                <option key={decade} value={decade}>{decade}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label>Sort by:</label>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value as 'rank' | 'year' | 'title' | 'artist')}
+              className="filter-select"
+            >
+              <option value="rank">Rank</option>
+              <option value="year">Year</option>
+              <option value="title">Title</option>
+              <option value="artist">Artist</option>
+            </select>
+          </div>
+          
+          <div className="filter-stats">
+            Showing {filteredAlbums.length} of {albums.length} albums
+          </div>
               
               <div className="edit-controls">
                 <button 
@@ -583,23 +583,23 @@ const FavoriteAlbums: React.FC = () => {
           </DndContext>
         ) : (
           // Normal view without drag and drop
-          <div className="albums-list">
-            {filteredAlbums.map((album) => {
-              const isExpanded = expandedAlbum === album.id
-              const isLastInRow = album.rank % 5 === 0
-              const isSecondToLastInRow = album.rank % 5 === 4
-              
+        <div className="albums-list">
+          {filteredAlbums.map((album) => {
+            const isExpanded = expandedAlbum === album.id
+            const isLastInRow = album.rank % 5 === 0
+            const isSecondToLastInRow = album.rank % 5 === 4
+            
               // On mobile, always expand right; on desktop, use position logic
               const expandDirection = isMobile 
                 ? 'expand-right' 
                 : (isLastInRow || isSecondToLastInRow ? 'expand-left' : 'expand-right')
               
-              return (
-                <div 
-                  key={album.id} 
+            return (
+              <div 
+                key={album.id} 
                   className={`album-item ${isExpanded ? 'expanded' : ''} ${isExpanded ? expandDirection : ''}`}
-                  onClick={() => setExpandedAlbum(isExpanded ? null : album.id)}
-                >
+                onClick={() => setExpandedAlbum(isExpanded ? null : album.id)}
+              >
                 <div className="album-rank">#{album.rank}</div>
                 
                 <div className="album-cover">
@@ -717,9 +717,9 @@ const FavoriteAlbums: React.FC = () => {
                   )}
                 </div>
               </div>
-              )
-            })}
-          </div>
+            )
+          })}
+        </div>
         )}
         
         <div className="add-album-section">

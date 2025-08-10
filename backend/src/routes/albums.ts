@@ -213,4 +213,178 @@ router.put('/reorder', authenticateToken, async (req: Request, res: Response): P
   }
 });
 
+// GET /api/albums/available - Get all available albums (excluding user's existing ones)
+router.get('/available', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    
+    const query = `
+      SELECT a.* 
+      FROM albums a
+      WHERE NOT EXISTS (
+        SELECT 1 FROM user_album_rankings uar 
+        WHERE uar.album_id = a.id AND uar.user_id = $1
+      )
+      ORDER BY a.title, a.artist
+    `;
+    
+    const result = await pool.query(query, [userId]);
+    
+    res.json({
+      albums: result.rows
+    });
+  } catch (error: any) {
+    console.error('Error fetching available albums:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/albums/search - Search albums by artist and title
+router.get('/search', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { artist, title } = req.query;
+    
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    
+    if (!artist && !title) {
+      res.status(400).json({ error: 'At least one search term (artist or title) is required' });
+      return;
+    }
+    
+    let query = `
+      SELECT a.* 
+      FROM albums a
+      WHERE NOT EXISTS (
+        SELECT 1 FROM user_album_rankings uar 
+        WHERE uar.album_id = a.id AND uar.user_id = $1
+      )
+    `;
+    const params: any[] = [userId];
+    let paramIndex = 2;
+    
+    if (artist) {
+      query += ` AND LOWER(a.artist) LIKE LOWER($${paramIndex})`;
+      params.push(`%${artist}%`);
+      paramIndex++;
+    }
+    
+    if (title) {
+      query += ` AND LOWER(a.title) LIKE LOWER($${paramIndex})`;
+      params.push(`%${title}%`);
+      paramIndex++;
+    }
+    
+    query += ' ORDER BY a.title, a.artist LIMIT 20';
+    
+    const result = await pool.query(query, params);
+    
+    res.json({
+      albums: result.rows
+    });
+  } catch (error: any) {
+    console.error('Error searching albums:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/albums/:id/add - Add album to user's list
+router.post('/:id/add', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const albumId = parseInt(req.params.id);
+    
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    
+    // Check if album exists
+    const albumCheck = await pool.query('SELECT id FROM albums WHERE id = $1', [albumId]);
+    if (albumCheck.rows.length === 0) {
+      res.status(404).json({ error: 'Album not found' });
+      return;
+    }
+    
+    // Check if user already has this album
+    const existingCheck = await pool.query(
+      'SELECT id FROM user_album_rankings WHERE user_id = $1 AND album_id = $2',
+      [userId, albumId]
+    );
+    
+    if (existingCheck.rows.length > 0) {
+      res.status(400).json({ error: 'Album already in your list' });
+      return;
+    }
+    
+    // Get the next available rank
+    const rankResult = await pool.query(
+      'SELECT COALESCE(MAX(rank), 0) + 1 as next_rank FROM user_album_rankings WHERE user_id = $1',
+      [userId]
+    );
+    const nextRank = rankResult.rows[0].next_rank;
+    
+    // Add album to user's list
+    const insertResult = await pool.query(
+      `INSERT INTO user_album_rankings (user_id, album_id, rank, personal_notes)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [userId, albumId, nextRank, '']
+    );
+    
+    res.json({
+      message: 'Album added to your list successfully',
+      ranking: insertResult.rows[0]
+    });
+  } catch (error: any) {
+    console.error('Error adding album to user list:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/albums/:id/remove - Remove album from user's list
+router.delete('/:id/remove', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const albumId = parseInt(req.params.id);
+    
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    
+    // Check if user has this album in their list
+    const existingCheck = await pool.query(
+      'SELECT id FROM user_album_rankings WHERE user_id = $1 AND album_id = $2',
+      [userId, albumId]
+    );
+    
+    if (existingCheck.rows.length === 0) {
+      res.status(404).json({ error: 'Album not found in your list' });
+      return;
+    }
+    
+    // Remove album from user's list
+    await pool.query(
+      'DELETE FROM user_album_rankings WHERE user_id = $1 AND album_id = $2',
+      [userId, albumId]
+    );
+    
+    res.json({
+      message: 'Album removed from your list successfully'
+    });
+  } catch (error: any) {
+    console.error('Error removing album from user list:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

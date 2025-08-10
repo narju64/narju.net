@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -34,6 +34,8 @@ const SortableAlbumItem: React.FC<{
   onRankChange: (value: string) => void;
   onRankSubmit: (albumId: number) => void;
   onRankCancel: () => void;
+  onRemoveAlbum: (albumId: number) => void;
+  isStaged: boolean;
 }> = ({ 
   album, 
   isMobile, 
@@ -42,7 +44,9 @@ const SortableAlbumItem: React.FC<{
   onRankClick, 
   onRankChange, 
   onRankSubmit, 
-  onRankCancel 
+  onRankCancel,
+  onRemoveAlbum,
+  isStaged
 }) => {
   const {
     attributes,
@@ -74,6 +78,27 @@ const SortableAlbumItem: React.FC<{
       className={`album-item-compact ${isDragging ? 'dragging' : ''}`}
       onClick={isMobile ? () => onRankClick(album) : undefined}
     >
+      <button 
+        className="remove-album-btn"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+          e.preventDefault()
+        }}
+        onClick={(e) => {
+          e.stopPropagation()
+          onRemoveAlbum(album.id)
+        }}
+        title="Remove album from list"
+      >
+        X
+      </button>
+      
+      {/* Staged indicator for staged albums */}
+      {isStaged && (
+        <div className="staged-badge" title="This album is staged and will be saved when you click 'Save Changes'">
+        </div>
+      )}
+      
       {isEditingRank ? (
         <div className="album-rank editing">
           <input
@@ -159,12 +184,17 @@ const FavoriteAlbums: React.FC = () => {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
-  const [isEditMode, setIsEditMode] = React.useState(false)
   const [originalAlbums, setOriginalAlbums] = React.useState<Album[]>([])
-  const [activeId, setActiveId] = React.useState<string | null>(null)
-  const [editingRankId, setEditingRankId] = React.useState<number | null>(null)
-  const [newRankValue, setNewRankValue] = React.useState<string>('')
-  const [isMobile, setIsMobile] = React.useState(false)
+  const [stagedAlbums, setStagedAlbums] = useState<Album[]>([])
+  const [stagedRemovals, setStagedRemovals] = useState<Album[]>([])
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingRankId, setEditingRankId] = useState<number | null>(null)
+  const [newRankValue, setNewRankValue] = useState('')
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Ref to the AddNewAlbumsPanel to call its functions
+  const addNewAlbumsPanelRef = useRef<{ addAlbumToAvailableList: (album: Album) => void }>(null)
 
   // Check if user is logged in
   React.useEffect(() => {
@@ -250,12 +280,77 @@ const FavoriteAlbums: React.FC = () => {
   // Edit mode functions
   const handleEditMode = () => {
     setOriginalAlbums([...albums]) // Save current state for cancel
+    setStagedAlbums([]) // Initialize empty staged albums
+    setStagedRemovals([]) // Initialize empty staged removals
     setIsEditMode(true)
   }
 
   const handleSaveChanges = async () => {
     try {
       setLoading(true)
+      
+      // Check if there are any net changes to save
+      const hasNetChanges = stagedAlbums.length > 0 || stagedRemovals.length > 0
+      
+      if (!hasNetChanges) {
+        // No changes to save, just exit edit mode
+        setIsEditMode(false)
+        setExpandedAlbum(null)
+        return
+      }
+      
+      // First, add any staged albums to the user's list
+      if (stagedAlbums.length > 0) {
+        const token = localStorage.getItem('adminToken')
+        if (!token) {
+          throw new Error('No authentication token found')
+        }
+
+        // Add staged albums one by one
+        for (const album of stagedAlbums) {
+          const response = await fetch(buildApiUrl(`/api/albums/${album.id}/add`), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(`Failed to add album ${album.title}: ${errorData.error}`)
+          }
+        }
+      }
+
+      // Then, remove any staged removals from the user's list
+      if (stagedRemovals.length > 0) {
+        const token = localStorage.getItem('adminToken')
+        if (!token) {
+          throw new Error('No authentication token found')
+        }
+
+        // Remove staged albums one by one
+        for (const album of stagedRemovals) {
+          const response = await fetch(buildApiUrl(`/api/albums/${album.id}/remove`), {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(`Failed to remove album ${album.title}: ${errorData.error}`)
+          }
+
+          // Add the removed album back to the available list
+          if (addNewAlbumsPanelRef.current) {
+            addNewAlbumsPanelRef.current.addAlbumToAvailableList(album)
+          }
+        }
+      }
       
       // Create rankings array with albumId and rank
       const rankings = albums.map((album, index) => ({
@@ -280,12 +375,14 @@ const FavoriteAlbums: React.FC = () => {
 
       setIsEditMode(false)
       setExpandedAlbum(null)
+      setStagedAlbums([]) // Clear staged albums after successful save
+      setStagedRemovals([]) // Clear staged removals after successful save
       
       // Refresh the data from the server to ensure consistency
       await fetchAlbumsFromApi()
       
     } catch (error) {
-      console.error('Error saving album order:', error)
+      console.error('Error saving changes:', error)
       setError('Failed to save changes. Please try again.')
       // Restore original order on error
       setAlbums([...originalAlbums])
@@ -296,6 +393,8 @@ const FavoriteAlbums: React.FC = () => {
 
   const handleCancelEdit = () => {
     setAlbums([...originalAlbums]) // Restore original state
+    setStagedAlbums([]) // Clear staged albums
+    setStagedRemovals([]) // Clear staged removals
     setIsEditMode(false)
     setExpandedAlbum(null)
     setEditingRankId(null)
@@ -352,6 +451,70 @@ const FavoriteAlbums: React.FC = () => {
     setNewRankValue('')
   }
 
+  // Check if an album is staged for addition or removal
+  const isAlbumStaged = (albumId: number) => {
+    return stagedAlbums.some(album => album.id === albumId) || 
+           stagedRemovals.some(album => album.id === albumId)
+  }
+
+  // Function to add an album to staged additions
+  const addToStagedAlbums = (album: Album) => {
+    setStagedAlbums(prev => {
+      // Check if this album is already staged for removal
+      const isStagedForRemoval = stagedRemovals.some(a => a.id === album.id)
+      
+      if (isStagedForRemoval) {
+        // If it's staged for removal, remove it from removals instead of adding to additions
+        setStagedRemovals(prevRemovals => prevRemovals.filter(a => a.id !== album.id))
+        return prev // Don't add to additions
+      }
+      
+      // Otherwise, add to staged additions
+      return [...prev, album]
+    })
+  }
+
+  const handleRemoveAlbum = async (albumId: number) => {
+    // Find the album to remove
+    const albumToRemove = albums.find(album => album.id === albumId)
+    if (!albumToRemove) {
+      console.error('Album not found for removal:', albumId)
+      return
+    }
+
+    // Check if this album is already staged for addition
+    const isStagedForAddition = stagedAlbums.some(a => a.id === albumId)
+    
+    if (isStagedForAddition) {
+      // If it's staged for addition, remove it from additions instead of staging for removal
+      setStagedAlbums(prev => prev.filter(a => a.id !== albumId))
+      
+      // Remove from the current albums list for display
+      setAlbums(prev => prev.filter(album => album.id !== albumId))
+      
+      // Add it back to the available list
+      if (addNewAlbumsPanelRef.current) {
+        addNewAlbumsPanelRef.current.addAlbumToAvailableList(albumToRemove)
+      }
+      
+      console.log('Album removed from staged additions:', albumToRemove.title)
+      return
+    }
+
+    // Stage the album for removal instead of removing immediately
+    setStagedRemovals(prev => [...prev, albumToRemove])
+    
+    // Remove from the current albums list for display
+    setAlbums(prev => prev.filter(album => album.id !== albumId))
+    
+    // Immediately add the album back to the available list so it shows up in Add New Albums panel
+    if (addNewAlbumsPanelRef.current) {
+      addNewAlbumsPanelRef.current.addAlbumToAvailableList(albumToRemove)
+    }
+    
+    console.log('Album staged for removal:', albumToRemove.title)
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -387,16 +550,23 @@ const FavoriteAlbums: React.FC = () => {
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveId(null)
-    
     const { active, over } = event
-    
-    if (!over || active.id === over.id) {
-      return
+
+    if (active.id !== over?.id) {
+      setAlbums((items) => {
+        const oldIndex = items.findIndex((item) => item.id.toString() === active.id)
+        const newIndex = items.findIndex((item) => item.id.toString() === over?.id)
+
+        // Check if the order actually changed
+        if (oldIndex !== newIndex) {
+          // Order change detection is now handled by checkOrderChanged function
+        }
+
+        return arrayMove(items, oldIndex, newIndex)
+      })
     }
 
-    // The reordering was already handled in handleDragOver
-    // This just finalizes the drag operation
+    setActiveId(null)
   }
 
   // Get unique genres and decades from current albums
@@ -422,6 +592,15 @@ const FavoriteAlbums: React.FC = () => {
           return a.rank - b.rank
       }
     })
+
+  const checkOrderChanged = (originalAlbums: Album[], currentAlbums: Album[]) => {
+    if (!originalAlbums || originalAlbums.length === 0) return false
+    return currentAlbums.some((album, index) => originalAlbums[index]?.id !== album.id)
+  }
+
+  const hasAnyChanges = () => {
+    return stagedAlbums.length > 0 || stagedRemovals.length > 0 || checkOrderChanged(originalAlbums, albums)
+  }
 
   // Show login required message if not logged in
   if (!isLoggedIn) {
@@ -457,12 +636,28 @@ const FavoriteAlbums: React.FC = () => {
           {isEditMode ? (
             <div className="edit-mode-header">
               <h3>Editing Albums - {isMobile ? 'Click album to edit' : 'Drag to reorder'}</h3>
+              {hasAnyChanges() && (
+                <div className="staged-count">
+                  {stagedAlbums.length > 0 && (
+                    <span>{stagedAlbums.length} album{stagedAlbums.length !== 1 ? 's' : ''} staged for addition</span>
+                  )}
+                  {stagedAlbums.length > 0 && stagedRemovals.length > 0 && <span> • </span>}
+                  {stagedRemovals.length > 0 && (
+                    <span>{stagedRemovals.length} album{stagedRemovals.length !== 1 ? 's' : ''} staged for removal</span>
+                  )}
+                  {(stagedAlbums.length > 0 || stagedRemovals.length > 0) && checkOrderChanged(originalAlbums, albums) && <span> • </span>}
+                  {checkOrderChanged(originalAlbums, albums) && (
+                    <span>Order changed</span>
+                  )}
+                </div>
+              )}
               <div className="edit-actions">
                 <button 
                   onClick={handleSaveChanges}
                   className="save-button"
+                  disabled={!hasAnyChanges()}
                 >
-                  Save Changes
+                  {hasAnyChanges() ? 'Save Changes' : 'No Changes'}
                 </button>
                 <button 
                   onClick={handleCancelEdit}
@@ -555,6 +750,8 @@ const FavoriteAlbums: React.FC = () => {
                     onRankChange={handleRankChange}
                     onRankSubmit={handleRankSubmit}
                     onRankCancel={handleRankCancel}
+                    onRemoveAlbum={handleRemoveAlbum}
+                    isStaged={isAlbumStaged(album.id)}
                   />
                 ))}
               </div>
@@ -600,7 +797,30 @@ const FavoriteAlbums: React.FC = () => {
                   className={`album-item ${isExpanded ? 'expanded' : ''} ${isExpanded ? expandDirection : ''}`}
                 onClick={() => setExpandedAlbum(isExpanded ? null : album.id)}
               >
+                {isEditMode && (
+                  <button 
+                    className="remove-album-btn"
+                    onPointerDown={(e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRemoveAlbum(album.id)
+                    }}
+                    title="Remove album from list"
+                  >
+                    X
+                  </button>
+                )}
+                
                 <div className="album-rank">#{album.rank}</div>
+                
+                {/* Staged indicator for staged albums */}
+                {isAlbumStaged(album.id) && (
+                  <div className="staged-badge" title="This album is staged and will be saved when you click 'Save Changes'">
+                  </div>
+                )}
                 
                 <div className="album-cover">
                   <img 
@@ -722,13 +942,278 @@ const FavoriteAlbums: React.FC = () => {
         </div>
         )}
         
-        <div className="add-album-section">
-          <h2>Add New Album</h2>
-          <p>Want to add more albums to this list? You can edit the data in the component file.</p>
-        </div>
+        {/* Add New Albums Panel - Only visible in edit mode */}
+        {isEditMode && (
+          <AddNewAlbumsPanel 
+            ref={addNewAlbumsPanelRef}
+            stagedRemovals={stagedRemovals}
+            onAlbumStaged={(album) => {
+              // Add album to staged albums (will be committed when Save Changes is clicked)
+              addToStagedAlbums(album)
+              
+              // Also add it to the current albums list for display
+              const nextRank = albums.length + 1
+              setAlbums(prev => [...prev, { ...album, rank: nextRank }])
+              
+              // Show success message
+              console.log('Album staged for addition:', album.title)
+            }}
+          />
+        )}
       </div>
     </div>
   )
 }
+
+// Add New Albums Panel Component
+const AddNewAlbumsPanel = React.forwardRef<{ addAlbumToAvailableList: (album: Album) => void }, {
+  stagedRemovals: Album[]
+  onAlbumStaged: (album: Album) => void
+}>(({ stagedRemovals, onAlbumStaged }, ref) => {
+  const [artistSearch, setArtistSearch] = React.useState('')
+  const [titleSearch, setTitleSearch] = React.useState('')
+  const [allAvailableAlbums, setAllAvailableAlbums] = React.useState<Album[]>([])
+  const [filteredAlbums, setFilteredAlbums] = React.useState<Album[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [searchError, setSearchError] = React.useState<string | null>(null)
+  const [addingAlbum, setAddingAlbum] = React.useState<number | null>(null)
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null)
+
+  // Function to add an album back to the available list
+  const addAlbumToAvailableList = React.useCallback((album: Album) => {
+    setAllAvailableAlbums(prev => {
+      // Only add if it's not already in the list
+      if (!prev.some(a => a.id === album.id)) {
+        // Insert the album in the correct alphabetical position
+        const newList = [...prev, album]
+        newList.sort((a, b) => {
+          // First sort by title (album name), then by artist
+          const titleCompare = a.title.localeCompare(b.title)
+          if (titleCompare !== 0) return titleCompare
+          return a.artist.localeCompare(b.artist)
+        })
+        return newList
+      }
+      return prev
+    })
+  }, [])
+
+  // Expose the function to parent component via ref
+  React.useImperativeHandle(ref, () => ({
+    addAlbumToAvailableList
+  }), [addAlbumToAvailableList])
+
+  // Load all available albums when component mounts
+  React.useEffect(() => {
+    const loadAllAlbums = async () => {
+      try {
+        const storedToken = localStorage.getItem('adminToken')
+        if (!storedToken) {
+          throw new Error('No authentication token found')
+        }
+
+        // Get all available albums
+        const response = await fetch(buildApiUrl('/api/albums/available'), {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error(`Failed to load albums: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setAllAvailableAlbums(data.albums || [])
+        setFilteredAlbums(data.albums || [])
+      } catch (error) {
+        console.error('Error loading albums:', error)
+        setSearchError(error instanceof Error ? error.message : 'Failed to load albums')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadAllAlbums()
+  }, [])
+
+  // Filter albums whenever search terms change
+  React.useEffect(() => {
+    filterAlbums()
+  }, [artistSearch, titleSearch, allAvailableAlbums])
+
+  const filterAlbums = () => {
+    if (!artistSearch.trim() && !titleSearch.trim()) {
+      // If no search terms, show all albums
+      setFilteredAlbums(allAvailableAlbums)
+      setSearchError(null)
+      return
+    }
+
+    setSearchError(null)
+    
+    // Filter the existing list based on search terms
+    const filtered = allAvailableAlbums.filter(album => {
+      const artistMatch = !artistSearch.trim() || 
+        album.artist.toLowerCase().includes(artistSearch.trim().toLowerCase())
+      const titleMatch = !titleSearch.trim() || 
+        album.title.toLowerCase().includes(titleSearch.trim().toLowerCase())
+      
+      return artistMatch && titleMatch
+    })
+
+    setFilteredAlbums(filtered)
+    
+    if (filtered.length === 0) {
+      setSearchError('No albums found matching your search criteria.')
+    }
+  }
+
+
+
+  const handleResultClick = async (album: Album) => {
+    setAddingAlbum(album.id)
+    setSuccessMessage(null)
+    
+    try {
+      // Stage the album for addition (will be committed when Save Changes is clicked)
+      onAlbumStaged(album)
+      
+      setSuccessMessage(`${album.title} by ${album.artist} staged for addition!`)
+      setArtistSearch('')
+      setTitleSearch('')
+      
+      // Remove the album from both local state arrays since it's now staged
+      setAllAvailableAlbums(prev => prev.filter(a => a.id !== album.id))
+      setFilteredAlbums(prev => prev.filter(a => a.id !== album.id))
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (error) {
+      console.error('Error staging album:', error)
+    } finally {
+      setAddingAlbum(null)
+    }
+  }
+
+  return (
+    <div className="add-new-albums-panel">
+      <h2>Add New Albums</h2>
+      <p>Browse and filter available albums to add to your collection</p>
+      
+      <div className="search-form">
+        <div className="search-inputs">
+          <div className="search-input-group">
+            <label htmlFor="artist-search">Artist:</label>
+            <input
+              id="artist-search"
+              type="text"
+              value={artistSearch}
+              onChange={(e) => setArtistSearch(e.target.value)}
+              placeholder="Enter artist name..."
+              className="search-input"
+            />
+          </div>
+          
+          <div className="search-input-group">
+            <label htmlFor="title-search">Album Title:</label>
+            <input
+              id="title-search"
+              type="text"
+              value={titleSearch}
+              onChange={(e) => setTitleSearch(e.target.value)}
+              placeholder="Enter album title..."
+              className="search-input"
+            />
+          </div>
+        </div>
+        
+        <div className="search-actions">
+          <button 
+            type="button" 
+            className="add-new-button"
+            onClick={() => {
+              // TODO: Implement adding completely new album
+              console.log('Add new album functionality to be implemented')
+            }}
+          >
+            Add New Album
+          </button>
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="loading-state">
+          <p>Loading available albums...</p>
+        </div>
+      )}
+
+      {searchError && (
+        <div className="search-error">
+          {searchError}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="search-success">
+          {successMessage}
+        </div>
+      )}
+
+      {!isLoading && filteredAlbums.length > 0 && (
+        <div className="search-results">
+          <h3>Available Albums ({filteredAlbums.length})</h3>
+          <div className="results-grid">
+            {filteredAlbums.map((album: Album) => (
+              <div 
+                key={album.id} 
+                className={`result-item ${addingAlbum === album.id ? 'adding' : ''} ${stagedRemovals.some(a => a.id === album.id) ? 'staged-for-removal' : ''}`}
+                onClick={() => handleResultClick(album)}
+              >
+                {/* Orange border for albums staged for removal - positioned around entire card */}
+                {stagedRemovals.some(a => a.id === album.id) && (
+                  <div className="staged-badge" title="This album is staged for removal and will be removed when you click 'Save Changes'">
+                  </div>
+                )}
+                <div className="result-cover">
+                  <img 
+                    src={album.cover_image} 
+                    alt={`${album.title} by ${album.artist}`}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="result-cover-placeholder hidden">
+                    <div className="placeholder-icon">🎵</div>
+                  </div>
+                  {addingAlbum === album.id && (
+                    <div className="adding-overlay">
+                      <div className="adding-spinner">⏳</div>
+                      <div className="adding-text">Adding...</div>
+                    </div>
+                  )}
+                </div>
+                <div className="result-info">
+                  <h4 className="result-title">{album.title}</h4>
+                  <p className="result-artist">{album.artist}</p>
+                  <p className="result-year">{album.year}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!isLoading && filteredAlbums.length === 0 && !searchError && (
+        <div className="no-results">
+          <p>No albums found matching your search criteria.</p>
+        </div>
+      )}
+    </div>
+  )
+})
 
 export default FavoriteAlbums

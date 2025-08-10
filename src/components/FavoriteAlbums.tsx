@@ -193,8 +193,57 @@ const FavoriteAlbums: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   
+  // Mobile swipe state for edit mode
+  const [currentScreen, setCurrentScreen] = useState<'albums' | 'add-new'>('albums');
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isSliding, setIsSliding] = useState(false);
+  const [isReturningFromLeft, setIsReturningFromLeft] = useState(false);
+
   // Ref to the AddNewAlbumsPanel to call its functions
   const addNewAlbumsPanelRef = useRef<{ addAlbumToAvailableList: (album: Album) => void }>(null)
+
+  // Touch handlers for mobile swipe in edit mode
+  const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
+    if (!isEditMode || !isMobile) return; // Only handle swipes in edit mode on mobile
+    setTouchStart(e.targetTouches[0].clientX);
+  }, [isEditMode, isMobile]);
+
+  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
+    if (!isEditMode || !isMobile) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  }, [isEditMode, isMobile]);
+
+  const handleTouchEnd = React.useCallback(() => {
+    if (!isEditMode || !touchStart || !touchEnd || !isMobile) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentScreen === 'albums') {
+      // Start sliding animation
+      setIsSliding(true);
+      
+      // After animation completes, change screen
+      setTimeout(() => {
+        setCurrentScreen('add-new');
+        setIsSliding(false);
+      }, 300); // Match CSS transition duration
+    } else if (isRightSwipe && currentScreen === 'add-new') {
+      // Start returning from left animation
+      setIsReturningFromLeft(true);
+      
+      // After animation completes, change screen
+      setTimeout(() => {
+        setCurrentScreen('albums');
+        setIsReturningFromLeft(false);
+      }, 300); // Match CSS transition duration
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  }, [touchStart, touchEnd, currentScreen, isEditMode, isMobile]);
 
   // Check if user is logged in
   React.useEffect(() => {
@@ -279,10 +328,24 @@ const FavoriteAlbums: React.FC = () => {
 
   // Edit mode functions
   const handleEditMode = () => {
-    setOriginalAlbums([...albums]) // Save current state for cancel
-    setStagedAlbums([]) // Initialize empty staged albums
-    setStagedRemovals([]) // Initialize empty staged removals
-    setIsEditMode(true)
+    if (isEditMode) {
+      // Exit edit mode
+      setIsEditMode(false)
+      setStagedAlbums([])
+      setStagedRemovals([])
+      setEditingRankId(null)
+      setNewRankValue('')
+      setActiveId(null)
+    } else {
+      // Enter edit mode
+      setOriginalAlbums([...albums]) // Save current state for cancel
+      setStagedAlbums([]) // Initialize empty staged albums
+      setStagedRemovals([]) // Initialize empty staged removals
+                   setCurrentScreen('albums') // Reset to albums page when entering edit mode
+             setIsSliding(false) // Reset sliding animation state
+             setIsReturningFromLeft(false) // Reset returning from left animation state
+      setIsEditMode(true)
+    }
   }
 
   const handleSaveChanges = async () => {
@@ -631,153 +694,249 @@ const FavoriteAlbums: React.FC = () => {
           </div>
         )}
         
-        {/* Filter and Sort Controls */}
-        <div className="filter-controls">
-          {isEditMode ? (
-            <div className="edit-mode-header">
-              <h3>Editing Albums - {isMobile ? 'Click album to edit' : 'Drag to reorder'}</h3>
-              {hasAnyChanges() && (
-                <div className="staged-count">
-                  {stagedAlbums.length > 0 && (
-                    <span>{stagedAlbums.length} album{stagedAlbums.length !== 1 ? 's' : ''} staged for addition</span>
-                  )}
-                  {stagedAlbums.length > 0 && stagedRemovals.length > 0 && <span> • </span>}
-                  {stagedRemovals.length > 0 && (
-                    <span>{stagedRemovals.length} album{stagedRemovals.length !== 1 ? 's' : ''} staged for removal</span>
-                  )}
-                  {(stagedAlbums.length > 0 || stagedRemovals.length > 0) && checkOrderChanged(originalAlbums, albums) && <span> • </span>}
-                  {checkOrderChanged(originalAlbums, albums) && (
-                    <span>Order changed</span>
-                  )}
-                </div>
-              )}
-              <div className="edit-actions">
-                <button 
-                  onClick={handleSaveChanges}
-                  className="save-button"
-                  disabled={!hasAnyChanges()}
-                >
-                  {hasAnyChanges() ? 'Save Changes' : 'No Changes'}
-                </button>
-                <button 
-                  onClick={handleCancelEdit}
-                  className="cancel-button"
-                >
-                  Cancel
-                </button>
+        {/* Edit Mode Header */}
+        {isEditMode && (
+          <div className="edit-mode-header">
+            <h3>Editing Albums - {isMobile ? 'Click album to edit' : 'Drag to reorder'}</h3>
+            {hasAnyChanges() && (
+              <div className="staged-count">
+                {stagedAlbums.length > 0 && (
+                  <span>{stagedAlbums.length} album{stagedAlbums.length !== 1 ? 's' : ''} staged for addition</span>
+                )}
+                {stagedAlbums.length > 0 && stagedRemovals.length > 0 && <span> • </span>}
+                {stagedRemovals.length > 0 && (
+                  <span>{stagedRemovals.length} album{stagedRemovals.length !== 1 ? 's' : ''} staged for removal</span>
+                )}
+                {(stagedAlbums.length > 0 || stagedRemovals.length > 0) && checkOrderChanged(originalAlbums, albums) && <span> • </span>}
+                {checkOrderChanged(originalAlbums, albums) && (
+                  <span>Order changed</span>
+                )}
               </div>
+            )}
+            <div className="edit-actions">
+              <button 
+                onClick={handleSaveChanges}
+                className="save-button"
+                disabled={!hasAnyChanges()}
+              >
+                                  {hasAnyChanges() ? 'Save' : 'No Changes'}
+              </button>
+              <button 
+                onClick={handleCancelEdit}
+                className="cancel-button"
+              >
+                Cancel
+              </button>
             </div>
-          ) : (
-            <>
-          <div className="filter-group">
-            <label>Genre:</label>
-            <select 
-              value={selectedGenre} 
-              onChange={(e) => setSelectedGenre(e.target.value)}
-              className="filter-select"
-            >
-              {genres.map(genre => (
-                <option key={genre} value={genre}>{genre}</option>
-              ))}
-            </select>
           </div>
-          
-          <div className="filter-group">
-            <label>Decade:</label>
-            <select 
-              value={selectedDecade} 
-              onChange={(e) => setSelectedDecade(e.target.value)}
-              className="filter-select"
-            >
-              {decades.map(decade => (
-                <option key={decade} value={decade}>{decade}</option>
-              ))}
-            </select>
+        )}
+
+        {/* Filter and Sort Controls */}
+        {!isEditMode && (
+          <div className="filter-controls">
+            <div className="filter-group">
+              <label>Genre:</label>
+              <select 
+                value={selectedGenre} 
+                onChange={(e) => setSelectedGenre(e.target.value)}
+                className="filter-select"
+              >
+                {genres.map(genre => (
+                  <option key={genre} value={genre}>{genre}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label>Decade:</label>
+              <select 
+                value={selectedDecade} 
+                onChange={(e) => setSelectedDecade(e.target.value)}
+                className="filter-select"
+              >
+                {decades.map(decade => (
+                  <option key={decade} value={decade}>{decade}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label>Sort by:</label>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value as 'rank' | 'year' | 'title' | 'artist')}
+                className="filter-select"
+              >
+                <option value="rank">Rank</option>
+                <option value="year">Year</option>
+                <option value="title">Title</option>
+                <option value="artist">Artist</option>
+              </select>
+            </div>
+            
+            <div className="filter-stats">
+              Showing {filteredAlbums.length} of {albums.length} albums
+            </div>
+                
+            <div className="edit-controls">
+              <button 
+                onClick={handleEditMode}
+                className="edit-button"
+              >
+                Edit Rankings
+              </button>
+            </div>
           </div>
-          
-          <div className="filter-group">
-            <label>Sort by:</label>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value as 'rank' | 'year' | 'title' | 'artist')}
-              className="filter-select"
-            >
-              <option value="rank">Rank</option>
-              <option value="year">Year</option>
-              <option value="title">Title</option>
-              <option value="artist">Artist</option>
-            </select>
-          </div>
-          
-          <div className="filter-stats">
-            Showing {filteredAlbums.length} of {albums.length} albums
-          </div>
-              
-              <div className="edit-controls">
-                <button 
-                  onClick={handleEditMode}
-                  className="edit-button"
-                >
-                  Edit Rankings
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        )}
         
         {isEditMode ? (
-          // Edit mode with drag and drop
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext 
-              items={filteredAlbums.map(album => album.id.toString())}
-              strategy={rectSortingStrategy}
+          // Mobile: Swipeable pages, Desktop: Normal layout
+          isMobile ? (
+            <div 
+              className="mobile-pages-container"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
-              <div className="albums-list edit-mode">
-                {filteredAlbums.map((album) => (
-                  <SortableAlbumItem 
-                    key={album.id} 
-                    album={album}
-                    isMobile={isMobile}
-                    isEditingRank={editingRankId === album.id}
-                    newRankValue={newRankValue}
-                    onRankClick={handleRankClick}
-                    onRankChange={handleRankChange}
-                    onRankSubmit={handleRankSubmit}
-                    onRankCancel={handleRankCancel}
-                    onRemoveAlbum={handleRemoveAlbum}
-                    isStaged={isAlbumStaged(album.id)}
-                  />
-                ))}
+              {/* Albums Page */}
+              <div className={`mobile-page ${currentScreen === 'albums' ? 'active' : ''} ${isSliding ? 'sliding-left' : ''} ${isReturningFromLeft ? 'returning-from-left' : ''}`}>
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={filteredAlbums.map(album => album.id.toString())}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="albums-list edit-mode">
+                      {filteredAlbums.map((album) => (
+                        <SortableAlbumItem 
+                          key={album.id} 
+                          album={album}
+                          isMobile={isMobile}
+                          isEditingRank={editingRankId === album.id}
+                          newRankValue={newRankValue}
+                          onRankClick={handleRankClick}
+                          onRankChange={handleRankChange}
+                          onRankSubmit={handleRankSubmit}
+                          onRankCancel={handleRankCancel}
+                          onRemoveAlbum={handleRemoveAlbum}
+                          isStaged={isAlbumStaged(album.id)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                  <DragOverlay>
+                    {activeId ? (
+                      <div className="album-item-compact dragging">
+                        {(() => {
+                          const draggedAlbum = filteredAlbums.find(album => album.id.toString() === activeId)
+                          if (!draggedAlbum) return null
+                          return (
+                            <>
+                              <div className="album-rank">#{draggedAlbum.rank}</div>
+                              <div className="album-cover-compact">
+                                <img 
+                                  src={draggedAlbum.cover_image} 
+                                  alt={`${draggedAlbum.title} by ${draggedAlbum.artist}`}
+                                />
+                              </div>
+                            </>
+                          )
+                        })()}
+                      </div>
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
               </div>
-            </SortableContext>
-            <DragOverlay>
-              {activeId ? (
-                <div className="album-item-compact dragging">
-                  {(() => {
-                    const draggedAlbum = filteredAlbums.find(album => album.id.toString() === activeId)
-                    if (!draggedAlbum) return null
-                    return (
-                      <>
-                        <div className="album-rank">#{draggedAlbum.rank}</div>
-                        <div className="album-cover-compact">
-                          <img 
-                            src={draggedAlbum.cover_image} 
-                            alt={`${draggedAlbum.title} by ${draggedAlbum.artist}`}
-                          />
-                        </div>
-                      </>
-                    )
-                  })()}
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+
+              {/* Add New Albums Page */}
+              <div className={`mobile-page ${currentScreen === 'add-new' ? 'active' : ''}`}>
+                <AddNewAlbumsPanel 
+                  ref={addNewAlbumsPanelRef}
+                  stagedRemovals={stagedRemovals}
+                  onAlbumStaged={(album) => {
+                    addToStagedAlbums(album)
+                    const nextRank = albums.length + 1
+                    setAlbums(prev => [...prev, { ...album, rank: nextRank }])
+                    console.log('Album staged for addition:', album.title)
+                  }}
+                />
+              </div>
+
+
+            </div>
+          ) : (
+            // Desktop: Normal layout with both panels visible
+            <>
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={filteredAlbums.map(album => album.id.toString())}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="albums-list edit-mode">
+                    {filteredAlbums.map((album) => (
+                      <SortableAlbumItem 
+                        key={album.id} 
+                        album={album}
+                        isMobile={isMobile}
+                        isEditingRank={editingRankId === album.id}
+                        newRankValue={newRankValue}
+                        onRankClick={handleRankClick}
+                        onRankChange={handleRankChange}
+                        onRankSubmit={handleRankSubmit}
+                        onRankCancel={handleRankCancel}
+                        onRemoveAlbum={handleRemoveAlbum}
+                        isStaged={isAlbumStaged(album.id)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+                <DragOverlay>
+                  {activeId ? (
+                    <div className="album-item-compact dragging">
+                      {(() => {
+                        const draggedAlbum = filteredAlbums.find(album => album.id.toString() === activeId)
+                        if (!draggedAlbum) return null
+                        return (
+                          <>
+                            <div className="album-rank">#{draggedAlbum.rank}</div>
+                            <div className="album-cover-compact">
+                              <img 
+                                src={draggedAlbum.cover_image} 
+                                alt={`${draggedAlbum.title} by ${draggedAlbum.artist}`}
+                              />
+                            </div>
+                          </>
+                        )
+                      })()}
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+              
+              {/* Desktop: Add New Albums Panel */}
+              <AddNewAlbumsPanel 
+                ref={addNewAlbumsPanelRef}
+                stagedRemovals={stagedRemovals}
+                onAlbumStaged={(album) => {
+                  addToStagedAlbums(album)
+                  const nextRank = albums.length + 1
+                  setAlbums(prev => [...prev, { ...album, rank: nextRank }])
+                  console.log('Album staged for addition:', album.title)
+                }}
+              />
+            </>
+          )
         ) : (
           // Normal view without drag and drop
         <div className="albums-list">
@@ -942,24 +1101,7 @@ const FavoriteAlbums: React.FC = () => {
         </div>
         )}
         
-        {/* Add New Albums Panel - Only visible in edit mode */}
-        {isEditMode && (
-          <AddNewAlbumsPanel 
-            ref={addNewAlbumsPanelRef}
-            stagedRemovals={stagedRemovals}
-            onAlbumStaged={(album) => {
-              // Add album to staged albums (will be committed when Save Changes is clicked)
-              addToStagedAlbums(album)
-              
-              // Also add it to the current albums list for display
-              const nextRank = albums.length + 1
-              setAlbums(prev => [...prev, { ...album, rank: nextRank }])
-              
-              // Show success message
-              console.log('Album staged for addition:', album.title)
-            }}
-          />
-        )}
+        {/* Add New Albums Panel is now integrated into mobile pages system above */}
       </div>
     </div>
   )

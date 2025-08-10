@@ -537,8 +537,84 @@
   }
   
   .filter-group {
-    min-width: 200px;
+    min-width: 120px;
     width: 100%;
+    gap: 0.25rem;
+  }
+  
+  .filter-group label {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Create a 2-column row for genre and decade */
+  .filter-controls .filter-group:nth-child(1),
+  .filter-controls .filter-group:nth-child(2) {
+    display: inline-block;
+    width: calc(50% - 0.5rem);
+    vertical-align: top;
+  }
+  
+  .filter-controls .filter-group:nth-child(1) {
+    margin-right: 1rem;
+  }
+  
+  /* Force the first two groups into a row container - only when NOT in edit mode */
+  .filter-controls:not(.edit-mode) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 0.75rem;
+    padding: 0.75rem 0.75rem 1rem 0.75rem;
+    margin-top: .25rem;
+  }
+  
+  .filter-controls:not(.edit-mode) .filter-group:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+    margin-right: 0;
+  }
+  
+  .filter-controls:not(.edit-mode) .filter-group:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+  
+  .filter-controls:not(.edit-mode) .filter-group:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  
+  .filter-controls:not(.edit-mode) .filter-stats {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .filter-controls:not(.edit-mode) .edit-controls {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -0.25rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Make dropdowns more compact */
+  .filter-select {
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Make edit button smaller */
+  .edit-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
   }
   
   .albums-list {
@@ -806,6 +882,7 @@
     justify-content: center;
     flex-grow: 1;
     padding-top: 15px; /* Space for rank badges */
+    padding-bottom: 120px; /* Add blank space at bottom for scrolling */
   }
   
   .albums-list:not(.edit-mode) {
@@ -913,13 +990,16 @@
     flex-direction: column;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.25rem 0;
-    margin-bottom: 0.25rem;
-    border-bottom: none; /* Remove underline */
+    padding: 0.5rem 0;
+    margin: 0.5rem 0;
+    border-bottom: none;
+    display: flex !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
   }
   
   .edit-mode-header h3 {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     margin: 0;
     padding: 0;
     text-align: center;
@@ -927,15 +1007,22 @@
   
   .edit-mode-header .edit-actions {
     gap: 0.5rem;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
   }
   
   .edit-mode-header .save-button,
   .edit-mode-header .cancel-button {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
     min-height: auto;
-    border-radius: 4px;
+    border-radius: 6px;
+    width: 120px; /* Make buttons equal width */
   }
+  
+
   
   /* Hide Add New Album section on mobile */
   .add-album-section {
@@ -945,7 +1032,7 @@
 
 /* Add New Albums Panel Styles */
 .add-new-albums-panel {
-  margin-top: 4rem;
+  margin-top: 0.5rem;
   background: var(--color-card-bg);
   border-radius: 12px;
   padding: 2rem;
@@ -1252,8 +1339,8 @@
   }
   
   .results-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 0.75rem;
   }
   
   .result-item {
@@ -1268,3 +1355,70 @@
     font-size: 0.9rem;
   }
 } 
+
+/* Mobile swipeable pages for edit mode */
+.mobile-pages-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  min-height: 60vh;
+}
+
+.mobile-page {
+  width: 100%;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform: translateX(100%);
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-height: 60vh;
+}
+
+.mobile-page.active {
+  transform: translateX(0);
+  opacity: 1;
+  position: relative;
+}
+
+/* Add sliding animation for the albums page when transitioning */
+.mobile-page.sliding-left {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Add returning from left animation for the albums page */
+.mobile-page.returning-from-left {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .mobile-pages-container {
+    min-height: 50vh;
+  }
+  
+  .mobile-page {
+    min-height: 50vh;
+  }
+  
+  /* Enable scrolling within the Add New Albums panel on mobile */
+  .mobile-page .add-new-albums-panel {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Hide the header and description on mobile */
+  .mobile-page .add-new-albums-panel h2,
+  .mobile-page .add-new-albums-panel p {
+    display: none;
+  }
+}
+
+ 

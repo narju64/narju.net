@@ -65,8 +65,8 @@ const NBAPlayerRankings: React.FC = () => {
 
   // Check if user is logged in
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
+    const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('authToken');
     const loggedIn = !!(storedUser && storedToken);
     setIsLoggedIn(loggedIn);
     
@@ -81,7 +81,7 @@ const NBAPlayerRankings: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const storedToken = localStorage.getItem('adminToken');
+      const storedToken = localStorage.getItem('authToken');
       if (!storedToken) {
         throw new Error('No authentication token found');
       }

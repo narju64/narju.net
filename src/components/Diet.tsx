@@ -137,8 +137,8 @@ const Diet: React.FC = () => {
 
   // Check if user is logged in and fetch ingredients from API
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
+    const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('authToken');
     const loggedIn = !!(storedUser && storedToken);
     setIsLoggedIn(loggedIn);
 

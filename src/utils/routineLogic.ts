@@ -11,195 +11,44 @@ export interface DayRoutine {
   routines: RoutineItem[];
 }
 
-// Single source of truth: each time slot defines both activity and time range
-const ROUTINE_SLOTS = {
-  '6:00 AM': {
-    activity: (dayNumber: number) => {
-      if (dayNumber === 7) {
-        return 'Wake up, Make bed, Brush teeth, Shower';
-      }
-      return 'Wake up, Make bed, Brush teeth';
-    },
-    category: '',
-    timeRange: { startHour: 6, startMinute: 0, endHour: 6, endMinute: 29 }
-  },
-  '6:30 AM': {
-    activity: (dayNumber: number) => {
-      if (dayNumber === 7) return 'Religious Study';
-      if (dayNumber === 1 || dayNumber === 3 || dayNumber === 5) return 'Exercise (Upper Body)';
-      if (dayNumber === 2 || dayNumber === 4 || dayNumber === 6) return 'Exercise (Vert & Core)';
-      return 'Exercise';
-    },
-    category: (dayNumber: number) => {
-      if (dayNumber === 7) return '';
-      return 'health';
-    },
-    timeRange: { startHour: 6, startMinute: 30, endHour: 7, endMinute: 29 }
-  },
-  '7:30 AM': {
-    activity: (dayNumber: number) => {
-      if (dayNumber === 7) {
-        return '';
-      }
-      return 'Shower';
-    },
-    category: '',
-    timeRange: { startHour: 7, startMinute: 30, endHour: 7, endMinute: 59 }
-  },
-  '8:00 AM': {
-    activity: (dayNumber: number) => dayNumber === 7 ? '' : 'Breakfast & Vitamins',
-    category: 'meal',
-    timeRange: { startHour: 8, startMinute: 0, endHour: 8, endMinute: 29 }
-  },
-  '8:30 AM - 1:00 PM': {
-    activity: 'Coding & Website',
-    category: 'leisure',
-    timeRange: { startHour: 8, startMinute: 30, endHour: 12, endMinute: 59 }
-  },
-  '1:00 PM': {
-    activity: (dayNumber: number) => dayNumber === 7 ? '' : 'Lunch',
-    category: 'meal',
-    timeRange: { startHour: 13, startMinute: 0, endHour: 13, endMinute: 29 }
-  },
-  '1:30 PM - 5:00 PM': {
-    activity: 'Art & Music',
-    category: 'leisure',
-    timeRange: { startHour: 13, startMinute: 30, endHour: 16, endMinute: 59 }
-  },
-  '5:00 PM': {
-    activity: (dayNumber: number) => {
-      const weeklyTasks = {
-        1: 'Grooming',
-        2: 'Laundry', 
-        3: 'Groceries',
-        4: 'Cleaning',
-        5: 'Plants / Mail',
-        6: 'Meal Prep'
-      };
-      return weeklyTasks[dayNumber as keyof typeof weeklyTasks] || '';
-    },
-    category: 'chores',
-    timeRange: { startHour: 17, startMinute: 0, endHour: 17, endMinute: 59 }
-  },
-  '6:00 PM': {
-    activity: 'Dinner',
-    category: 'meal',
-    timeRange: { startHour: 18, startMinute: 0, endHour: 18, endMinute: 29 }
-  },
-  '6:30 PM': {
-    activity: 'Walk',
-    category: 'health',
-    timeRange: { startHour: 18, startMinute: 30, endHour: 18, endMinute: 59 }
-  },
-  '7:00 PM - 9:00 PM': {
-    activity: 'Podcasts & Media',
-    category: 'leisure',
-    timeRange: { startHour: 19, startMinute: 0, endHour: 20, endMinute: 59 }
-  },
-  '9:00 PM': {
-    activity: 'Read',
-    category: '',
-    timeRange: { startHour: 21, startMinute: 0, endHour: 21, endMinute: 59 }
-  },
-  '10:00 PM': {
-    activity: 'Brush teeth, Pray, Sleep',
-    category: '',
-    timeRange: { startHour: 22, startMinute: 0, endHour: 22, endMinute: 29 }
-  }
-};
-
+// Time slots are now defined in the database, not hardcoded
 export const generateTimes = () => {
-  return Object.keys(ROUTINE_SLOTS);
+  // This will be populated from the database routine data
+  // For now, return an empty array - the actual times will come from the API
+  return [];
 };
 
-export const getCurrentRoutine = (dayNumber: number): RoutineItem[] => {
-  const times = generateTimes();
-  return times.map(time => {
-    const config = ROUTINE_SLOTS[time as keyof typeof ROUTINE_SLOTS];
-    if (!config) {
-      return { time, activity: '', category: '' };
-    }
-    
-    const activity = typeof config.activity === 'function' 
-      ? config.activity(dayNumber) 
-      : config.activity;
-    
-    const category = typeof config.category === 'function' 
-      ? config.category(dayNumber) 
-      : config.category;
-    
-    return { 
-      time, 
-      activity, 
-      category 
-    };
-  });
-};
-
-export const isCurrentTime = (time: string, dayNumber?: number) => {
+export const isCurrentTime = (time: string) => {
+  // Parse the time string (e.g., "6:00 AM", "2:00 PM")
+  const timeMatch = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!timeMatch) return false;
+  
+  const hour = parseInt(timeMatch[1]);
+  const minute = parseInt(timeMatch[2]);
+  const period = timeMatch[3].toUpperCase();
+  
+  // Convert to 24-hour format
+  let hour24 = hour;
+  if (period === 'PM' && hour !== 12) {
+    hour24 = hour + 12;
+  } else if (period === 'AM' && hour === 12) {
+    hour24 = 0;
+  }
+  
+  // Get current time
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
   
-  const config = ROUTINE_SLOTS[time as keyof typeof ROUTINE_SLOTS];
-  if (!config) {
-    return false;
-  }
+  // Check if current time is within this time slot (within 30 minutes)
+  const timeSlotStart = hour24 * 60 + minute;
+  const timeSlotEnd = timeSlotStart + 60; // 1 hour slot
+  const currentTimeMinutes = currentHour * 60 + currentMinute;
   
-  const { startHour, startMinute, endHour, endMinute } = config.timeRange;
-  
-  // Convert current time to minutes for easier comparison
-  const currentTimeInMinutes = currentHour * 60 + currentMinute;
-  const startTimeInMinutes = startHour * 60 + startMinute;
-  const endTimeInMinutes = endHour * 60 + endMinute;
-  
-  // Check if current time falls within this slot's range
-  const isInTimeRange = currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
-  
-  if (!isInTimeRange) {
-    return false;
-  }
-  
-  // If this slot has an activity, return true
-  const activity = typeof config.activity === 'function' 
-    ? config.activity(dayNumber || 1) 
-    : config.activity;
-  
-  if (activity) {
-    return true;
-  }
-  
-  // If this slot is empty, check if we should extend the previous activity
-  const times = generateTimes();
-  const currentIndex = times.indexOf(time);
-  
-  // Look backward to find the most recent activity
-  for (let i = currentIndex - 1; i >= 0; i--) {
-    const previousTime = times[i];
-    const previousConfig = ROUTINE_SLOTS[previousTime as keyof typeof ROUTINE_SLOTS];
-    
-    if (previousConfig) {
-      const previousActivity = typeof previousConfig.activity === 'function' 
-        ? previousConfig.activity(dayNumber || 1) 
-        : previousConfig.activity;
-      
-      if (previousActivity) {
-        // Check if the previous activity's time range extends to cover current time
-        const { startHour: prevStartHour, startMinute: prevStartMinute, endHour: prevEndHour, endMinute: prevEndMinute } = previousConfig.timeRange;
-        const prevStartTimeInMinutes = prevStartHour * 60 + prevStartMinute;
-        const prevEndTimeInMinutes = prevEndHour * 60 + prevEndMinute;
-        
-        // If current time is within the previous activity's range, extend it
-        return currentTimeInMinutes >= prevStartTimeInMinutes && currentTimeInMinutes <= prevEndTimeInMinutes;
-      }
-    }
-  }
-  
-  return false;
+  return currentTimeMinutes >= timeSlotStart && currentTimeMinutes < timeSlotEnd;
 };
 
-export const getCurrentAndNextTask = (currentDate: OrbitalDate) => {
-  const routines = getCurrentRoutine(currentDate.weekDay);
+export const getCurrentAndNextTask = (routines: RoutineItem[] = []) => {
   let currentTask = null;
   let nextTask = null;
 
@@ -227,10 +76,10 @@ export const getCurrentAndNextTask = (currentDate: OrbitalDate) => {
       }
     }
   } else {
-    // Normal routine logic
+    // Normal routine logic - this will need to be updated when we implement proper time checking
     for (let i = 0; i < routines.length; i++) {
       const routine = routines[i];
-      if (routine.activity && isCurrentTime(routine.time, currentDate.weekDay)) {
+      if (routine.activity && isCurrentTime(routine.time)) {
         currentTask = routine;
         // Find next task
         for (let j = i + 1; j < routines.length; j++) {

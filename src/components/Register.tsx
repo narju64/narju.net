@@ -103,8 +103,8 @@ const Register: React.FC = () => {
       const registerData = data as RegisterResponse;
 
       // Store the token and user info (automatically log them in)
-      localStorage.setItem('adminToken', registerData.token);
-      localStorage.setItem('adminUser', JSON.stringify(registerData.user));
+      localStorage.setItem('authToken', registerData.token);
+      localStorage.setItem('currentUser', JSON.stringify(registerData.user));
 
       setSuccess(true);
       

@@ -361,4 +361,260 @@
   .legend-label {
     font-size: 0.8rem;
   }
-} 
+}
+
+/* Edit Form Styles */
+.edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.edit-form {
+  background: #1a1a1a;
+  border: 2px solid #294cad;
+  border-radius: 12px;
+  padding: 2rem;
+  min-width: 400px;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.edit-form h3 {
+  color: #ff7300;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.edit-form p {
+  color: #ffffff;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #294cad;
+  border-radius: 6px;
+  background: #0a0a0a;
+  color: #ffffff;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #ff7300;
+  box-shadow: 0 0 0 2px rgba(255, 115, 0, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.save-btn,
+.cancel-btn,
+.delete-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-btn {
+  background-color: #27ae60;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #229954;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.cancel-btn {
+  background-color: #95a5a6;
+  color: white;
+}
+
+/* Clickable time cell styles */
+.clickable-time {
+  transition: all 0.2s ease;
+}
+
+.clickable-time:hover {
+  background-color: rgba(52, 152, 219, 0.2) !important;
+  cursor: pointer;
+}
+
+/* Add Time Column Styles */
+.add-time-header {
+  width: 80px;
+  text-align: center;
+  background-color: #2c3e50;
+  color: white;
+  font-weight: bold;
+  padding: 10px;
+  border: 1px solid #34495e;
+}
+
+.add-time-cell {
+  width: 80px;
+  text-align: center;
+  background-color: #34495e;
+  border: 1px solid #2c3e50;
+  padding: 5px;
+  vertical-align: middle;
+}
+
+.add-time-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 2px;
+}
+
+.add-time-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.add-time-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #3498db;
+  background-color: #3498db;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.add-time-btn:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+  transform: scale(1.1);
+}
+
+.delete-time-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #e74c3c;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.delete-time-btn:hover {
+  background-color: #c0392b;
+  border-color: #c0392b;
+  transform: scale(1.1);
+}
+
+.delete-time-btn.deleted {
+  background-color: #27ae60;
+  border-color: #27ae60;
+}
+
+.delete-time-btn.deleted:hover {
+  background-color: #229954;
+  border-color: #229954;
+}
+
+/* Style for time slots marked for deletion */
+.time-row-deleted {
+  opacity: 0.5;
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.time-row-deleted .time-cell {
+  text-decoration: line-through;
+  color: #e74c3c;
+}
+
+.intermediate-times {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #2c3e50;
+  border: 1px solid #34495e;
+  border-radius: 4px;
+  padding: 5px;
+  z-index: 1000;
+  min-width: 80px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: none;
+}
+
+.add-time-dropdown:hover .intermediate-times {
+  display: block;
+}
+
+.intermediate-time-btn {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  margin: 2px 0;
+  background-color: #34495e;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.intermediate-time-btn:hover {
+  background-color: #3498db;
+}

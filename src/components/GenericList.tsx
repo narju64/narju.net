@@ -40,8 +40,8 @@ const GenericList: React.FC<GenericListProps> = ({
 
   // Check if user is logged in
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
+    const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('authToken');
     const loggedIn = !!(storedUser && storedToken);
 
     // If logged in, fetch from API

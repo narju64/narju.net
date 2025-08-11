@@ -247,8 +247,8 @@ const FavoriteAlbums: React.FC = () => {
 
   // Check if user is logged in
   React.useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser')
-    const storedToken = localStorage.getItem('adminToken')
+    const storedUser = localStorage.getItem('currentUser')
+    const storedToken = localStorage.getItem('authToken')
     const loggedIn = !!(storedUser && storedToken)
     setIsLoggedIn(loggedIn)
 
@@ -291,7 +291,7 @@ const FavoriteAlbums: React.FC = () => {
       setLoading(true)
       setError(null)
       
-      const storedToken = localStorage.getItem('adminToken')
+      const storedToken = localStorage.getItem('authToken')
       if (!storedToken) {
         throw new Error('No authentication token found')
       }
@@ -364,7 +364,7 @@ const FavoriteAlbums: React.FC = () => {
       
       // First, add any staged albums to the user's list
       if (stagedAlbums.length > 0) {
-        const token = localStorage.getItem('adminToken')
+        const token = localStorage.getItem('authToken')
         if (!token) {
           throw new Error('No authentication token found')
         }
@@ -388,7 +388,7 @@ const FavoriteAlbums: React.FC = () => {
 
       // Then, remove any staged removals from the user's list
       if (stagedRemovals.length > 0) {
-        const token = localStorage.getItem('adminToken')
+        const token = localStorage.getItem('authToken')
         if (!token) {
           throw new Error('No authentication token found')
         }
@@ -421,7 +421,7 @@ const FavoriteAlbums: React.FC = () => {
         rank: index + 1
       }))
       
-      const token = localStorage.getItem('adminToken')
+      const token = localStorage.getItem('authToken')
       const response = await fetch(buildApiUrl('/api/albums/reorder'), {
         method: 'PUT',
         headers: {
@@ -1149,7 +1149,7 @@ const AddNewAlbumsPanel = React.forwardRef<{ addAlbumToAvailableList: (album: Al
   React.useEffect(() => {
     const loadAllAlbums = async () => {
       try {
-        const storedToken = localStorage.getItem('adminToken')
+        const storedToken = localStorage.getItem('authToken')
         if (!storedToken) {
           throw new Error('No authentication token found')
         }

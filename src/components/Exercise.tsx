@@ -37,7 +37,7 @@ const Exercise: React.FC = () => {
 
   // Check if user is logged in
   React.useEffect(() => {
-    const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
+    const loggedIn = !!(localStorage.getItem('currentUser') && localStorage.getItem('authToken'));
     setIsLoggedIn(loggedIn);
     
     // If logged in, fetch from API

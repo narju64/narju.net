@@ -78,12 +78,91 @@ export const createAdminUser = async () => {
   }
 };
 
+// Create User Routines table
+export const createUserRoutinesTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS user_routines (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      day_number INTEGER NOT NULL CHECK (day_number >= 1 AND day_number <= 7),
+      time_slot VARCHAR(10) NOT NULL,
+      activity VARCHAR(255) NOT NULL,
+      category VARCHAR(50) NOT NULL,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      
+      -- Ensure unique time slots per user per day
+      UNIQUE(user_id, day_number, time_slot)
+    );
+  `;
+  
+  try {
+    await pool.query(query);
+    console.log('✅ User Routines table created successfully');
+  } catch (error) {
+    console.error('❌ Error creating user_routines table:', error);
+    throw error;
+  }
+};
+
+// Create User Deleted Timeslots table
+export const createUserDeletedTimeslotsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS user_deleted_timeslots (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      time_slot VARCHAR(10) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      
+      -- Ensure unique time slots per user
+      UNIQUE(user_id, time_slot)
+    );
+  `;
+  
+  try {
+    await pool.query(query);
+    console.log('✅ User Deleted Timeslots table created successfully');
+  } catch (error) {
+    console.error('❌ Error creating user_deleted_timeslots table:', error);
+    throw error;
+  }
+};
+
+// Create User Settings table
+export const createUserSettingsTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS user_settings (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      setting_key VARCHAR(100) NOT NULL,
+      setting_value TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      
+      -- Ensure unique settings per user
+      UNIQUE(user_id, setting_key)
+    );
+  `;
+  
+  try {
+    await pool.query(query);
+    console.log('✅ User Settings table created successfully');
+  } catch (error) {
+    console.error('❌ Error creating user_settings table:', error);
+    throw error;
+  }
+};
+
 // Run all migrations
 export const runMigrations = async () => {
   try {
     console.log('🔄 Running database migrations...');
     await createUsersTable();
     await createListsTable();
+    await createUserRoutinesTable();
+    await createUserDeletedTimeslotsTable();
+    await createUserSettingsTable();
     await createAdminUser();
     // Note: Data has been manually uploaded to Railway database
     console.log('✅ All migrations completed successfully');

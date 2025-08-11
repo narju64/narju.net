@@ -25,7 +25,7 @@ const DynamicListManager: React.FC<DynamicListManagerProps> = ({
 
   useEffect(() => {
     // Check if user is logged in - can be used for future features
-    // const loggedIn = !!(localStorage.getItem('adminUser') && localStorage.getItem('adminToken'));
+    // const loggedIn = !!(localStorage.getItem('currentUser') && localStorage.getItem('authToken'));
   }, []);
 
   const selectedConfig = listConfigs.find(config => config.category === selectedCategory);

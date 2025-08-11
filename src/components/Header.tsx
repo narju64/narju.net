@@ -139,16 +139,16 @@ const Header: React.FC = () => {
 
   // Check if user is already logged in on component mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    const storedToken = localStorage.getItem('adminToken');
+    const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('authToken');
     
     if (storedUser && storedToken) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (error) {
         // Clear invalid stored data
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
       }
     }
   }, []);
@@ -219,8 +219,8 @@ const Header: React.FC = () => {
 
       if (response.ok) {
         setUser(data.user);
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user));
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
         setShowLoginForm(false);
         setLoginEmail('');
         setLoginPassword('');
@@ -238,8 +238,8 @@ const Header: React.FC = () => {
   // Handle logout
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
     setShowLoginForm(false);
   };
 

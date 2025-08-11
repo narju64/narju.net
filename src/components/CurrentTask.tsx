@@ -77,7 +77,7 @@ const CurrentTask: React.FC = () => {
 
   if (!currentDate) return null;
 
-  const { current, next } = getCurrentAndNextTask(currentDate);
+  const { current, next } = getCurrentAndNextTask([]);
   const dailyDescription = getDailyDescription(currentDate.weekDay);
 
   return (

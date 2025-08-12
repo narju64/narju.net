@@ -85,8 +85,8 @@
   font-weight: 600;
   color: #ffffff;
   font-size: 1rem;
-  min-width: 170px;
-  width: 170px;
+  min-width: 120px;
+  width: 120px;
 }
 
 .day-header {
@@ -131,8 +131,8 @@
   color: #ffffff;
   font-size: 0.9rem;
   text-align: center;
-  min-width: 140px;
-  width: 140px;
+  min-width: 100px;
+  width: 100px;
 }
 
 .routine-grid .time-cell.current-time {
@@ -220,44 +220,64 @@
 
 .routine-legend {
   margin-top: 2rem;
-  background: white;
+  background: #1a1a1a;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e1e5e9;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid #ff7300;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
 
 .routine-legend h3 {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 1rem 0;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .legend-items {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #2a2a2a;
+  border-radius: 8px;
+  border: 1px solid #3a3a3a;
+  transition: all 0.2s ease;
+}
+
+.legend-item:hover {
+  background: #3a3a3a;
+  border-color: #4a4a4a;
+  transform: translateY(-2px);
 }
 
 .legend-color {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .legend-label {
   font-size: 0.9rem;
-  color: #34495e;
+  color: #ffffff;
   font-weight: 500;
   text-transform: capitalize;
+  white-space: nowrap;
 }
 
 /* Responsive Design */
@@ -300,6 +320,19 @@
   .routine-category {
     font-size: 0.7rem;
   }
+  
+  .routine-legend {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .legend-items {
+    gap: 1rem;
+  }
+  
+  .legend-item {
+    padding: 0.4rem 0.8rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -317,6 +350,20 @@
   
   .routine-grid {
     min-width: 500px;
+  }
+  
+  .routine-legend {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .legend-items {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .legend-item {
+    padding: 0.3rem 0.6rem;
   }
   
   .routine-grid th,
@@ -506,9 +553,10 @@
 
 .add-time-controls {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   align-items: center;
+  justify-content: center;
   padding: 2px;
 }
 

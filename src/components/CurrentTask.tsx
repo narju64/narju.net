@@ -1,10 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { orbitalCalendar, OrbitalDate } from '../utils/orbitalCalendar';
-import { getCurrentAndNextTask, getDayName, formatOrbitalDate, formatGregorianDate } from '../utils/routineLogic';
+import { getCurrentAndNextTask, getDayName, formatOrbitalDate, formatGregorianDate, DayRoutine } from '../utils/routineLogic';
+import { buildApiUrl } from '../utils/api';
 
 const CurrentTask: React.FC = () => {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState<OrbitalDate | null>(null);
+  const [routineData, setRoutineData] = useState<DayRoutine[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch routine data for the current day
+  const fetchRoutineData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Check if user is logged in
+      const isLoggedIn = !!(localStorage.getItem('currentUser') && localStorage.getItem('authToken'));
+      
+      let endpoint = '/api/lists/routine'; // Default system routine endpoint
+      let headers: HeadersInit = {};
+      
+      if (isLoggedIn) {
+        // Get user ID from localStorage
+        const currentUser = localStorage.getItem('currentUser');
+        const authToken = localStorage.getItem('authToken');
+        
+        if (currentUser && authToken) {
+          try {
+            const userData = JSON.parse(currentUser);
+            const userId = userData.id || userData.userId;
+            if (userId) {
+              endpoint = `/api/users/${userId}/routines`;
+              headers = {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+              };
+            }
+          } catch (parseError) {
+            console.error('Error parsing current user data:', parseError);
+            // Fallback to system routine if parsing fails
+            endpoint = '/api/lists/routine';
+          }
+        }
+      }
+      
+      const response = await fetch(buildApiUrl(endpoint), { headers });
+      
+      if (!response.ok) {
+        // Don't treat 401 (no user routines) as an error - it's expected
+        if (isLoggedIn && response.status === 401) {
+          // User is logged in but has no personal routines yet
+          setRoutineData([]);
+          return;
+        }
+        
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
+        setRoutineData(data.list.items_json);
+      } else if (data.routines && data.routines.length > 0) {
+        setRoutineData(data.routines);
+      } else {
+        setRoutineData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching routine data:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -22,6 +92,10 @@ const CurrentTask: React.FC = () => {
 
     updateTime();
     const interval = setInterval(updateTime, 1000);
+    
+    // Fetch routine data when component mounts
+    fetchRoutineData();
+    
     return () => clearInterval(interval);
   }, []);
 
@@ -77,7 +151,12 @@ const CurrentTask: React.FC = () => {
 
   if (!currentDate) return null;
 
-  const { current, next } = getCurrentAndNextTask([]);
+  // Get routines for the current day
+  const currentDayRoutine = routineData.find(day => day.day === currentDate.weekDay);
+  const todayRoutines = currentDayRoutine?.routines || [];
+  
+  // Get current and next tasks using real routine data
+  const { current, next } = getCurrentAndNextTask(todayRoutines);
   const dailyDescription = getDailyDescription(currentDate.weekDay);
 
   return (
@@ -117,61 +196,78 @@ const CurrentTask: React.FC = () => {
         </div>
       </div>
 
-      {current ? (
-        isExerciseTask(current.activity) ? (
-          <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
-            <div className="current-task" style={{ cursor: 'pointer' }}>
-              <div className="task-label">Current Task:</div>
-              <div className="task-time">{current.time}</div>
-              <div className="task-activity">{renderTaskActivity(current.activity)}</div>
-            </div>
-          </a>
-        ) : isMealTask(current.activity) ? (
-          <a href="/lifestyle/diet" style={{ textDecoration: 'none', display: 'block' }}>
-            <div className="current-task" style={{ cursor: 'pointer' }}>
-              <div className="task-label">Current Task:</div>
-              <div className="task-time">{current.time}</div>
-              <div className="task-activity">{renderTaskActivity(current.activity)}</div>
-            </div>
-          </a>
-        ) : (
-          <div className="current-task">
-            <div className="task-label">Current Task:</div>
-            <div className="task-time">{current.time}</div>
-            <div className="task-activity">{renderTaskActivity(current.activity)}</div>
-          </div>
-        )
-      ) : (
+      {loading && (
         <div className="current-task">
-          <div className="task-label">Current Task:</div>
-          <div className="task-activity">No scheduled task</div>
+          <div className="task-label">Loading routine...</div>
         </div>
       )}
 
-      {next && (
-        isExerciseTask(next.activity) ? (
-          <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
-            <div className="next-task" style={{ cursor: 'pointer' }}>
-              <div className="task-label">Next Task:</div>
-              <div className="task-time">{next.time}</div>
-              <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+      {error && (
+        <div className="current-task">
+          <div className="task-label">Error loading routine</div>
+          <div className="task-activity">{error}</div>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          {current ? (
+            isExerciseTask(current.activity) ? (
+              <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
+                <div className="current-task" style={{ cursor: 'pointer' }}>
+                  <div className="task-label">Current Task:</div>
+                  <div className="task-time">{current.time}</div>
+                  <div className="task-activity">{renderTaskActivity(current.activity)}</div>
+                </div>
+              </a>
+            ) : isMealTask(current.activity) ? (
+              <a href="/lifestyle/diet" style={{ textDecoration: 'none', display: 'block' }}>
+                <div className="current-task" style={{ cursor: 'pointer' }}>
+                  <div className="task-label">Current Task:</div>
+                  <div className="task-time">{current.time}</div>
+                  <div className="task-activity">{renderTaskActivity(current.activity)}</div>
+                </div>
+              </a>
+            ) : (
+              <div className="current-task">
+                <div className="task-label">Current Task:</div>
+                <div className="task-time">{current.time}</div>
+                <div className="task-activity">{renderTaskActivity(current.activity)}</div>
+              </div>
+            )
+          ) : (
+            <div className="current-task">
+              <div className="task-label">Current Task:</div>
+              <div className="task-activity">No scheduled task</div>
             </div>
-          </a>
-        ) : isMealTask(next.activity) ? (
-          <a href="/lifestyle/diet" style={{ textDecoration: 'none', display: 'block' }}>
-            <div className="next-task" style={{ cursor: 'pointer' }}>
-              <div className="task-label">Next Task:</div>
-              <div className="task-time">{next.time}</div>
-              <div className="task-activity">{renderTaskActivity(next.activity)}</div>
-            </div>
-          </a>
-        ) : (
-          <div className="next-task">
-            <div className="task-label">Next Task:</div>
-            <div className="task-time">{next.time}</div>
-            <div className="task-activity">{renderTaskActivity(next.activity)}</div>
-          </div>
-        )
+          )}
+
+          {next && (
+            isExerciseTask(next.activity) ? (
+              <a href="/lifestyle/exercise" style={{ textDecoration: 'none', display: 'block' }}>
+                <div className="next-task" style={{ cursor: 'pointer' }}>
+                  <div className="task-label">Next Task:</div>
+                  <div className="task-time">{next.time}</div>
+                  <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+                </div>
+              </a>
+            ) : isMealTask(next.activity) ? (
+              <a href="/lifestyle/diet" style={{ textDecoration: 'none', display: 'block' }}>
+                <div className="next-task" style={{ cursor: 'pointer' }}>
+                  <div className="task-label">Next Task:</div>
+                  <div className="task-time">{next.time}</div>
+                  <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+                </div>
+              </a>
+            ) : (
+              <div className="next-task">
+                <div className="task-label">Next Task:</div>
+                <div className="task-time">{next.time}</div>
+                <div className="task-activity">{renderTaskActivity(next.activity)}</div>
+              </div>
+            )
+          )}
+        </>
       )}
     </div>
   );

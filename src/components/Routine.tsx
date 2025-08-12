@@ -4,7 +4,8 @@ import {
   formatOrbitalDate, 
   formatGregorianDate, 
   getDayName,
-  DayRoutine
+  DayRoutine,
+  calculateEndTimes
 } from '../utils/routineLogic';
 import { isCurrentTime } from '../utils/routineLogic';
 import './Routine.css';
@@ -91,7 +92,7 @@ const Routine: React.FC = () => {
     try {
       const currentUser = localStorage.getItem('currentUser');
       if (!currentUser) {
-        console.log('No current user found in localStorage, skipping user settings load');
+        // No current user found in localStorage, skipping user settings load
         return;
       }
 
@@ -99,11 +100,11 @@ const Routine: React.FC = () => {
       const userId = userData.id || userData.userId;
       
       if (!userId) {
-        console.log('No valid user ID found in current user data');
+        // No valid user ID found in current user data
         return;
       }
 
-      console.log('Loading user settings for userId:', userId);
+      // Loading user settings for userId
 
       const response = await fetch(buildApiUrl(`/api/users/${userId}/settings`), {
         method: 'GET',
@@ -113,17 +114,17 @@ const Routine: React.FC = () => {
         }
       });
 
-      console.log('Settings load response status:', response.status);
+      // Settings load response status
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Settings load response data:', data);
+        // Settings load response data
         if (data.settings && data.settings.calendarMode) {
-          console.log('Setting calendar mode from loaded settings:', data.settings.calendarMode);
+          // Setting calendar mode from loaded settings
           setIsGregorianMode(data.settings.calendarMode === 'gregorian');
           setOriginalCalendarMode(data.settings.calendarMode === 'gregorian'); // Initialize original
         } else {
-          console.log('No calendar mode setting found in loaded settings');
+          // No calendar mode setting found in loaded settings
         }
       } else {
         const errorText = await response.text();
@@ -151,7 +152,7 @@ const Routine: React.FC = () => {
         return;
       }
 
-      console.log('Attempting to save user settings:', { userId, settings });
+      // Attempting to save user settings
 
       const response = await fetch(buildApiUrl(`/api/users/${userId}/settings`), {
         method: 'POST',
@@ -162,8 +163,7 @@ const Routine: React.FC = () => {
         body: JSON.stringify({ settings })
       });
 
-      console.log('Settings save response status:', response.status);
-      console.log('Settings save response headers:', response.headers);
+      // Settings save response status and headers
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -171,8 +171,8 @@ const Routine: React.FC = () => {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const responseData = await response.json();
-      console.log('Settings saved successfully:', responseData);
+      await response.json();
+      // Settings saved successfully
     } catch (error) {
       console.error('Error saving user settings:', error);
       throw error; // Re-throw so the caller can handle it
@@ -243,19 +243,16 @@ const Routine: React.FC = () => {
         }
       }
       
-      console.log('Fetching routine data from:', endpoint);
-      console.log('Headers:', headers);
+      // Fetching routine data from endpoint
       
       const response = await fetch(buildApiUrl(endpoint), { headers });
       
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      // Response status and ok
       
       if (!response.ok) {
         // Don't treat 401 (no user routines) as an error - it's expected
         if (isUserLoggedIn && response.status === 401) {
           // User is logged in but has no personal routines yet
-          console.log('User has no personal routines yet, setting empty data');
           setRoutineData([]);
           return;
         }
@@ -264,17 +261,17 @@ const Routine: React.FC = () => {
       }
       
       const data: ApiResponse = await response.json();
-      console.log('Received data:', data);
+      // Received data
       
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
-        console.log('Using system routine data');
+        // Using system routine data
         setRoutineData(data.list.items_json);
       } else if (data.routines && data.routines.length > 0) {
         // Handle user routines response format
-        console.log('Using user routine data');
+        // Using user routine data
         setRoutineData(data.routines);
       } else {
-        console.log('No routine data found, setting empty array');
+        // No routine data found, setting empty array
         setRoutineData([]);
       }
       
@@ -301,9 +298,9 @@ const Routine: React.FC = () => {
                 const deletedTimes = deletedData.deletedTimeslots || [];
                 setDeletedTimeSlots(deletedTimes);
                 setOriginalDeletedTimeSlots(deletedTimes); // Track original state
-                console.log('Loaded deleted timeslots:', deletedTimes);
+                // Loaded deleted timeslots
               } else {
-                console.log('No deleted timeslots found or error occurred');
+                // No deleted timeslots found or error occurred
                 setDeletedTimeSlots([]);
                 setOriginalDeletedTimeSlots([]);
               }
@@ -367,17 +364,17 @@ const Routine: React.FC = () => {
     
     // Convert to array and sort chronologically
     const times = Array.from(timeSet);
-    console.log('Original times from data:', times);
+    // Original times from data
     
     // Sort times chronologically by converting to comparable values
     const sortedTimes = times.sort((a, b) => {
       const timeA = convertTimeToMinutes(a);
       const timeB = convertTimeToMinutes(b);
-      console.log(`Comparing ${a} (${timeA}) vs ${b} (${timeB})`);
+      // Comparing times for sorting
       return timeA - timeB;
     });
     
-    console.log('Sorted times:', sortedTimes);
+    // Sorted times
     return sortedTimes;
   };
 
@@ -405,12 +402,102 @@ const Routine: React.FC = () => {
     return totalMinutes;
   };
 
+  // Helper function to calculate duration between two time slots
+  const calculateDuration = (startTime: string, endTime: string): string => {
+    const startMinutes = convertTimeToMinutes(startTime);
+    const endMinutes = convertTimeToMinutes(endTime);
+    
+    let durationMinutes: number;
+    
+    if (endMinutes <= startMinutes) {
+      // Cross-day duration: end time is on the next day
+      // Add 24 hours (1440 minutes) to the end time
+      durationMinutes = (endMinutes + 1440) - startMinutes;
+    } else {
+      // Same-day duration
+      durationMinutes = endMinutes - startMinutes;
+    }
+    
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+    
+    if (hours > 0 && minutes > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else if (minutes > 0) {
+      return `${minutes}m`;
+    } else {
+      return '';
+    }
+  };
+
+
+
+  // Helper function to get the next activity time for a specific day and time
+  const getNextActivityTimeForDay = (currentTime: string, dayNumber: number): string | null => {
+    const currentIndex = displayTimes.indexOf(currentTime);
+    if (currentIndex === -1) {
+      return null; // Invalid time
+    }
+    
+    // Look for the next time slot that has an activity on this specific day
+    for (let i = currentIndex + 1; i < displayTimes.length; i++) {
+      const checkTime = displayTimes[i];
+      
+      // Check if there's an activity at this time on this specific day
+      const dayRoutine = routineData.find(day => day.day === dayNumber);
+      if (dayRoutine) {
+        const routine = dayRoutine.routines.find(r => r.time === checkTime);
+        if (routine && routine.activity && routine.activity.trim() !== '') {
+          // Found next activity on this day
+          return checkTime;
+        }
+      }
+      
+      // Also check for pending changes on this day
+      const changeKey = `${dayNumber}-${checkTime}`;
+      const pendingChange = pendingChanges[changeKey];
+      if (pendingChange && pendingChange.activity && pendingChange.activity.trim() !== '') {
+        // Found next activity from pending changes on this day
+        return checkTime;
+      }
+    }
+    
+    // If no next activity found on this day, look for the first activity of the next day
+    const nextDayNumber = dayNumber === 7 ? 1 : dayNumber + 1; // Wrap around from Sunday to Monday
+    const nextDayRoutine = routineData.find(day => day.day === nextDayNumber);
+    
+    if (nextDayRoutine) {
+      // Find the first activity of the next day
+      for (let i = 0; i < displayTimes.length; i++) {
+        const checkTime = displayTimes[i];
+        const routine = nextDayRoutine.routines.find(r => r.time === checkTime);
+        if (routine && routine.activity && routine.activity.trim() !== '') {
+          // Found first activity of next day
+          return checkTime;
+        }
+        
+        // Also check pending changes for next day
+        const changeKey = `${nextDayNumber}-${checkTime}`;
+        const pendingChange = pendingChanges[changeKey];
+        if (pendingChange && pendingChange.activity && pendingChange.activity.trim() !== '') {
+          // Found first activity of next day from pending changes
+          return checkTime;
+        }
+      }
+    }
+    
+    // If still no next activity found, return null
+    return null;
+  };
+
   // Generate all available times in 15-minute intervals for the Change Time dropdown
   const generateAllAvailableTimes = (): string[] => {
     const allTimes: string[] = [];
     
-    // Generate times from 6:00 AM to 10:00 PM in 15-minute intervals
-    for (let hour = 6; hour <= 22; hour++) {
+    // Generate times from 6:00 AM to 11:45 PM in 15-minute intervals
+    for (let hour = 6; hour <= 23; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         let displayHour = hour;
         let period = 'AM';
@@ -495,6 +582,8 @@ const Routine: React.FC = () => {
     };
     return orbitalMapping[gregorianDay] || gregorianDay;
   };
+
+
 
   const getDateForDay = (dayNumber: number): OrbitalDate => {
     try {
@@ -655,7 +744,7 @@ const Routine: React.FC = () => {
         return templateData;
       }
       
-      // If not in edit mode or not logged in, return actual routine data
+      // If not in edit mode, return actual routine data (this applies to both logged-in and non-logged-in users)
       if (routineData.length > 0) {
         return routineData;
       }
@@ -684,6 +773,7 @@ const Routine: React.FC = () => {
       return displayData.length > 0 ? displayData[0].routines.map(r => r.time) : [];
     } else {
       // In normal mode, use the chronologically sorted times from data
+      // This applies to both logged-in and non-logged-in users
       return times;
     }
   }, [isEditMode, isLoggedIn, displayData, times, addedTimeSlots, deletedTimeSlots, routineData, isGregorianMode]);
@@ -782,30 +872,52 @@ const Routine: React.FC = () => {
     }
     
     // Normal processing for routines with activities (non-edit mode)
-    for (let i = 0; i < routines.length; i++) {
-      const routine = routines[i];
-      const changeKey = `${dayNumber}-${routine.time}`;
+    // This applies to both logged-in and non-logged-in users
+    
+    // Get all available times for this day
+    const allTimes = displayTimes;
+    
+    // Process each time slot
+    for (let timeIndex = 0; timeIndex < allTimes.length; timeIndex++) {
+      const currentTime = allTimes[timeIndex];
+      
+      // Find the routine for this time slot
+      const routine = routines.find(r => r.time === currentTime);
+      const changeKey = `${dayNumber}-${currentTime}`;
       const pendingChange = pendingChanges[changeKey];
       
       // Check if this activity is marked for deletion
       const isDeleted = pendingChange && pendingChange.activity === '';
-      const activity = isDeleted ? '' : (pendingChange ? pendingChange.activity : (routine.activity || ''));
+      const activity = isDeleted ? '' : (pendingChange ? pendingChange.activity : (routine?.activity || ''));
       
-      if (activity) {
+      if (activity && activity.trim() !== '') {
         // This slot has an activity, calculate how many empty slots follow
         let rowSpan = 1;
-        let j = i + 1;
+        let j = timeIndex + 1;
         
-        // Count consecutive empty slots
-        while (j < routines.length && !routines[j].activity) {
-          rowSpan++;
-          j++;
+        // Count consecutive empty time slots
+        while (j < allTimes.length) {
+          const nextTime = allTimes[j];
+          const nextRoutine = routines.find(r => r.time === nextTime);
+          const nextChangeKey = `${dayNumber}-${nextTime}`;
+          const nextPendingChange = pendingChanges[nextChangeKey];
+          
+          // Check if the next slot is empty (either no activity or marked for deletion)
+          const nextActivity = nextPendingChange ? nextPendingChange.activity : (nextRoutine?.activity || '');
+          const isNextEmpty = !nextActivity || nextActivity.trim() === '';
+          
+          if (isNextEmpty) {
+            rowSpan++;
+            j++;
+          } else {
+            break;
+          }
         }
         
         processed.push({
-          time: routine.time,
+          time: currentTime,
           activity: activity,
-          category: isDeleted ? '' : (pendingChange ? pendingChange.category : (routine.category || '')),
+          category: isDeleted ? '' : (pendingChange ? pendingChange.category : (routine?.category || '')),
           rowSpan,
           isExtended: rowSpan > 1
         });
@@ -818,43 +930,62 @@ const Routine: React.FC = () => {
     return processed;
   };
 
+
+
   // Use template data or routine data from API
   const weeklyRoutine: DayRoutine[] = displayData;
 
   // Process each day's routine for visual extension
-  const processedWeeklyRoutine = weeklyRoutine.map(day => ({
-    day: day.day,
-    processedRoutines: processRoutineForDay(day.routines, day.day)
-  }));
+  // Ensure we always have all 7 days in the correct order
+  const processedWeeklyRoutine = Array.from({ length: 7 }, (_, index) => {
+    const dayNumber = index + 1;
+    const existingDay = weeklyRoutine.find(day => day.day === dayNumber);
+    
+    if (existingDay) {
+      // Day exists in data - process it
+      return {
+        day: dayNumber,
+        processedRoutines: processRoutineForDay(existingDay.routines, dayNumber)
+      };
+    } else {
+      // Day doesn't exist - create empty day structure
+      return {
+        day: dayNumber,
+        processedRoutines: processRoutineForDay([], dayNumber)
+      };
+    }
+  });
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      'health': '#27ae60',
-      'leisure': '#3498db',
-      'meal': '#e74c3c',
-      'meals': '#e74c3c', // Alias for meal
-      'chores': '#9b59b6',
-      'work': '#f39c12',
-      'exercise': '#27ae60',
-      'sleep': '#8e44ad',
-      'other': '#95a5a6'
+      'work': '#f39c12', // Orange
+      'exercise': '#e74c3c', // Red
+      'meal': '#27ae60', // Green
+      'meals': '#27ae60', // Green (alias for meal)
+      'leisure': '#3498db', // Blue
+      'chores': '#9b59b6', // Purple
+      'sleep': '#2c3e50', // Black
+      'none': '#95a5a6', // Grey for None category
     };
-    return colors[category] || '#95a5a6';
+    return colors[category] || '#95a5a6'; // Grey for no category
   };
 
   const getCategoryBackgroundTint = (category: string) => {
     const tints: { [key: string]: string } = {
-      'health': 'rgba(39, 174, 96, 0.05)',
-      'leisure': 'rgba(52, 152, 219, 0.05)',
-      'meal': 'rgba(231, 76, 60, 0.05)',
-      'meals': 'rgba(231, 76, 60, 0.05)', // Alias for meal
-      'chores': 'rgba(155, 89, 182, 0.05)',
-      'work': 'rgba(243, 156, 18, 0.05)',
-      'exercise': 'rgba(39, 174, 96, 0.05)',
-      'sleep': 'rgba(142, 68, 173, 0.05)',
-      'other': 'rgba(149, 165, 166, 0.05)'
+      'work': 'rgba(243, 156, 18, 0.05)', // Orange tint
+      'exercise': 'rgba(231, 76, 60, 0.05)', // Red tint
+      'meal': 'rgba(39, 174, 96, 0.05)', // Green tint
+      'meals': 'rgba(39, 174, 96, 0.05)', // Green tint (alias for meal)
+      'leisure': 'rgba(52, 152, 219, 0.05)', // Blue tint
+      'chores': 'rgba(155, 89, 182, 0.05)', // Purple tint
+      'sleep': 'rgba(44, 62, 80, 0.05)', // Black tint
+      'none': 'rgba(149, 165, 166, 0.15)', // Grey tint for None category
     };
-    return tints[category] || 'transparent';
+    // Handle empty string or undefined category as "none"
+    if (!category || category.trim() === '') {
+      return tints['none'];
+    }
+    return tints[category] || tints['none'];
   };
 
 
@@ -898,7 +1029,11 @@ const Routine: React.FC = () => {
   };
 
   const isCurrentCell = (dayNumber: number, time: string) => {
-    return isCurrentDay(dayNumber) && isCurrentTime(time);
+    // Get routines for the current day
+    const currentDayRoutine = routineData.find(day => day.day === dayNumber);
+    const todayRoutines = currentDayRoutine?.routines || [];
+    
+    return isCurrentDay(dayNumber) && isCurrentTime(time, todayRoutines);
   };
 
   const handleCellClick = (dayNumber: number, time: string, currentActivity: string, currentCategory: string) => {
@@ -1081,11 +1216,7 @@ const Routine: React.FC = () => {
   }
     
     try {
-      console.log('Starting to save routines...');
-      console.log('Pending changes:', pendingChanges);
-      console.log('Deleted timeslots changes:', hasDeletedTimeslotChanges);
-      console.log('Current deletedTimeSlots:', deletedTimeSlots);
-      console.log('Original deletedTimeSlots:', originalDeletedTimeSlots);
+      // Starting to save routines
       
       // Get user ID from localStorage
       const currentUser = localStorage.getItem('currentUser');
@@ -1101,7 +1232,7 @@ const Routine: React.FC = () => {
         return;
       }
       
-      console.log('User ID:', userId);
+      // User ID
       
       // Convert pending changes to API format, separating saves from deletions
       const routinesToSave: Array<{
@@ -1153,8 +1284,7 @@ const Routine: React.FC = () => {
         }
       });
       
-      console.log('Routines to save:', routinesToSave);
-      console.log('Routines to delete:', routinesToDelete);
+      // Routines to save and delete
       
       // Handle timeslot deletions and restorations FIRST
       const newlyDeletedTimeslots = deletedTimeSlots.filter(time => !originalDeletedTimeSlots.includes(time));
@@ -1162,7 +1292,7 @@ const Routine: React.FC = () => {
       
       // Save newly deleted timeslots
       if (newlyDeletedTimeslots.length > 0) {
-        console.log('Saving newly deleted timeslots:', newlyDeletedTimeslots);
+        // Saving newly deleted timeslots
         const deletedTimeslotsResponse = await fetch(buildApiUrl(`/api/users/${userId}/routines/deleted-timeslots`), {
           method: 'POST',
           headers: {
@@ -1178,12 +1308,12 @@ const Routine: React.FC = () => {
           alert(`Failed to save newly deleted timeslots: ${errorData.error || 'Unknown error'}`);
           return;
         }
-        console.log('Newly deleted timeslots saved successfully');
+        // Newly deleted timeslots saved successfully
       }
       
       // Remove newly restored timeslots from database
       if (newlyRestoredTimeslots.length > 0) {
-        console.log('Removing newly restored timeslots from database:', newlyRestoredTimeslots);
+        // Removing newly restored timeslots from database
         const restoreTimeslotsResponse = await fetch(buildApiUrl(`/api/users/${userId}/routines/deleted-timeslots`), {
           method: 'DELETE',
           headers: {
@@ -1199,12 +1329,12 @@ const Routine: React.FC = () => {
           alert(`Failed to restore timeslots: ${errorData.error || 'Unknown error'}`);
           return;
         }
-        console.log('Timeslots restored successfully');
+        // Timeslots restored successfully
       }
       
       // Then, delete any routines marked for deletion
       if (routinesToDelete.length > 0) {
-        console.log('Deleting routines...');
+        // Deleting routines
         const deleteResponse = await fetch(buildApiUrl(`/api/users/${userId}/routines/delete`), {
           method: 'DELETE',
           headers: {
@@ -1220,12 +1350,12 @@ const Routine: React.FC = () => {
           alert(`Failed to delete routines: ${errorData.error || 'Unknown error'}`);
           return;
         }
-        console.log('Routines deleted successfully');
+        // Routines deleted successfully
       }
       
       // Then, save any new/updated routines
       if (routinesToSave.length > 0) {
-        console.log('Saving routines...');
+        // Saving routines
         const saveResponse = await fetch(buildApiUrl(`/api/users/${userId}/routines/bulk-upsert`), {
           method: 'POST',
           headers: {
@@ -1241,19 +1371,16 @@ const Routine: React.FC = () => {
           alert(`Failed to save routines: ${errorData.error || 'Unknown error'}`);
           return;
         }
-        console.log('Routines saved successfully');
+        // Routines saved successfully
       }
       
       // Save calendar mode setting if it has changed
       if (isGregorianMode !== originalCalendarMode) {
-        console.log('Saving calendar mode setting...');
-        console.log('Current isGregorianMode:', isGregorianMode);
-        console.log('Current originalCalendarMode:', originalCalendarMode);
+        // Saving calendar mode setting
         try {
           const settingsToSave = { calendarMode: isGregorianMode ? 'gregorian' : 'orbital' };
-          console.log('Settings to save:', settingsToSave);
           await saveUserSettings(settingsToSave);
-          console.log('Calendar mode setting saved successfully');
+          // Calendar mode setting saved successfully
         } catch (error) {
           console.error('Failed to save calendar mode setting:', error);
           // Don't fail the entire save operation for this
@@ -1529,9 +1656,62 @@ const Routine: React.FC = () => {
                           {/* Show available intermediate times on hover or click */}
                           {(() => {
                             const nextTime = displayTimes[timeIndex + 1];
-                            if (!nextTime) return null;
+                            const isFirstTime = timeIndex === 0;
+                            let intermediateTimes: string[] = [];
                             
-                            const intermediateTimes = generateIntermediateTimes(time, nextTime);
+                            if (isFirstTime) {
+                              // Special case: at the first time slot, generate times that come before
+                              // Generate times from 12:00 AM up to current time - 15 minutes
+                              const currentMinutes = convertTimeToMinutes(time);
+                              let timeInMinutes = convertTimeToMinutes('12:00 AM');
+                              
+                              while (timeInMinutes < currentMinutes) {
+                                const hours = Math.floor(timeInMinutes / 60);
+                                const minutes = timeInMinutes % 60;
+                                
+                                let displayHour = hours;
+                                let period = 'AM';
+                                
+                                if (hours >= 12) {
+                                  period = 'PM';
+                                  if (hours > 12) displayHour = hours - 12;
+                                }
+                                if (hours === 0) displayHour = 12;
+                                
+                                const timeString = `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+                                intermediateTimes.push(timeString);
+                                
+                                timeInMinutes += 15;
+                              }
+                            } else if (nextTime) {
+                              // Normal case: generate intermediate times between current and next
+                              intermediateTimes = generateIntermediateTimes(time, nextTime);
+                            } else {
+                              // Special case: at the last time slot, generate times that extend beyond
+                              // Generate times from current time + 15 minutes up to 11:45 PM
+                              const currentMinutes = convertTimeToMinutes(time);
+                              let timeInMinutes = currentMinutes + 15;
+                              
+                              while (timeInMinutes <= convertTimeToMinutes('11:45 PM')) {
+                                const hours = Math.floor(timeInMinutes / 60);
+                                const minutes = timeInMinutes % 60;
+                                
+                                let displayHour = hours;
+                                let period = 'AM';
+                                
+                                if (hours >= 12) {
+                                  period = 'PM';
+                                  if (hours > 12) displayHour = hours - 12;
+                                }
+                                if (hours === 0) displayHour = 12;
+                                
+                                const timeString = `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+                                intermediateTimes.push(timeString);
+                                
+                                timeInMinutes += 15;
+                              }
+                            }
+                            
                             if (intermediateTimes.length === 0) return null;
                             
                             return (
@@ -1563,11 +1743,32 @@ const Routine: React.FC = () => {
                     </td>
                   )}
                   <td 
-                    className={`time-cell ${isCurrentTime(time) ? 'current-time' : ''} ${isEditMode ? 'clickable-time' : ''}`}
+                    className={`time-cell ${isCurrentTime(time, routineData.find(day => day.day === 1)?.routines || []) ? 'current-time' : ''} ${isEditMode ? 'clickable-time' : ''}`}
                     onClick={isEditMode ? () => handleTimeHeaderClick(time) : undefined}
                     style={isEditMode ? { cursor: 'pointer' } : {}}
                   >
                     {time}
+                    {!isEditMode && (
+                      <div style={{ 
+                        fontSize: '10px', 
+                        color: '#95a5a6', 
+                        marginTop: '2px',
+                        fontWeight: 'normal'
+                      }}>
+                        {(() => {
+                          // Show time range for the first day (Monday) as reference
+                          const firstDayRoutine = routineData.find(day => day.day === 1);
+                          if (firstDayRoutine) {
+                            const routinesWithEndTimes = calculateEndTimes(firstDayRoutine.routines);
+                            const currentRoutine = routinesWithEndTimes.find((r: any) => r.time === time);
+                            if (currentRoutine && currentRoutine.endTime && currentRoutine.endTime !== time) {
+                              return `${time} - ${currentRoutine.endTime}`;
+                            }
+                          }
+                          return time;
+                        })()}
+                      </div>
+                    )}
                     {isEditMode && (
                       <div style={{ 
                         fontSize: '10px', 
@@ -1579,28 +1780,50 @@ const Routine: React.FC = () => {
                       </div>
                     )}
                   </td>
-                  {processedWeeklyRoutine.map(day => {
-                    const processedRoutine = day.processedRoutines.find(r => r.time === time);
+                  {processedWeeklyRoutine.map((day: any) => {
+                    const processedRoutine = day.processedRoutines.find((r: any) => r.time === time);
+                    
+                    // Check if this cell should be skipped due to rowspan from a previous row
+                    const shouldSkipCell = (() => {
+                      // Look through all previous times to see if any extended cell covers this position
+                      for (let prevTimeIndex = 0; prevTimeIndex < timeIndex; prevTimeIndex++) {
+                        const prevTime = displayTimes[prevTimeIndex];
+                        const prevDayRoutine = processedWeeklyRoutine.find(d => d.day === day.day);
+                        const prevProcessedRoutine = prevDayRoutine?.processedRoutines.find(r => r.time === prevTime);
+                        
+                        if (prevProcessedRoutine && prevProcessedRoutine.isExtended) {
+                          // Check if this current time falls within the extended range
+                          const prevTimeStartIndex = displayTimes.indexOf(prevTime);
+                          const extendedEndIndex = prevTimeStartIndex + prevProcessedRoutine.rowSpan - 1;
+                          const currentTimeIndex = displayTimes.indexOf(time);
+                          
+                          if (currentTimeIndex > prevTimeStartIndex && currentTimeIndex <= extendedEndIndex) {
+                            return true; // This cell is covered by a previous extended cell
+                          }
+                        }
+                      }
+                      return false;
+                    })();
+                    
+                    if (shouldSkipCell) {
+                      // This cell is covered by a previous extended cell - don't render anything
+                      return null;
+                    }
                     
                     if (!processedRoutine) {
-                      // This time slot is empty and covered by an extended cell above
+                      // This time slot is empty - render an invisible cell to maintain column alignment
                       return (
                         <td 
                           key={day.day} 
-                          className="routine-cell hidden-cell"
-                          onClick={isEditMode ? () => handleCellClick(day.day, time, '', 'health') : undefined}
-                          style={isEditMode ? { cursor: 'pointer', backgroundColor: 'rgba(52, 152, 219, 0.1)' } : {}}
+                          className="routine-cell empty-cell"
+                          style={{ 
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            padding: 0,
+                            height: '60px' // Match the height of other cells
+                          }}
                         >
-                          {isEditMode && (
-                            <div style={{ 
-                              textAlign: 'center', 
-                              color: '#3498db', 
-                              fontSize: '12px',
-                              padding: '4px'
-                            }}>
-                              + Add
-                            </div>
-                          )}
+                          {/* Empty invisible cell - maintains column structure */}
                         </td>
                       );
                     }
@@ -1668,6 +1891,23 @@ const Routine: React.FC = () => {
                               >
                                 <div className="routine-activity">
                                   {renderActivity(processedRoutine.activity)}
+                                  {!isEditMode && (() => {
+                                    const nextTime = getNextActivityTimeForDay(processedRoutine.time, day.day);
+                                    if (nextTime) {
+                                      const duration = calculateDuration(processedRoutine.time, nextTime);
+                                      return duration ? (
+                                        <span style={{ 
+                                          fontSize: '11px', 
+                                          color: '#95a5a6', 
+                                          fontStyle: 'italic',
+                                          fontWeight: 'normal'
+                                        }}>
+                                          {` (${duration})`}
+                                        </span>
+                                      ) : '';
+                                    }
+                                    return '';
+                                  })()}
                                 </div>
                               </div>
                             </a>
@@ -1709,6 +1949,23 @@ const Routine: React.FC = () => {
                               >
                                 <div className="routine-activity">
                                   {renderActivity(processedRoutine.activity)}
+                                  {!isEditMode && (() => {
+                                    const nextTime = getNextActivityTimeForDay(processedRoutine.time, day.day);
+                                    if (nextTime) {
+                                      const duration = calculateDuration(processedRoutine.time, nextTime);
+                                      return duration ? (
+                                        <span style={{ 
+                                          fontSize: '11px', 
+                                          color: '#95a5a6', 
+                                          fontStyle: 'italic',
+                                          fontWeight: 'normal'
+                                        }}>
+                                          {` (${duration})`}
+                                        </span>
+                                      ) : '';
+                                    }
+                                    return '';
+                                  })()}
                                 </div>
                               </div>
                             </a>
@@ -1724,6 +1981,28 @@ const Routine: React.FC = () => {
                           >
                             <div className="routine-activity">
                               {renderActivity(processedRoutine.activity)}
+                              {!isEditMode && (
+                                <>
+                                  {(() => {
+                                    const nextTime = getNextActivityTimeForDay(processedRoutine.time, day.day);
+                                    if (nextTime) {
+                                      const duration = calculateDuration(processedRoutine.time, nextTime);
+                                      return duration ? (
+                                        <span style={{ 
+                                          fontSize: '11px', 
+                                          color: '#95a5a6', 
+                                          fontStyle: 'italic',
+                                          fontWeight: 'normal'
+                                        }}>
+                                          {` (${duration})`}
+                                        </span>
+                                      ) : '';
+                                    }
+                                    return '';
+                                  })()}
+
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1739,7 +2018,7 @@ const Routine: React.FC = () => {
 
       {/* Category Legend */}
       <div className="routine-legend">
-        <h3>Activity Categories</h3>
+        <h3>Activity Categories:</h3>
         <div className="legend-items">
           <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getCategoryColor('work') }}></div>
@@ -1750,10 +2029,6 @@ const Routine: React.FC = () => {
             <span className="legend-label">Exercise</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('health') }}></div>
-            <span className="legend-label">Health</span>
-          </div>
-          <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getCategoryColor('meals') }}></div>
             <span className="legend-label">Meals</span>
           </div>
@@ -1762,16 +2037,16 @@ const Routine: React.FC = () => {
             <span className="legend-label">Leisure</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('sleep') }}></div>
-            <span className="legend-label">Sleep</span>
-          </div>
-          <div className="legend-item">
             <div className="legend-color" style={{ backgroundColor: getCategoryColor('chores') }}></div>
             <span className="legend-label">Chores</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('other') }}></div>
-            <span className="legend-label">Other</span>
+            <div className="legend-color" style={{ backgroundColor: getCategoryColor('sleep') }}></div>
+            <span className="legend-label">Sleep</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: getCategoryColor('none') }}></div>
+            <span className="legend-label">None</span>
           </div>
         </div>
       </div>
@@ -1805,12 +2080,10 @@ const Routine: React.FC = () => {
                 <option value="">None</option>
                 <option value="work">Work</option>
                 <option value="exercise">Exercise</option>
-                <option value="health">Health</option>
                 <option value="meals">Meals</option>
                 <option value="leisure">Leisure</option>
-                <option value="sleep">Sleep</option>
                 <option value="chores">Chores</option>
-                <option value="other">Other</option>
+                <option value="sleep">Sleep</option>
               </select>
             </div>
             
@@ -1855,12 +2128,10 @@ const Routine: React.FC = () => {
                  <option value="">None</option>
                  <option value="work">Work</option>
                  <option value="exercise">Exercise</option>
-                 <option value="health">Health</option>
                  <option value="meals">Meals</option>
                  <option value="leisure">Leisure</option>
-                 <option value="sleep">Sleep</option>
                  <option value="chores">Chores</option>
-                 <option value="other">Other</option>
+                 <option value="sleep">Sleep</option>
                </select>
              </div>
              

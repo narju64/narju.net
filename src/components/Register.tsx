@@ -213,7 +213,10 @@ const Register: React.FC = () => {
         </form>
 
         <div className="login-link">
-          Already have an account? Use the "Login" button in the header above
+          Already have an account?{' '}
+          <a href="/auth/login" className="login-link-text">
+            Sign in here
+          </a>
         </div>
       </div>
     </div>

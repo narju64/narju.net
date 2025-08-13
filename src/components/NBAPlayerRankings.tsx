@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './NBAPlayerRankings.css';
 import { buildApiUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useAuthRefresh } from '../hooks/useAuthRefresh';
 
 interface Player {
   id?: number;
@@ -61,34 +63,31 @@ const NBAPlayerRankings: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, authToken } = useAuth();
 
-  // Check if user is logged in
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedToken = localStorage.getItem('authToken');
-    const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
-    
-    // If logged in, fetch from API
-    if (loggedIn) {
+  // Fetch players when component mounts or auth state changes
+  useAuthRefresh(() => {
+    if (isLoggedIn) {
       fetchPlayersFromApi();
+    } else {
+      // Clear players when logged out
+      setPlayers([]);
+      setError(null);
     }
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchPlayersFromApi = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const storedToken = localStorage.getItem('authToken');
-      if (!storedToken) {
+      if (!authToken) {
         throw new Error('No authentication token found');
       }
       
       const response = await fetch(buildApiUrl('/api/nba-players'), {
         headers: {
-          'Authorization': `Bearer ${storedToken}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -173,7 +172,7 @@ const NBAPlayerRankings: React.FC = () => {
       <div className="nba-rankings-page">
         <div className="container">
           <h1 className="page-title">NBA Player Rankings</h1>
-          <p className="page-description">Please log in to view the NBA player rankings.</p>
+          <p className="page-description">Please <a href="/auth/login" style={{ color: '#3498db', textDecoration: 'none', fontWeight: '600' }}>log in</a> to view the NBA player rankings.</p>
         </div>
       </div>
     );

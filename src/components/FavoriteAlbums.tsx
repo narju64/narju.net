@@ -23,6 +23,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import './FavoriteAlbums.css';
 import { buildApiUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useAuthRefresh } from '../hooks/useAuthRefresh';
 
 // Sortable album item component with mobile support
 const SortableAlbumItem: React.FC<{ 
@@ -183,7 +185,7 @@ const FavoriteAlbums: React.FC = () => {
   const [albums, setAlbums] = React.useState<Album[]>([])
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false)
+  const { isLoggedIn, authToken } = useAuth()
   const [originalAlbums, setOriginalAlbums] = React.useState<Album[]>([])
   const [stagedAlbums, setStagedAlbums] = useState<Album[]>([])
   const [stagedRemovals, setStagedRemovals] = useState<Album[]>([])
@@ -245,18 +247,16 @@ const FavoriteAlbums: React.FC = () => {
     setTouchEnd(null);
   }, [touchStart, touchEnd, currentScreen, isEditMode, isMobile]);
 
-  // Check if user is logged in
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser')
-    const storedToken = localStorage.getItem('authToken')
-    const loggedIn = !!(storedUser && storedToken)
-    setIsLoggedIn(loggedIn)
-
-    // If logged in, fetch from API
-    if (loggedIn) {
+  // Fetch albums when component mounts or auth state changes
+  useAuthRefresh(() => {
+    if (isLoggedIn) {
       fetchAlbumsFromApi()
+    } else {
+      // Clear albums when logged out
+      setAlbums([])
+      setError(null)
     }
-  }, [])
+  }, [isLoggedIn])
 
   // Mobile detection
   React.useEffect(() => {
@@ -291,14 +291,13 @@ const FavoriteAlbums: React.FC = () => {
       setLoading(true)
       setError(null)
       
-      const storedToken = localStorage.getItem('authToken')
-      if (!storedToken) {
+      if (!authToken) {
         throw new Error('No authentication token found')
       }
       
       const response = await fetch(buildApiUrl('/api/albums'), {
         headers: {
-          'Authorization': `Bearer ${storedToken}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       })
@@ -670,7 +669,7 @@ const FavoriteAlbums: React.FC = () => {
   return (
     <div className="favorite-albums-page">
       <div className="container">
-          <p className="page-description">Please log in to view the album collection.</p>
+          <p className="page-description">Please <a href="/auth/login" style={{ color: '#3498db', textDecoration: 'none', fontWeight: '600' }}>log in</a> to view the album collection.</p>
         </div>
       </div>
     )

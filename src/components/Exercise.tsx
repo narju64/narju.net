@@ -2,6 +2,8 @@ import React from 'react';
 import './Exercise.css';
 import { orbitalCalendar } from '../utils/orbitalCalendar';
 import { buildApiUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useAuthRefresh } from '../hooks/useAuthRefresh';
 
 interface Exercise {
   name: string;
@@ -33,32 +35,43 @@ const Exercise: React.FC = () => {
   const [workouts, setWorkouts] = React.useState<ExerciseWorkout[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const { isLoggedIn, authToken } = useAuth();
 
-  // Check if user is logged in
-  React.useEffect(() => {
-    const loggedIn = !!(localStorage.getItem('currentUser') && localStorage.getItem('authToken'));
-    setIsLoggedIn(loggedIn);
-    
-    // If logged in, fetch from API
-    if (loggedIn) {
+  // Fetch workouts when component mounts or auth state changes
+  useAuthRefresh(() => {
+    if (isLoggedIn) {
       fetchWorkoutsFromApi();
+    } else {
+      // Clear workouts when logged out
+      setWorkouts([]);
+      setError(null);
     }
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchWorkoutsFromApi = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(buildApiUrl('/api/lists/exercise'));
+      if (!authToken) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch(buildApiUrl('/api/lists/exercise'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data: ApiResponse = await response.json();
-      console.log('API Response:', data);
       
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
         setWorkouts(data.list.items_json);
@@ -115,10 +128,10 @@ const Exercise: React.FC = () => {
   if (!isLoggedIn) {
     return (
       <div className="exercise-page">
-        <div className="exercise-header">
-          <h1>Exercise Routine</h1>
-          <p>Please log in to view your exercise routine.</p>
-        </div>
+                 <div className="exercise-header">
+           <h1>Exercise Routine</h1>
+           <p>Please <a href="/auth/login" style={{ color: '#3498db', textDecoration: 'none', fontWeight: '600' }}>log in</a> to view your exercise routine.</p>
+         </div>
       </div>
     );
   }

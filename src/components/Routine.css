@@ -104,6 +104,158 @@
   box-shadow: 0 0 10px rgba(255, 115, 0, 0.3);
 }
 
+/* Day Overview Row Styles */
+.day-overview-row {
+  background: #2a2a2a;
+}
+
+.day-overview-label {
+  background: #2a2a2a;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: center;
+  font-size: 0.9rem;
+  min-width: 120px;
+  width: 120px;
+  border-right: 1px solid #294cad;
+}
+
+.day-overview-cell {
+  background: #2a2a2a;
+  padding: 0.5rem;
+  text-align: center;
+  border: 1px solid #294cad;
+}
+
+.day-overview-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.day-overview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-height: 1.5rem;
+}
+
+.day-overview-tag {
+  background: #294cad;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Category-based color coding for day overview tags - using existing system colors */
+.category-work {
+  background: #f39c12 !important; /* Orange for work */
+}
+
+.category-exercise {
+  background: #e74c3c !important; /* Red for exercise */
+}
+
+.category-meals {
+  background: #27ae60 !important; /* Green for meals */
+}
+
+.category-leisure {
+  background: #3498db !important; /* Blue for leisure */
+}
+
+.category-chores {
+  background: #9b59b6 !important; /* Purple for chores */
+}
+
+.category-sleep {
+  background: #2c3e50 !important; /* Black for sleep */
+}
+
+.category-none {
+  background: #95a5a6 !important; /* Gray for none */
+}
+
+.remove-tag-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.remove-tag-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.add-tag-input {
+  width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.category-select {
+  padding: 0.5rem;
+  border: 1px solid #294cad;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #ffffff;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: #ff7300;
+  box-shadow: 0 0 0 2px rgba(255, 115, 0, 0.2);
+}
+
+.day-overview-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #294cad;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #ffffff;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.day-overview-input:focus {
+  outline: none;
+  border-color: #ff7300;
+  box-shadow: 0 0 0 2px rgba(255, 115, 0, 0.2);
+}
+
+.day-overview-text {
+  color: #95a5a6;
+  font-size: 0.9rem;
+  font-style: italic;
+  min-height: 1.2em;
+}
+
+.day-overview-tag-display {
+  background: #294cad;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin: 0.1rem;
+  display: inline-block;
+}
+
 .day-name {
   font-size: 1.1rem;
   font-weight: 700;

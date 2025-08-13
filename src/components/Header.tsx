@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { SiteToggle } from '../npa-translator/components/SiteToggle';
 import { usePhoneticContext } from '../npa-translator/context/PhoneticContext';
+import { useAuth } from '../context/AuthContext';
 import { buildApiUrl } from '../utils/api';
 
 // Normal navigation structure
@@ -130,28 +131,12 @@ const Header: React.FC = () => {
   const navRefs = useRef<{ [key: string]: HTMLAnchorElement | HTMLButtonElement | null }>({});
   
   // Authentication state
-  const [user, setUser] = useState<{ id: number; email: string; username: string; role: string } | null>(null);
+  const { isLoggedIn, currentUser, logout: authLogout, login } = useAuth();
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState('');
-
-  // Check if user is already logged in on component mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedToken = localStorage.getItem('authToken');
-    
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        // Clear invalid stored data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-      }
-    }
-  }, []);
 
   // Helper to check if a path is active or a parent of the current path
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/');
@@ -218,9 +203,8 @@ const Header: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        // Use the auth context to handle login
+        login(data.user, data.token);
         setShowLoginForm(false);
         setLoginEmail('');
         setLoginPassword('');
@@ -237,9 +221,7 @@ const Header: React.FC = () => {
 
   // Handle logout
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
+    authLogout();
     setShowLoginForm(false);
   };
 
@@ -399,9 +381,9 @@ const Header: React.FC = () => {
         
         {/* User Account Section */}
         <div className="user-account-section">
-          {user ? (
+          {isLoggedIn && currentUser ? (
             <div className="user-info">
-              <span className="username">{user.username}</span>
+              <span className="username">{currentUser.username}</span>
               <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>
@@ -450,7 +432,7 @@ const Header: React.FC = () => {
                   onClick={() => setShowLoginForm(true)}
                   className="login-toggle-btn"
                 >
-                  Login
+                  LOGIN
                 </button>
               )}
             </div>

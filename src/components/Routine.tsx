@@ -4,10 +4,11 @@ import {
   formatOrbitalDate, 
   formatGregorianDate, 
   getDayName,
-  DayRoutine,
-  calculateEndTimes
+  DayRoutine
 } from '../utils/routineLogic';
-import { isCurrentTime } from '../utils/routineLogic';
+import { isCurrentTime, isCurrentActivity } from '../utils/routineLogic';
+import { useAuth } from '../context/AuthContext';
+import { useAuthRefresh } from '../hooks/useAuthRefresh';
 import './Routine.css';
 import { buildApiUrl } from '../utils/api';
 
@@ -56,8 +57,7 @@ const Routine: React.FC = () => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [routineData, setRoutineData] = useState<DayRoutine[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, authToken, currentUser } = useAuth();
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingCell, setEditingCell] = useState<{ day: number; time: string } | null>(null);
   const [editingRow, setEditingRow] = useState<string | null>(null);
@@ -87,17 +87,21 @@ const Routine: React.FC = () => {
   // Track original calendar mode to detect changes
   const [originalCalendarMode, setOriginalCalendarMode] = useState(true);
 
+  // Day overview state - stores custom descriptions with categories for each day
+  const [dayOverviews, setDayOverviews] = useState<{ [key: number]: Array<{ text: string; category: string }> }>({});
+  
+  // Track original day overviews to detect changes
+  const [originalDayOverviews, setOriginalDayOverviews] = useState<{ [key: number]: Array<{ text: string; category: string }> }>({});
+
   // Load user settings from database
   const loadUserSettings = async () => {
     try {
-      const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        // No current user found in localStorage, skipping user settings load
+      if (!currentUser || !authToken) {
+        // No current user or auth token found, skipping user settings load
         return;
       }
 
-      const userData = JSON.parse(currentUser);
-      const userId = userData.id || userData.userId;
+      const userId = currentUser.id;
       
       if (!userId) {
         // No valid user ID found in current user data
@@ -109,7 +113,7 @@ const Routine: React.FC = () => {
       const response = await fetch(buildApiUrl(`/api/users/${userId}/settings`), {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -126,6 +130,20 @@ const Routine: React.FC = () => {
         } else {
           // No calendar mode setting found in loaded settings
         }
+
+        // Load day overviews if they exist
+        if (data.settings && data.settings.dayOverviews) {
+          try {
+            const loadedOverviews = JSON.parse(data.settings.dayOverviews);
+            setDayOverviews(loadedOverviews);
+            setOriginalDayOverviews(loadedOverviews);
+          } catch (error) {
+            console.error('Error parsing day overviews:', error);
+            // If parsing fails, set empty overviews
+            setDayOverviews({});
+            setOriginalDayOverviews({});
+          }
+        }
       } else {
         const errorText = await response.text();
         console.error('Failed to load user settings. Status:', response.status, 'Response:', errorText);
@@ -138,14 +156,12 @@ const Routine: React.FC = () => {
   // Save user settings to database
   const saveUserSettings = async (settings: { [key: string]: string }) => {
     try {
-      const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        console.error('No current user found in localStorage');
+      if (!currentUser || !authToken) {
+        console.error('No current user or auth token found');
         return;
       }
 
-      const userData = JSON.parse(currentUser);
-      const userId = userData.id || userData.userId;
+      const userId = currentUser.id;
       
       if (!userId) {
         console.error('No valid user ID found in current user data');
@@ -157,7 +173,7 @@ const Routine: React.FC = () => {
       const response = await fetch(buildApiUrl(`/api/users/${userId}/settings`), {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ settings })
@@ -179,19 +195,31 @@ const Routine: React.FC = () => {
     }
   };
 
-  // Check if user is logged in and fetch appropriate routine data
-  React.useEffect(() => {
-    const loggedIn = !!(localStorage.getItem('currentUser') && localStorage.getItem('authToken'));
-    setIsLoggedIn(loggedIn);
-    
-    // Always fetch routine data - system routine for non-logged-in, user routine for logged-in
-    fetchRoutineData(loggedIn);
-    
-    // If logged in, load user settings including calendar preference
-    if (loggedIn) {
+  // Fetch routine data when authentication state changes
+  useAuthRefresh(() => {
+    if (isLoggedIn) {
+      fetchRoutineData(true);
       loadUserSettings();
+    } else {
+      // Clear all data when logged out
+      setRoutineData([]);
+      setLoading(false);
+      setIsEditMode(false);
+      setEditingCell(null);
+      setEditingRow(null);
+      setEditFormData({ activity: '', category: '' });
+      setRowEditData({ time: '', activity: '', category: '', newTime: '' });
+      setPendingChanges({});
+      setAddedTimeSlots([]);
+      setDeletedTimeSlots([]);
+      setHasUnsavedChanges(false);
+      setOriginalDeletedTimeSlots([]);
+      setIsGregorianMode(true);
+      setOriginalCalendarMode(true);
+      setDayOverviews({});
+      setOriginalDayOverviews({});
     }
-  }, []);
+  }, [isLoggedIn]);
 
   // Automatically update hasUnsavedChanges when any changes are made
   React.useEffect(() => {
@@ -203,43 +231,53 @@ const Routine: React.FC = () => {
     // Check if calendar mode has changed
     const hasCalendarModeChanges = isGregorianMode !== originalCalendarMode;
     
+    // Check if day overviews have changed
+    const hasDayOverviewChanges = Object.keys(dayOverviews).some(day => {
+      const currentTags = dayOverviews[parseInt(day)] || [];
+      const originalTags = originalDayOverviews[parseInt(day)] || [];
+      return currentTags.length !== originalTags.length || 
+             currentTags.some(tag => !originalTags.some(origTag => 
+               origTag.text === tag.text && origTag.category === tag.category
+             )) ||
+             originalTags.some(tag => !currentTags.some(currTag => 
+               currTag.text === tag.text && currTag.category === tag.category
+             ));
+    }) || Object.keys(originalDayOverviews).some(day => {
+      const currentTags = dayOverviews[parseInt(day)] || [];
+      const originalTags = originalDayOverviews[parseInt(day)] || [];
+      return currentTags.length !== originalTags.length || 
+             currentTags.some(tag => !originalTags.some(origTag => 
+               origTag.text === tag.text && origTag.category === tag.category
+             )) ||
+             originalTags.some(tag => !currentTags.some(currTag => 
+               currTag.text === tag.text && currTag.category === tag.category
+             ));
+    });
+    
     const hasChanges = Object.keys(pendingChanges).length > 0 || 
                       addedTimeSlots.length > 0 || 
                       hasDeletedTimeslotChanges ||
-                      hasCalendarModeChanges;
+                      hasCalendarModeChanges ||
+                      hasDayOverviewChanges;
     
     setHasUnsavedChanges(hasChanges);
-  }, [pendingChanges, addedTimeSlots, deletedTimeSlots, originalDeletedTimeSlots, isGregorianMode, originalCalendarMode]);
+  }, [pendingChanges, addedTimeSlots, deletedTimeSlots, originalDeletedTimeSlots, isGregorianMode, originalCalendarMode, dayOverviews, originalDayOverviews]);
 
   const fetchRoutineData = async (isUserLoggedIn: boolean) => {
     try {
       setLoading(true);
-      setError(null);
       
       let endpoint = '/api/lists/routine'; // Default system routine endpoint
       let headers: HeadersInit = {};
       
-      if (isUserLoggedIn) {
-        // Get user ID from localStorage (assuming it's stored there)
-        const currentUser = localStorage.getItem('currentUser');
-        const authToken = localStorage.getItem('authToken');
-        
-        if (currentUser && authToken) {
-          try {
-            const userData = JSON.parse(currentUser);
-            const userId = userData.id || userData.userId;
-            if (userId) {
-              endpoint = `/api/users/${userId}/routines`;
-              headers = {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-              };
-            }
-          } catch (parseError) {
-            console.error('Error parsing current user data:', parseError);
-            // Fallback to system routine if parsing fails
-            endpoint = '/api/lists/routine';
-          }
+      if (isUserLoggedIn && currentUser && authToken) {
+        const userId = currentUser.id;
+        if (userId) {
+          endpoint = `/api/users/${userId}/routines`;
+          headers = {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          };
         }
       }
       
@@ -263,47 +301,41 @@ const Routine: React.FC = () => {
       const data: ApiResponse = await response.json();
       // Received data
       
-      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
-        // Using system routine data
-        setRoutineData(data.list.items_json);
-      } else if (data.routines && data.routines.length > 0) {
+      if (data.routines && data.routines.length > 0) {
         // Handle user routines response format
         // Using user routine data
         setRoutineData(data.routines);
+      } else if (data.list && data.list.items_json && data.list.items_json.length > 0) {
+        // Fallback to system routine data (if it still exists)
+        setRoutineData(data.list.items_json);
       } else {
         // No routine data found, setting empty array
         setRoutineData([]);
       }
       
       // If user is logged in, also fetch their deleted timeslots
-      if (isUserLoggedIn) {
+      if (isUserLoggedIn && currentUser && authToken) {
         try {
-          const currentUser = localStorage.getItem('currentUser');
-          const authToken = localStorage.getItem('authToken');
+          const userId = currentUser.id;
           
-          if (currentUser && authToken) {
-            const userData = JSON.parse(currentUser);
-            const userId = userData.id || userData.userId;
-            
-            if (userId) {
-              const deletedTimeslotsResponse = await fetch(buildApiUrl(`/api/users/${userId}/routines/deleted-timeslots`), {
-                headers: {
-                  'Authorization': `Bearer ${authToken}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-              
-              if (deletedTimeslotsResponse.ok) {
-                const deletedData = await deletedTimeslotsResponse.json();
-                const deletedTimes = deletedData.deletedTimeslots || [];
-                setDeletedTimeSlots(deletedTimes);
-                setOriginalDeletedTimeSlots(deletedTimes); // Track original state
-                // Loaded deleted timeslots
-              } else {
-                // No deleted timeslots found or error occurred
-                setDeletedTimeSlots([]);
-                setOriginalDeletedTimeSlots([]);
+          if (userId) {
+            const deletedTimeslotsResponse = await fetch(buildApiUrl(`/api/users/${userId}/routines/deleted-timeslots`), {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
               }
+            });
+              
+            if (deletedTimeslotsResponse.ok) {
+              const deletedData = await deletedTimeslotsResponse.json();
+              const deletedTimes = deletedData.deletedTimeslots || [];
+              setDeletedTimeSlots(deletedTimes);
+              setOriginalDeletedTimeSlots(deletedTimes); // Track original state
+              // Loaded deleted timeslots
+            } else {
+              // No deleted timeslots found or error occurred
+              setDeletedTimeSlots([]);
+              setOriginalDeletedTimeSlots([]);
             }
           }
         } catch (error) {
@@ -313,7 +345,6 @@ const Routine: React.FC = () => {
       }
     } catch (err) {
       console.error('Error fetching routine data:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -991,20 +1022,14 @@ const Routine: React.FC = () => {
 
 
 
-  // Check if an activity is exercise-related
-  const isExerciseActivity = (activity: string): boolean => {
-    const exerciseKeywords = ['exercise', 'upper body', 'vert', 'core', 'workout'];
-    return exerciseKeywords.some(keyword => 
-      activity.toLowerCase().includes(keyword.toLowerCase())
-    );
+  // Check if an activity is exercise-related based on category
+  const isExerciseActivity = (category: string): boolean => {
+    return category === 'exercise';
   };
 
-  // Check if an activity is meal-related
-  const isMealActivity = (activity: string): boolean => {
-    const mealKeywords = ['breakfast', 'lunch', 'dinner', 'meal', 'eat', 'food'];
-    return mealKeywords.some(keyword => 
-      activity.toLowerCase().includes(keyword.toLowerCase())
-    );
+  // Check if an activity is meal-related based on category
+  const isMealActivity = (category: string): boolean => {
+    return category === 'meal' || category === 'meals';
   };
 
   // Render activity with exercise links
@@ -1033,7 +1058,7 @@ const Routine: React.FC = () => {
     const currentDayRoutine = routineData.find(day => day.day === dayNumber);
     const todayRoutines = currentDayRoutine?.routines || [];
     
-    return isCurrentDay(dayNumber) && isCurrentTime(time, todayRoutines);
+    return isCurrentDay(dayNumber) && isCurrentActivity(time, todayRoutines);
   };
 
   const handleCellClick = (dayNumber: number, time: string, currentActivity: string, currentCategory: string) => {
@@ -1210,7 +1235,26 @@ const Routine: React.FC = () => {
   
   const hasCalendarModeChanges = isGregorianMode !== originalCalendarMode;
   
-  if (Object.keys(pendingChanges).length === 0 && addedTimeSlots.length === 0 && !hasDeletedTimeslotChanges && !hasCalendarModeChanges) {
+  // Check if day overviews have changed
+  const hasDayOverviewChanges = Object.keys(dayOverviews).some(day => {
+    const currentTags = dayOverviews[parseInt(day)] || [];
+    const originalTags = originalDayOverviews[parseInt(day)] || [];
+    return currentTags.length !== originalTags.length || 
+           currentTags.some(tag => !originalTags.some(origTag => 
+             origTag.text === tag.text && origTag.category === tag.category
+           )) ||
+           originalTags.some(tag => !currentTags.some(currTag => 
+             currTag.text === tag.text && currTag.category === tag.category
+           ));
+  }) || Object.keys(originalDayOverviews).some(day => {
+    const currentTags = dayOverviews[parseInt(day)] || [];
+    const originalTags = originalDayOverviews[parseInt(day)] || [];
+    return currentTags.length !== originalTags.length || 
+           currentTags.some(tag => !originalTags.includes(tag)) ||
+           originalTags.some(tag => !currentTags.includes(tag));
+  });
+
+  if (Object.keys(pendingChanges).length === 0 && addedTimeSlots.length === 0 && !hasDeletedTimeslotChanges && !hasCalendarModeChanges && !hasDayOverviewChanges) {
     alert('No changes to save.');
     return;
   }
@@ -1218,15 +1262,13 @@ const Routine: React.FC = () => {
     try {
       // Starting to save routines
       
-      // Get user ID from localStorage
-      const currentUser = localStorage.getItem('currentUser');
-      if (!currentUser) {
-        console.error('No current user data found');
+      // Get user ID from auth context
+      if (!currentUser || !authToken) {
+        console.error('No current user or auth token found');
         return;
       }
       
-      const userData = JSON.parse(currentUser);
-      const userId = userData.id || userData.userId;
+      const userId = currentUser.id;
       if (!userId) {
         console.error('No user ID found');
         return;
@@ -1297,7 +1339,7 @@ const Routine: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({ timeslots: newlyDeletedTimeslots })
         });
@@ -1318,7 +1360,7 @@ const Routine: React.FC = () => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({ timeslots: newlyRestoredTimeslots })
         });
@@ -1339,7 +1381,7 @@ const Routine: React.FC = () => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({ routines: routinesToDelete })
         });
@@ -1360,7 +1402,7 @@ const Routine: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({ routines: routinesToSave })
         });
@@ -1386,6 +1428,19 @@ const Routine: React.FC = () => {
           // Don't fail the entire save operation for this
         }
       }
+
+      // Save day overviews if they have changed
+      if (hasDayOverviewChanges) {
+        try {
+          // Save day overviews to user settings as JSON string
+          const overviewsToSave = { dayOverviews: JSON.stringify(dayOverviews) };
+          await saveUserSettings(overviewsToSave);
+          // Day overviews saved successfully
+        } catch (error) {
+          console.error('Failed to save day overviews:', error);
+          // Don't fail the entire save operation for this
+        }
+      }
       
       // Clear pending changes and refresh data
       setPendingChanges({});
@@ -1395,6 +1450,8 @@ const Routine: React.FC = () => {
       setOriginalDeletedTimeSlots(deletedTimeSlots);
       // Update originalCalendarMode to reflect the new state
       setOriginalCalendarMode(isGregorianMode);
+      // Update originalDayOverviews to reflect the new state
+      setOriginalDayOverviews(dayOverviews);
       await fetchRoutineData(true);
       alert('All changes saved successfully!');
     } catch (error) {
@@ -1415,6 +1472,8 @@ const Routine: React.FC = () => {
     // Don't clear deletedTimeSlots - they should persist
     // Reset calendar mode to original state if exiting without saving
     setIsGregorianMode(originalCalendarMode);
+    // Reset day overviews to original state if exiting without saving
+    setDayOverviews(originalDayOverviews);
     setEditingCell(null);
     setEditingRow(null);
     setEditFormData({ activity: '', category: '' });
@@ -1511,17 +1570,9 @@ const Routine: React.FC = () => {
             Loading routine from database...
           </div>
         )}
-        {error && (
-          <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
-            Error loading routine: {error}
-          </div>
-        )}
 
-        {!isLoggedIn && (
-          <div style={{ textAlign: 'center', padding: '10px', color: '#3498db', fontWeight: 'bold' }}>
-            Viewing system routine - log in to customize your own
-          </div>
-        )}
+
+
 
         {/* Calendar Toggle - Only visible in edit mode */}
         {isEditMode && (
@@ -1576,24 +1627,38 @@ const Routine: React.FC = () => {
 
       </div>
 
-      <div className="month-week-header">
-        <h2>
-          {isGregorianMode ? (
-            <>
-              {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - 
-              Week {Math.ceil(new Date().getDate() / 7)}
-            </>
-          ) : (
-            <>
-              {orbitalCalendar.getMonthName(currentDate.month)} - Week {Math.ceil(currentDate.day / 7)}
-            </>
-          )}
-        </h2>
-      </div>
+      {/* Month/Week Header - Only show when logged in */}
+      {isLoggedIn && (
+        <div className="month-week-header">
+          <h2>
+            {isGregorianMode ? (
+              <>
+                {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - 
+                Week {Math.ceil(new Date().getDate() / 7)}
+              </>
+            ) : (
+              <>
+                {orbitalCalendar.getMonthName(currentDate.month)} - Week {Math.ceil(currentDate.day / 7)}
+              </>
+            )}
+          </h2>
+        </div>
+      )}
 
       {weeklyRoutine.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#95a5a6' }}>
-          {loading ? 'Loading routine...' : 'No routine data available'}
+        <div style={{ textAlign: 'center', padding: '40px', color: '#95a5a6' }}>
+          {loading ? (
+            'Loading routine...'
+          ) : !isLoggedIn ? (
+            <div className="no-routine-message">
+              <h3 style={{ marginBottom: '20px', color: '#e67e22' }}>No Routine Found</h3>
+              <p style={{ marginBottom: '20px', fontSize: '16px' }}>
+                Please <a href="/auth/login" style={{ color: '#3498db', textDecoration: 'none', fontWeight: '600' }}>log in</a> to create your custom weekly routine.
+              </p>
+            </div>
+          ) : (
+            'No routine data available. Create your first routine by adding activities to different time slots.'
+          )}
         </div>
       ) : (
         <div className="routine-grid-container">
@@ -1625,6 +1690,89 @@ const Routine: React.FC = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Day Overview Row */}
+              <tr className="day-overview-row">
+                {isEditMode && <td className="day-overview-controls"></td>}
+                <td className="day-overview-label">Day Overview</td>
+                {weeklyRoutine.map(day => (
+                  <td key={day.day} className="day-overview-cell">
+                    {isEditMode ? (
+                      <div className="day-overview-edit">
+                        <div className="day-overview-tags">
+                          {(dayOverviews[day.day] || []).map((tag, index) => (
+                            <span key={index} className={`day-overview-tag category-${tag.category}`}>
+                              {tag.text}
+                              <button
+                                className="remove-tag-btn"
+                                onClick={() => {
+                                  const newTags = (dayOverviews[day.day] || []).filter((_, i) => i !== index);
+                                  setDayOverviews(prev => ({
+                                    ...prev,
+                                    [day.day]: newTags
+                                  }));
+                                }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="add-tag-input">
+                          <select 
+                            className="category-select"
+                            defaultValue=""
+                          >
+                            <option value="" disabled>Select category...</option>
+                            <option value="work">Work</option>
+                            <option value="exercise">Exercise</option>
+                            <option value="meals">Meals</option>
+                            <option value="leisure">Leisure</option>
+                            <option value="chores">Chores</option>
+                            <option value="sleep">Sleep</option>
+                            <option value="none">None</option>
+                          </select>
+                          <input
+                            type="text"
+                            placeholder="Add description..."
+                            className="day-overview-input"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                                const categorySelect = e.currentTarget.parentElement?.querySelector('.category-select') as HTMLSelectElement;
+                                const category = categorySelect?.value;
+                                const text = e.currentTarget.value.trim();
+                                
+                                if (category && text) {
+                                  const newTag = { text, category };
+                                  const currentTags = dayOverviews[day.day] || [];
+                                  setDayOverviews(prev => ({
+                                    ...prev,
+                                    [day.day]: [...currentTags, newTag]
+                                  }));
+                                  e.currentTarget.value = '';
+                                  categorySelect.value = '';
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="day-overview-text">
+                        {(dayOverviews[day.day] || []).length > 0 ? (
+                          (dayOverviews[day.day] || []).map((tag, index) => (
+                            <span key={index} className={`day-overview-tag-display category-${tag.category}`}>
+                              {tag.text}
+                            </span>
+                          ))
+                        ) : (
+                          'No overview set'
+                        )}
+                      </div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+              
               {displayTimes.map((time, timeIndex) => (
                 <tr 
                   key={time} 
@@ -1743,7 +1891,7 @@ const Routine: React.FC = () => {
                     </td>
                   )}
                   <td 
-                    className={`time-cell ${isCurrentTime(time, routineData.find(day => day.day === 1)?.routines || []) ? 'current-time' : ''} ${isEditMode ? 'clickable-time' : ''}`}
+                    className={`time-cell ${isCurrentTime(time, displayTimes) ? 'current-time' : ''} ${isEditMode ? 'clickable-time' : ''}`}
                     onClick={isEditMode ? () => handleTimeHeaderClick(time) : undefined}
                     style={isEditMode ? { cursor: 'pointer' } : {}}
                   >
@@ -1756,14 +1904,11 @@ const Routine: React.FC = () => {
                         fontWeight: 'normal'
                       }}>
                         {(() => {
-                          // Show time range for the first day (Monday) as reference
-                          const firstDayRoutine = routineData.find(day => day.day === 1);
-                          if (firstDayRoutine) {
-                            const routinesWithEndTimes = calculateEndTimes(firstDayRoutine.routines);
-                            const currentRoutine = routinesWithEndTimes.find((r: any) => r.time === time);
-                            if (currentRoutine && currentRoutine.endTime && currentRoutine.endTime !== time) {
-                              return `${time} - ${currentRoutine.endTime}`;
-                            }
+                          // Show time range based on the next time slot in displayTimes
+                          const currentTimeIndex = displayTimes.indexOf(time);
+                          if (currentTimeIndex !== -1 && currentTimeIndex < displayTimes.length - 1) {
+                            const nextTime = displayTimes[currentTimeIndex + 1];
+                            return `${time} - ${nextTime}`;
                           }
                           return time;
                         })()}
@@ -1854,7 +1999,7 @@ const Routine: React.FC = () => {
                               {isEditMode ? 'Click to add activity...' : ''}
                             </div>
                           </div>
-                        ) : isExerciseActivity(processedRoutine.activity) ? (
+                        ) : isExerciseActivity(processedRoutine.category) ? (
                           isEditMode ? (
                             // In edit mode, render as clickable div instead of link
                             <div 
@@ -1912,7 +2057,7 @@ const Routine: React.FC = () => {
                               </div>
                             </a>
                           )
-                        ) : isMealActivity(processedRoutine.activity) ? (
+                        ) : isMealActivity(processedRoutine.category) ? (
                           isEditMode ? (
                             // In edit mode, render as clickable div instead of link
                             <div 
@@ -2016,40 +2161,60 @@ const Routine: React.FC = () => {
         </div>
       )}
 
-      {/* Category Legend */}
-      <div className="routine-legend">
-        <h3>Activity Categories:</h3>
-        <div className="legend-items">
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('work') }}></div>
-            <span className="legend-label">Work</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('exercise') }}></div>
-            <span className="legend-label">Exercise</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('meals') }}></div>
-            <span className="legend-label">Meals</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('leisure') }}></div>
-            <span className="legend-label">Leisure</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('chores') }}></div>
-            <span className="legend-label">Chores</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('sleep') }}></div>
-            <span className="legend-label">Sleep</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: getCategoryColor('none') }}></div>
-            <span className="legend-label">None</span>
+      {/* Category Legend - Only show when logged in */}
+      {isLoggedIn && (
+        <div className="routine-legend">
+          <h3>Activity Categories:</h3>
+          <div className="legend-items">
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: getCategoryColor('work') }}></div>
+              <span className="legend-label">Work</span>
+            </div>
+            {!isEditMode ? (
+              <a href="/lifestyle/exercise" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="legend-item" style={{ cursor: 'pointer' }}>
+                  <div className="legend-color" style={{ backgroundColor: getCategoryColor('exercise') }}></div>
+                  <span className="legend-label">Exercise</span>
+                </div>
+              </a>
+            ) : (
+              <div className="legend-item">
+                <div className="legend-color" style={{ backgroundColor: getCategoryColor('exercise') }}></div>
+                <span className="legend-label">Exercise</span>
+              </div>
+            )}
+            {!isEditMode ? (
+              <a href="/lifestyle/diet" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="legend-item" style={{ cursor: 'pointer' }}>
+                  <div className="legend-color" style={{ backgroundColor: getCategoryColor('meals') }}></div>
+                  <span className="legend-label">Meals</span>
+                </div>
+              </a>
+            ) : (
+              <div className="legend-item">
+                <div className="legend-color" style={{ backgroundColor: getCategoryColor('meals') }}></div>
+                <span className="legend-label">Meals</span>
+              </div>
+            )}
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: getCategoryColor('leisure') }}></div>
+              <span className="legend-label">Leisure</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: getCategoryColor('chores') }}></div>
+              <span className="legend-label">Chores</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: getCategoryColor('sleep') }}></div>
+              <span className="legend-label">Sleep</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: getCategoryColor('none') }}></div>
+              <span className="legend-label">None</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Inline Edit Form for Individual Cell */}
       {editingCell && (

@@ -18,8 +18,10 @@ import Prayer from './components/Prayer'
 import SwipeableWidgets from './components/SwipeableWidgets'
 import ApiTest from './components/ApiTest'
 import Register from './components/Register'
+import Login from './components/Login'
 import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
+import { AuthProvider } from './context/AuthContext'
 
 const App: React.FC = () => {
   // Set page title based on environment for all pages
@@ -29,40 +31,43 @@ const App: React.FC = () => {
     document.title = title;
   }, []);
   return (
-    <PhoneticProvider>
-      <Router>
-        <div className="App">
-          <Header />
-          <main className="main">
-            <Routes>
-              <Route path="/" element={
-                <>
-                  <SwipeableWidgets />
-                </>
-              } />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
-              <Route path="/lifestyle/routine" element={<Routine />} />
-              <Route path="/lifestyle/exercise" element={<Exercise />} />
-              <Route path="/lifestyle/diet" element={<Diet />} />
-              <Route path="/creative/music/beats" element={<BeatsPlayer />} />
-              <Route path="/creative/visual-art/traditional" element={<TraditionalArt />} />
-              <Route path="/list" element={<Lists />} />
-              <Route path="/lists/music" element={<MusicLists />} />
-              <Route path="/lists/music/favorite-albums" element={<FavoriteAlbums />} />
-              <Route path="/lists/sports" element={<SportsLists />} />
-              <Route path="/lists/sports/nba-player-rankings" element={<NBAPlayerRankings />} />
-              <Route path="/projects/phonetic-alphabet" element={<PhoneticAlphabetPage />} />
-              <Route path="/content/personal-docs/prayer" element={<Prayer />} />
-              <Route path="/najnimre" element={<SecretPage />} />
-              <Route path="/najnimre/accounts" element={<SecretPage />} />
-              <Route path="/api-test" element={<ApiTest />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
-          </main>
-        </div>
-      </Router>
-    </PhoneticProvider>
+    <AuthProvider>
+      <PhoneticProvider>
+        <Router>
+          <div className="App">
+            <Header />
+            <main className="main">
+              <Routes>
+                <Route path="/" element={
+                  <>
+                    <SwipeableWidgets />
+                  </>
+                } />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/orbital-calendar" element={<OrbitalCalendarPage />} />
+                <Route path="/lifestyle/routine" element={<Routine />} />
+                <Route path="/lifestyle/exercise" element={<Exercise />} />
+                <Route path="/lifestyle/diet" element={<Diet />} />
+                <Route path="/creative/music/beats" element={<BeatsPlayer />} />
+                <Route path="/creative/visual-art/traditional" element={<TraditionalArt />} />
+                <Route path="/list" element={<Lists />} />
+                <Route path="/lists/music" element={<MusicLists />} />
+                <Route path="/lists/music/favorite-albums" element={<FavoriteAlbums />} />
+                <Route path="/lists/sports" element={<SportsLists />} />
+                <Route path="/lists/sports/nba-player-rankings" element={<NBAPlayerRankings />} />
+                <Route path="/projects/phonetic-alphabet" element={<PhoneticAlphabetPage />} />
+                <Route path="/content/personal-docs/prayer" element={<Prayer />} />
+                <Route path="/najnimre" element={<SecretPage />} />
+                <Route path="/najnimre/accounts" element={<SecretPage />} />
+                <Route path="/api-test" element={<ApiTest />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/auth/login" element={<Login />} />
+              </Routes>
+            </main>
+          </div>
+        </Router>
+      </PhoneticProvider>
+    </AuthProvider>
   )
 }
 

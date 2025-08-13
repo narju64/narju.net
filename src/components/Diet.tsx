@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Diet.css';
 import { buildApiUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useAuthRefresh } from '../hooks/useAuthRefresh';
 
 interface Ingredient {
   id: string;
@@ -77,7 +79,7 @@ const Diet: React.FC = () => {
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, authToken } = useAuth();
 
   // Helper function to calculate nutrition for a meal's ingredients
   const calculateNutritionForMeal = (mealIngredients: (SelectedIngredient & { servingSizeMultiplier?: number })[]) => {
@@ -135,31 +137,41 @@ const Diet: React.FC = () => {
     setIsLoading(false);
   }, []);
 
-  // Check if user is logged in and fetch ingredients from API
-  useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    const storedToken = localStorage.getItem('authToken');
-    const loggedIn = !!(storedUser && storedToken);
-    setIsLoggedIn(loggedIn);
-
-    if (loggedIn) {
+  // Fetch ingredients when component mounts or auth state changes
+  useAuthRefresh(() => {
+    if (isLoggedIn) {
       fetchIngredientsFromApi();
+    } else {
+      // Clear ingredients when logged out
+      setIngredientsData([]);
+      setError(null);
     }
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchIngredientsFromApi = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(buildApiUrl('/api/lists/diet'));
+      if (!authToken) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch(buildApiUrl('/api/lists/diet'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data: ApiResponse = await response.json();
-      console.log('API Response:', data);
       
       if (data.list && data.list.items_json && data.list.items_json.length > 0) {
         setIngredientsData(data.list.items_json);
@@ -760,7 +772,7 @@ const Diet: React.FC = () => {
       <div className="diet-page">
         <div className="diet-header">
           <h1>Diet & Nutrition</h1>
-          <p>Please log in to access your diet tracking tools.</p>
+          <p>Please <a href="/auth/login" style={{ color: '#3498db', textDecoration: 'none', fontWeight: '600' }}>log in</a> to access your diet tracking tools.</p>
         </div>
       </div>
     );

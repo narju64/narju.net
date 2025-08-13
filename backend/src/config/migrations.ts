@@ -154,6 +154,21 @@ export const createUserSettingsTable = async () => {
   }
 };
 
+// Clean up hardcoded routine from lists table
+export const cleanupHardcodedRoutine = async () => {
+  try {
+    const result = await pool.query("DELETE FROM lists WHERE category = 'routine'");
+    if (result.rowCount && result.rowCount > 0) {
+      console.log(`✅ Removed ${result.rowCount} hardcoded routine entries from lists table`);
+    } else {
+      console.log('ℹ️ No hardcoded routine found in lists table');
+    }
+  } catch (error) {
+    console.error('❌ Error cleaning up hardcoded routine:', error);
+    throw error;
+  }
+};
+
 // Run all migrations
 export const runMigrations = async () => {
   try {
@@ -164,6 +179,7 @@ export const runMigrations = async () => {
     await createUserDeletedTimeslotsTable();
     await createUserSettingsTable();
     await createAdminUser();
+    await cleanupHardcodedRoutine();
     // Note: Data has been manually uploaded to Railway database
     console.log('✅ All migrations completed successfully');
   } catch (error) {

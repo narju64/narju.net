@@ -177,4 +177,51 @@
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+}
+
+/* Day Overview Tag Styles for CurrentTask Widget */
+.day-overview-tag-display {
+  background: #294cad;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin: 0.1rem;
+  display: inline-block;
+}
+
+/* Category-based color coding for day overview tags in CurrentTask widget - using existing system colors */
+.day-overview-tag-display.category-work {
+  background: #f39c12 !important; /* Orange for work */
+}
+
+.day-overview-tag-display.category-exercise {
+  background: #e74c3c !important; /* Red for exercise */
+}
+
+.day-overview-tag-display.category-meals {
+  background: #27ae60 !important; /* Green for meals */
+}
+
+.day-overview-tag-display.category-leisure {
+  background: #3498db !important; /* Blue for leisure */
+}
+
+.day-overview-tag-display.category-chores {
+  background: #9b59b6 !important; /* Purple for chores */
+}
+
+.day-overview-tag-display.category-sleep {
+  background: #2c3e50 !important; /* Black for sleep */
+}
+
+.day-overview-tag-display.category-none {
+  background: #95a5a6 !important; /* Gray for none */
+}
+
+.daily-description .description-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
 } 

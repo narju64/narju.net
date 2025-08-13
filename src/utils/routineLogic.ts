@@ -79,7 +79,47 @@ export const calculateEndTimes = (routines: RoutineItem[]): RoutineItem[] => {
   return routinesWithEndTimes;
 };
 
-export const isCurrentTime = (time: string, routines: RoutineItem[] = []) => {
+export const isCurrentTime = (time: string, displayTimes: string[] = []) => {
+  if (displayTimes.length === 0) return false;
+  
+  // Get current time in minutes
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  const currentTimeMinutes = currentHour * 60 + currentMinute;
+  
+  // The function should highlight the current time slot, not based on activities
+  // We need to find which time slot the current time falls into
+  
+  // Find the time slot that contains the current time
+  for (let i = 0; i < displayTimes.length; i++) {
+    const currentSlot = displayTimes[i];
+    const currentSlotMinutes = convertTimeToMinutes(currentSlot);
+    
+    // Check if current time falls within this time slot's range
+    if (currentTimeMinutes >= currentSlotMinutes) {
+      // This could be the current time slot
+      // Check if there's a next time slot and if current time is before it
+      if (i < displayTimes.length - 1) {
+        const nextSlot = displayTimes[i + 1];
+        const nextSlotMinutes = convertTimeToMinutes(nextSlot);
+        
+        // Current time is within this time slot's range
+        if (currentTimeMinutes < nextSlotMinutes) {
+          return time === currentSlot;
+        }
+      } else {
+        // This is the last time slot of the day, so current time is within it
+        return time === currentSlot;
+      }
+    }
+  }
+  
+  return false;
+};
+
+// Function to check if a cell should be highlighted based on current activity
+export const isCurrentActivity = (time: string, routines: RoutineItem[] = []) => {
   if (routines.length === 0) return false;
   
   // Calculate end times for all routines

@@ -8,7 +8,7 @@ const removeRoutineList = async () => {
     const deleteQuery = "DELETE FROM lists WHERE category = 'routine'";
     const result = await pool.query(deleteQuery);
     
-    if (result.rowCount > 0) {
+    if (result.rowCount && result.rowCount > 0) {
       console.log(`✅ Successfully removed ${result.rowCount} routine list(s) from lists table`);
     } else {
       console.log('ℹ️ No routine list found in lists table');

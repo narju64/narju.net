@@ -92,6 +92,29 @@ const Routine: React.FC = () => {
   
   // Track original day overviews to detect changes
   const [originalDayOverviews, setOriginalDayOverviews] = useState<{ [key: number]: Array<{ text: string; category: string }> }>({});
+  
+  // User categories state - stores custom categories created by the user
+  const [userCategories, setUserCategories] = useState<Array<{ name: string; color: string }>>([]);
+  
+  // Track original user categories to detect changes
+  const [originalUserCategories, setOriginalUserCategories] = useState<Array<{ name: string; color: string }>>([]);
+  
+  // Category management modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#e67e22'); // Default to first available color
+  
+  // Predefined colors for user categories (completely different from system categories)
+  const availableColors = [
+    '#000000', // Black (unique)
+    '#ffffff', // White (unique)
+    '#32cd32', // Lime green (different from meals dark green)
+    '#f1c40f', // Sunflower (unique yellow)
+    '#e91e63', // Pink (unique)
+    '#795548', // Brown (unique)
+    '#ff6b6b', // Light coral (unique)
+    '#4ecdc4', // Turquoise (unique)
+  ];
 
   // Load user settings from database
   const loadUserSettings = async () => {
@@ -143,6 +166,22 @@ const Routine: React.FC = () => {
             setDayOverviews({});
             setOriginalDayOverviews({});
           }
+        }
+        
+        // Load user categories if they exist
+        if (data.settings && data.settings.userCategories) {
+          try {
+            const loadedCategories = JSON.parse(data.settings.userCategories);
+            setUserCategories(loadedCategories);
+            setOriginalUserCategories(loadedCategories);
+          } catch (error) {
+            console.error('Error parsing user categories:', error);
+            setUserCategories([]);
+            setOriginalUserCategories([]);
+          }
+        } else {
+          setUserCategories([]);
+          setOriginalUserCategories([]);
         }
       } else {
         const errorText = await response.text();
@@ -218,6 +257,8 @@ const Routine: React.FC = () => {
       setOriginalCalendarMode(true);
       setDayOverviews({});
       setOriginalDayOverviews({});
+      setUserCategories([]);
+      setOriginalUserCategories([]);
     }
   }, [isLoggedIn]);
 
@@ -254,14 +295,22 @@ const Routine: React.FC = () => {
              ));
     });
     
+    // Check if user categories have changed
+    const hasUserCategoryChanges = userCategories.length !== originalUserCategories.length ||
+      userCategories.some((cat, index) => 
+        cat.name !== originalUserCategories[index]?.name || 
+        cat.color !== originalUserCategories[index]?.color
+      );
+    
     const hasChanges = Object.keys(pendingChanges).length > 0 || 
                       addedTimeSlots.length > 0 || 
                       hasDeletedTimeslotChanges ||
                       hasCalendarModeChanges ||
-                      hasDayOverviewChanges;
+                      hasDayOverviewChanges ||
+                      hasUserCategoryChanges;
     
     setHasUnsavedChanges(hasChanges);
-  }, [pendingChanges, addedTimeSlots, deletedTimeSlots, originalDeletedTimeSlots, isGregorianMode, originalCalendarMode, dayOverviews, originalDayOverviews]);
+  }, [pendingChanges, addedTimeSlots, deletedTimeSlots, originalDeletedTimeSlots, isGregorianMode, originalCalendarMode, dayOverviews, originalDayOverviews, userCategories, originalUserCategories]);
 
   const fetchRoutineData = async (isUserLoggedIn: boolean) => {
     try {
@@ -988,28 +1037,47 @@ const Routine: React.FC = () => {
   });
 
   const getCategoryColor = (category: string) => {
+    // Check user categories first
+    const userCategory = userCategories.find(cat => cat.name === category);
+    if (userCategory) {
+      return userCategory.color;
+    }
+    
+    // Fall back to system categories
     const colors: { [key: string]: string } = {
       'work': '#f39c12', // Orange
       'exercise': '#e74c3c', // Red
-      'meal': '#27ae60', // Green
-      'meals': '#27ae60', // Green (alias for meal)
-      'leisure': '#3498db', // Blue
-      'chores': '#9b59b6', // Purple
-      'sleep': '#2c3e50', // Black
+      'meal': '#1a5f3a', // Dark green (changed from bright green)
+      'meals': '#1a5f3a', // Dark green (alias for meal)
+      'leisure': '#2980b9', // Darker blue (changed from bright blue)
+      'chores': '#8e44ad', // Darker purple (changed from bright purple)
+      'sleep': '#2c3e50', // Dark blue-grey
       'none': '#95a5a6', // Grey for None category
     };
     return colors[category] || '#95a5a6'; // Grey for no category
   };
 
   const getCategoryBackgroundTint = (category: string) => {
+    // Check user categories first
+    const userCategory = userCategories.find(cat => cat.name === category);
+    if (userCategory) {
+      // Convert hex color to rgba with low opacity
+      const hex = userCategory.color.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.05)`;
+    }
+    
+    // Fall back to system categories
     const tints: { [key: string]: string } = {
       'work': 'rgba(243, 156, 18, 0.05)', // Orange tint
       'exercise': 'rgba(231, 76, 60, 0.05)', // Red tint
-      'meal': 'rgba(39, 174, 96, 0.05)', // Green tint
-      'meals': 'rgba(39, 174, 96, 0.05)', // Green tint (alias for meal)
-      'leisure': 'rgba(52, 152, 219, 0.05)', // Blue tint
-      'chores': 'rgba(155, 89, 182, 0.05)', // Purple tint
-      'sleep': 'rgba(44, 62, 80, 0.05)', // Black tint
+      'meal': 'rgba(26, 95, 58, 0.05)', // Dark green tint (updated)
+      'meals': 'rgba(26, 95, 58, 0.05)', // Dark green tint (updated)
+      'leisure': 'rgba(41, 128, 185, 0.05)', // Darker blue tint (updated)
+      'chores': 'rgba(142, 68, 173, 0.05)', // Darker purple tint (updated)
+      'sleep': 'rgba(44, 62, 80, 0.05)', // Dark blue-grey tint
       'none': 'rgba(149, 165, 166, 0.15)', // Grey tint for None category
     };
     // Handle empty string or undefined category as "none"
@@ -1058,6 +1126,27 @@ const Routine: React.FC = () => {
     const currentDayRoutine = routineData.find(day => day.day === dayNumber);
     const todayRoutines = currentDayRoutine?.routines || [];
     
+    const currentHour = new Date().getHours();
+    
+    // If it's AM hours (past midnight), check for overnight activities on the previous day
+    if (currentHour < 12) { // AM hours (past midnight)
+      const currentDay = orbitalCalendar.getCurrentOrbitalDate().day;
+      const previousDayNumber = currentDay === 1 ? 7 : currentDay - 1; // Wrap around from day 1 to day 7
+      
+      // Only highlight if this is the previous day and has an ongoing overnight activity
+      if (dayNumber === previousDayNumber) {
+        const previousDayRoutine = routineData.find(day => day.day === previousDayNumber);
+        const previousDayRoutines = previousDayRoutine?.routines || [];
+        
+        // Check if this time slot has an overnight activity that's still ongoing
+        return isCurrentActivity(time, previousDayRoutines);
+      }
+      
+      // Don't highlight current day during AM hours if we're highlighting the previous day
+      return false;
+    }
+    
+    // Normal case: check if this is the current day and has current activity
     return isCurrentDay(dayNumber) && isCurrentActivity(time, todayRoutines);
   };
 
@@ -1151,6 +1240,47 @@ const Routine: React.FC = () => {
     setEditingCell(null);
     setEditFormData({ activity: '', category: '' });
   };
+  
+  // Category management functions
+  const handleAddCategory = () => {
+    if (newCategoryName.trim() === '') return;
+    
+    // Check if category name already exists (case-insensitive)
+    const existingCategory = userCategories.find(cat => 
+      cat.name.toLowerCase() === newCategoryName.trim().toLowerCase()
+    );
+    
+    if (existingCategory) {
+      alert('A category with this name already exists.');
+      return;
+    }
+    
+    const newCategory = {
+      name: newCategoryName.trim(),
+      color: newCategoryColor
+    };
+    
+    setUserCategories(prev => [...prev, newCategory]);
+    setNewCategoryName('');
+    setNewCategoryColor('#3498db');
+    setShowCategoryModal(false);
+  };
+  
+  const handleDeleteCategory = (categoryName: string) => {
+    // Check if category is in use
+    const isInUse = routineData.some(day => 
+      day.routines.some(routine => routine.category === categoryName)
+    );
+    
+    if (isInUse) {
+      alert('Cannot delete category that is currently in use. Please change all activities using this category first.');
+      return;
+    }
+    
+    setUserCategories(prev => prev.filter(cat => cat.name !== categoryName));
+  };
+  
+
 
   const handleSaveRow = () => {
     if (!editingRow) return;
@@ -1254,7 +1384,14 @@ const Routine: React.FC = () => {
            originalTags.some(tag => !currentTags.includes(tag));
   });
 
-  if (Object.keys(pendingChanges).length === 0 && addedTimeSlots.length === 0 && !hasDeletedTimeslotChanges && !hasCalendarModeChanges && !hasDayOverviewChanges) {
+  // Check if user categories have changed
+  const hasUserCategoryChanges = userCategories.length !== originalUserCategories.length ||
+    userCategories.some((cat, index) => 
+      cat.name !== originalUserCategories[index]?.name || 
+      cat.color !== originalUserCategories[index]?.color
+    );
+
+  if (Object.keys(pendingChanges).length === 0 && addedTimeSlots.length === 0 && !hasDeletedTimeslotChanges && !hasCalendarModeChanges && !hasDayOverviewChanges && !hasUserCategoryChanges) {
     alert('No changes to save.');
     return;
   }
@@ -1433,11 +1570,28 @@ const Routine: React.FC = () => {
       if (hasDayOverviewChanges) {
         try {
           // Save day overviews to user settings as JSON string
-          const overviewsToSave = { dayOverviews: JSON.stringify(dayOverviews) };
+          const overviewsToSave = { 
+            dayOverviews: JSON.stringify(dayOverviews)
+          };
           await saveUserSettings(overviewsToSave);
           // Day overviews saved successfully
         } catch (error) {
           console.error('Failed to save day overviews:', error);
+          // Don't fail the entire save operation for this
+        }
+      }
+      
+      // Save user categories if they have changed
+      if (hasUserCategoryChanges) {
+        try {
+          // Save user categories to user settings as JSON string
+          const categoriesToSave = { 
+            userCategories: JSON.stringify(userCategories)
+          };
+          await saveUserSettings(categoriesToSave);
+          // User categories saved successfully
+        } catch (error) {
+          console.error('Failed to save user categories:', error);
           // Don't fail the entire save operation for this
         }
       }
@@ -1450,8 +1604,10 @@ const Routine: React.FC = () => {
       setOriginalDeletedTimeSlots(deletedTimeSlots);
       // Update originalCalendarMode to reflect the new state
       setOriginalCalendarMode(isGregorianMode);
-      // Update originalDayOverviews to reflect the new state
-      setOriginalDayOverviews(dayOverviews);
+              // Update originalDayOverviews to reflect the new state
+        setOriginalDayOverviews(dayOverviews);
+        // Update originalUserCategories to reflect the new state
+        setOriginalUserCategories(userCategories);
       await fetchRoutineData(true);
       alert('All changes saved successfully!');
     } catch (error) {
@@ -1473,7 +1629,8 @@ const Routine: React.FC = () => {
     // Reset calendar mode to original state if exiting without saving
     setIsGregorianMode(originalCalendarMode);
     // Reset day overviews to original state if exiting without saving
-    setDayOverviews(originalDayOverviews);
+          setDayOverviews(originalDayOverviews);
+      setUserCategories(originalUserCategories);
     setEditingCell(null);
     setEditingRow(null);
     setEditFormData({ activity: '', category: '' });
@@ -1907,8 +2064,13 @@ const Routine: React.FC = () => {
                           // Show time range based on the next time slot in displayTimes
                           const currentTimeIndex = displayTimes.indexOf(time);
                           if (currentTimeIndex !== -1 && currentTimeIndex < displayTimes.length - 1) {
+                            // Regular time slot - show range to next time
                             const nextTime = displayTimes[currentTimeIndex + 1];
                             return `${time} - ${nextTime}`;
+                          } else if (currentTimeIndex === displayTimes.length - 1) {
+                            // Last time slot - show range to first time of next day
+                            const firstTime = displayTimes[0];
+                            return `${time} - ${firstTime}`;
                           }
                           return time;
                         })()}
@@ -2166,6 +2328,7 @@ const Routine: React.FC = () => {
         <div className="routine-legend">
           <h3>Activity Categories:</h3>
           <div className="legend-items">
+            {/* System Categories */}
             <div className="legend-item">
               <div className="legend-color" style={{ backgroundColor: getCategoryColor('work') }}></div>
               <span className="legend-label">Work</span>
@@ -2212,6 +2375,34 @@ const Routine: React.FC = () => {
               <div className="legend-color" style={{ backgroundColor: getCategoryColor('none') }}></div>
               <span className="legend-label">None</span>
             </div>
+            
+            {/* User Categories */}
+            {userCategories.map((category, index) => (
+              <div key={index} className="legend-item user-category">
+                <div className="legend-color" style={{ backgroundColor: category.color }}></div>
+                <span className="legend-label">{category.name}</span>
+                {isEditMode && (
+                  <button
+                    className="delete-category-btn"
+                    onClick={() => handleDeleteCategory(category.name)}
+                    title={`Delete ${category.name} category`}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            
+            {/* Add Category Button - Only show in edit mode */}
+            {isEditMode && (
+              <button
+                className="add-category-btn"
+                onClick={() => setShowCategoryModal(true)}
+                title="Add new category"
+              >
+                +
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -2249,6 +2440,10 @@ const Routine: React.FC = () => {
                 <option value="leisure">Leisure</option>
                 <option value="chores">Chores</option>
                 <option value="sleep">Sleep</option>
+                {/* User Categories */}
+                {userCategories.map((category, index) => (
+                  <option key={index} value={category.name}>{category.name}</option>
+                ))}
               </select>
             </div>
             
@@ -2333,8 +2528,50 @@ const Routine: React.FC = () => {
                <button onClick={handleCancelEdit} className="cancel-btn">Cancel</button>
              </div>
            </div>
-         </div>
-       )}
+                 </div>
+      )}
+      
+      {/* Category Management Modal */}
+      {showCategoryModal && (
+        <div className="edit-overlay">
+          <div className="edit-form">
+            <h3>Add New Category</h3>
+            
+            <div className="form-group">
+              <label htmlFor="categoryName">Category Name:</label>
+              <input
+                type="text"
+                id="categoryName"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Enter category name..."
+                autoFocus
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Category Color:</label>
+              <div className="color-selection-grid">
+                {availableColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`color-option ${newCategoryColor === color ? 'selected' : ''}`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setNewCategoryColor(color)}
+                    title={`Select ${color}`}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            <div className="form-actions">
+              <button onClick={handleAddCategory} className="save-btn">Add Category</button>
+              <button onClick={() => setShowCategoryModal(false)} className="cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

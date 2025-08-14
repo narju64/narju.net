@@ -166,6 +166,17 @@ body {
   color: var(--color-titles);
 }
 
+.username-link {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.username-link:hover {
+  color: var(--color-titles);
+  text-decoration: underline;
+}
+
 .logout-btn {
   background: #e53e3e;
   color: white;

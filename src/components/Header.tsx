@@ -383,7 +383,9 @@ const Header: React.FC = () => {
         <div className="user-account-section">
           {isLoggedIn && currentUser ? (
             <div className="user-info">
-              <span className="username">{currentUser.username}</span>
+              <Link to={`/user/${currentUser.username}`} className="username-link">
+                <span className="username">{currentUser.username}</span>
+              </Link>
               <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>

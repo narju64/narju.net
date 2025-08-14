@@ -19,6 +19,7 @@ import SwipeableWidgets from './components/SwipeableWidgets'
 import ApiTest from './components/ApiTest'
 import Register from './components/Register'
 import Login from './components/Login'
+import UserProfile from './components/UserProfile'
 import { PhoneticAlphabetPage } from './npa-translator/PhoneticAlphabetPage'
 import { PhoneticProvider } from './npa-translator/context/PhoneticContext'
 import { AuthProvider } from './context/AuthContext'
@@ -62,6 +63,7 @@ const App: React.FC = () => {
                 <Route path="/api-test" element={<ApiTest />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/auth/login" element={<Login />} />
+                <Route path="/user/:username" element={<UserProfile />} />
               </Routes>
             </main>
           </div>

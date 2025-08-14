@@ -1,0 +1,12 @@
+backend/src/index.ts
+backend/src/routes/auth.ts
+backend/src/routes/users.ts
+src/App.tsx
+src/components/Header.tsx
+src/components/Routine.css
+src/components/Routine.tsx
+src/components/UserProfile.css
+src/components/UserProfile.tsx
+src/context/AuthContext.tsx
+src/index.css
+src/utils/routineLogic.ts

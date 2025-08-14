@@ -64,8 +64,9 @@ export const calculateEndTimes = (routines: RoutineItem[]): RoutineItem[] => {
   
   const routinesWithEndTimes = sortedRoutines.map((routine, index) => {
     if (index === sortedRoutines.length - 1) {
-      // Last activity of the day - extend until end of day (11:59 PM)
-      return { ...routine, endTime: '11:59 PM' };
+      // Last activity of the day - extend to the first activity of the next day
+      // This creates a circular reference where the last activity ends when the first one starts
+      return { ...routine, endTime: sortedRoutines[0].time };
     }
     
     // Calculate end time as 1 minute before next activity starts
@@ -88,28 +89,28 @@ export const isCurrentTime = (time: string, displayTimes: string[] = []) => {
   const currentMinute = now.getMinutes();
   const currentTimeMinutes = currentHour * 60 + currentMinute;
   
-  // The function should highlight the current time slot, not based on activities
-  // We need to find which time slot the current time falls into
-  
   // Find the time slot that contains the current time
   for (let i = 0; i < displayTimes.length; i++) {
     const currentSlot = displayTimes[i];
     const currentSlotMinutes = convertTimeToMinutes(currentSlot);
     
     // Check if current time falls within this time slot's range
-    if (currentTimeMinutes >= currentSlotMinutes) {
-      // This could be the current time slot
-      // Check if there's a next time slot and if current time is before it
-      if (i < displayTimes.length - 1) {
-        const nextSlot = displayTimes[i + 1];
-        const nextSlotMinutes = convertTimeToMinutes(nextSlot);
-        
-        // Current time is within this time slot's range
-        if (currentTimeMinutes < nextSlotMinutes) {
-          return time === currentSlot;
-        }
-      } else {
-        // This is the last time slot of the day, so current time is within it
+    if (i < displayTimes.length - 1) {
+      // Regular time slot - check range to next slot
+      const nextSlot = displayTimes[i + 1];
+      const nextSlotMinutes = convertTimeToMinutes(nextSlot);
+      
+      if (currentTimeMinutes >= currentSlotMinutes && currentTimeMinutes < nextSlotMinutes) {
+        return time === currentSlot;
+      }
+    } else {
+      // Last time slot - check if it's an overnight activity
+      // For overnight activities, the last slot extends to the first slot of the next day
+      const firstSlot = displayTimes[0];
+      const firstSlotMinutes = convertTimeToMinutes(firstSlot);
+      
+      // Check if current time is within the overnight range
+      if (currentTimeMinutes >= currentSlotMinutes || currentTimeMinutes < firstSlotMinutes) {
         return time === currentSlot;
       }
     }
@@ -172,73 +173,60 @@ export const getCurrentAndNextTask = (routines: RoutineItem[] = []) => {
   let currentTask = null;
   let nextTask = null;
   
-  // Check if it's sleeping hours (10:30 PM to 6:00 AM)
-  const isSleepingHours = (currentHour === 22 && currentMinute >= 30) || 
-                         (currentHour >= 23) || 
-                         (currentHour >= 0 && currentHour < 6);
-
-  if (isSleepingHours) {
-    // Create a sleeping task
-    currentTask = { 
-      time: 'Sleeping', 
-      activity: 'Sleeping', 
-      category: '' 
-    };
+  // Find current task based on time ranges
+  for (let i = 0; i < routinesWithEndTimes.length; i++) {
+    const routine = routinesWithEndTimes[i];
+    if (!routine.activity || !routine.endTime) continue;
     
-    // Find the first task of the day as next task
-    for (const routine of routinesWithEndTimes) {
-      if (routine.activity && routine.activity.trim() !== '') {
-        nextTask = routine;
+    const startMinutes = convertTimeToMinutes(routine.time);
+    const endMinutes = convertTimeToMinutes(routine.endTime);
+    
+    // Handle activities that span midnight
+    if (endMinutes < startMinutes) {
+      // Activity spans midnight
+      if (currentTimeMinutes >= startMinutes || currentTimeMinutes <= endMinutes) {
+        currentTask = routine;
+        // Find next task
+        for (let j = i + 1; j < routinesWithEndTimes.length; j++) {
+          if (routinesWithEndTimes[j].activity && routinesWithEndTimes[j].activity.trim() !== '') {
+            nextTask = routinesWithEndTimes[j];
+            break;
+          }
+        }
+        // If no next task found, look for first task of next day
+        if (!nextTask) {
+          for (const nextRoutine of routinesWithEndTimes) {
+            if (nextRoutine.activity && nextRoutine.activity.trim() !== '') {
+              nextTask = nextRoutine;
+              break;
+            }
+          }
+        }
+        break;
+      }
+    } else {
+      // Normal activity within same day
+      if (currentTimeMinutes >= startMinutes && currentTimeMinutes <= endMinutes) {
+        currentTask = routine;
+        // Find next task
+        for (let j = i + 1; j < routinesWithEndTimes.length; j++) {
+          if (routinesWithEndTimes[j].activity && routinesWithEndTimes[j].activity.trim() !== '') {
+            nextTask = routinesWithEndTimes[j];
+            break;
+          }
+        }
         break;
       }
     }
-  } else {
-    // Find current task based on time ranges
-    for (let i = 0; i < routinesWithEndTimes.length; i++) {
-      const routine = routinesWithEndTimes[i];
-      if (!routine.activity || !routine.endTime) continue;
-      
-      const startMinutes = convertTimeToMinutes(routine.time);
-      const endMinutes = convertTimeToMinutes(routine.endTime);
-      
-      // Handle activities that span midnight
-      if (endMinutes < startMinutes) {
-        // Activity spans midnight
-        if (currentTimeMinutes >= startMinutes || currentTimeMinutes <= endMinutes) {
-          currentTask = routine;
-          // Find next task
-          for (let j = i + 1; j < routinesWithEndTimes.length; j++) {
-            if (routinesWithEndTimes[j].activity && routinesWithEndTimes[j].activity.trim() !== '') {
-              nextTask = routinesWithEndTimes[j];
-              break;
-            }
-          }
-          // If no next task found, look for first task of next day
-          if (!nextTask) {
-            for (const nextRoutine of routinesWithEndTimes) {
-              if (nextRoutine.activity && nextRoutine.activity.trim() !== '') {
-                nextTask = nextRoutine;
-                break;
-              }
-            }
-          }
-          break;
-        }
-      } else {
-        // Normal activity within same day
-        if (currentTimeMinutes >= startMinutes && currentTimeMinutes <= endMinutes) {
-          currentTask = routine;
-          // Find next task
-          for (let j = i + 1; j < routinesWithEndTimes.length; j++) {
-            if (routinesWithEndTimes[j].activity && routinesWithEndTimes[j].activity.trim() !== '') {
-              nextTask = routinesWithEndTimes[j];
-              break;
-            }
-          }
-          break;
-        }
-      }
-    }
+  }
+
+  // Check if current task is sleep-related and update display accordingly
+  if (currentTask && currentTask.category?.toLowerCase().includes('sleep')) {
+    currentTask = {
+      time: 'Sleeping',
+      activity: 'Sleeping',
+      category: currentTask.category || ''
+    };
   }
 
   return { current: currentTask, next: nextTask };

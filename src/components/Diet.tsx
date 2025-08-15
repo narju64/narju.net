@@ -1527,8 +1527,9 @@ const Diet: React.FC = () => {
        )}
 
       <div className="diet-container">
-                 <div className="ingredients-section">
-                       <div className="tab-header">
+        <div className="diet-content">
+          <div className="ingredients-section">
+            <div className="tab-header">
               <button 
                 className={`tab-button ${activeTab === 'ingredients' ? 'active' : ''}`}
                 onClick={() => setActiveTab('ingredients')}
@@ -1547,18 +1548,18 @@ const Diet: React.FC = () => {
               >
                 Custom Ingredients
               </button>
-                             <button 
-                 className={`tab-button ${activeTab === 'hidden-ingredients' ? 'active' : ''}`}
-                 onClick={() => setActiveTab('hidden-ingredients')}
-               >
-                 Hidden Ingredients
-               </button>
-               <button 
-                 className={`tab-button ${activeTab === 'weight' ? 'active' : ''}`}
-                 onClick={() => setActiveTab('weight')}
-               >
-                 Weight
-               </button>
+              <button 
+                className={`tab-button ${activeTab === 'hidden-ingredients' ? 'active' : ''}`}
+                onClick={() => setActiveTab('hidden-ingredients')}
+              >
+                Hidden Ingredients
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'weight' ? 'active' : ''}`}
+                onClick={() => setActiveTab('weight')}
+              >
+                Weight
+              </button>
             </div>
            
                        {activeTab === 'ingredients' && (
@@ -2121,20 +2122,25 @@ const Diet: React.FC = () => {
 
          <div className="right-column">
                        <div className="meal-section">
-              <div className="meal-header">
+                          <div className="meal-header">
+              <div className="meal-title-section">
                 <h2>Current Meal</h2>
-                                 <div className="meal-controls">
-                                      <button 
-                      onClick={saveMeal} 
-                      className="save-button"
-                      disabled={selectedIngredients.length === 0 || !mealName.trim() || getAvailableMealTypes().length === 0 || isSavingMeal}
-                    >
-                      {isSavingMeal ? 'Saving...' : 'Save Meal'}
-                    </button>
-                    
-                   <button onClick={clearMeal} className="clear-button">Clear Meal</button>
-                 </div>
+                <a href="/lifestyle/diet/history" className="view-history-button">
+                  📊 View Meal History
+                </a>
               </div>
+              <div className="meal-controls">
+                <button 
+                  onClick={saveMeal} 
+                  className="save-button"
+                  disabled={selectedIngredients.length === 0 || !mealName.trim() || getAvailableMealTypes().length === 0 || isSavingMeal}
+                >
+                  {isSavingMeal ? 'Saving...' : 'Save Meal'}
+                </button>
+                
+                <button onClick={clearMeal} className="clear-button">Clear Meal</button>
+              </div>
+            </div>
 
               <div className="meal-inputs">
                 <div className="input-group">
@@ -2458,6 +2464,7 @@ const Diet: React.FC = () => {
              </div>
            )}
          </div>
+        </div>
       </div>
     </div>
   );

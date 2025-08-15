@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { buildApiUrl } from '../utils/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 // Inline styles for simplicity
 
 interface MealHistoryEntry {
@@ -108,11 +109,13 @@ const MealHistory: React.FC = () => {
   // Load meals when selectedDate changes
   useEffect(() => {
     if (selectedDate && isLoggedIn && authToken) {
-      if (selectedDate === getTodayDate()) {
-        loadMealHistory();
-      } else {
-        loadMealsForDate(selectedDate);
-      }
+      console.log('selectedDate changed:', selectedDate);
+      console.log('getTodayDate():', getTodayDate());
+      console.log('Are they equal?', selectedDate === getTodayDate());
+      
+      // Always call loadMealsForDate for specific dates, including today
+      console.log('Calling loadMealsForDate() with:', selectedDate);
+      loadMealsForDate(selectedDate);
     }
   }, [selectedDate, isLoggedIn, authToken]);
 
@@ -134,9 +137,10 @@ const MealHistory: React.FC = () => {
         }
       });
 
+      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('Date-specific meal data:', data);
+        console.log('Response data:', data);
         
         // Handle different response formats
         let meals = [];
@@ -145,14 +149,14 @@ const MealHistory: React.FC = () => {
         } else if (data && Array.isArray(data.meals)) {
           meals = data.meals;
         } else if (data && typeof data === 'object') {
-          console.log('Date data keys:', Object.keys(data));
+          console.log('Data keys:', Object.keys(data));
           meals = [];
         }
         
-        console.log('Processed date meals:', meals);
+        console.log('Final meals array:', meals);
         setMealHistory(meals);
       } else {
-        console.error('Failed to load meals for date:', response.status, response.statusText);
+        console.error('Response not ok:', response.status, response.statusText);
         setError('Failed to load meals for selected date');
       }
     } catch (error) {
@@ -165,14 +169,14 @@ const MealHistory: React.FC = () => {
 
   // Handle date selection
   const handleDateChange = (date: string) => {
+    console.log('handleDateChange called with:', date);
+    console.log('getTodayDate():', getTodayDate());
+    console.log('Are they equal?', date === getTodayDate());
+    
     setSelectedDate(date);
-    if (date === getTodayDate()) {
-      // Load all history for today
-      loadMealHistory();
-    } else {
-      // Date is already in MM-DD-YYYY format, use directly
-      loadMealsForDate(date);
-    }
+    // Always call loadMealsForDate for specific dates, including today
+    console.log('Calling loadMealsForDate() from handleDateChange with:', date);
+    loadMealsForDate(date);
   };
 
   // Parse nutrition data safely
@@ -256,8 +260,11 @@ const MealHistory: React.FC = () => {
 
   // Convert YYYY-MM-DD to MM-DD-YYYY format (from HTML date picker)
   const convertFromPickerFormat = (dateStr: string) => {
+    console.log('convertFromPickerFormat input:', dateStr);
     const [year, month, day] = dateStr.split('-');
-    return `${month}-${day}-${year}`;
+    const result = `${month}-${day}-${year}`;
+    console.log('convertFromPickerFormat output:', result);
+    return result;
   };
 
 
@@ -870,35 +877,646 @@ const MealHistory: React.FC = () => {
     );
   };
 
-  // Monthly View Component (placeholder for now)
-  const MonthlyView = () => (
-    <div style={{ 
-      textAlign: 'center', 
-      padding: '3rem 2rem', 
-      color: '#bdc3c7', 
-      background: '#1a1a1a', 
-      borderRadius: '8px', 
-      border: '1px solid #333' 
-    }}>
-      <h3 style={{ margin: '0 0 1rem 0', color: '#ffffff', fontSize: '1.2rem' }}>Monthly View</h3>
-      <p style={{ margin: '0', fontSize: '1rem' }}>Monthly calendar view coming soon! This will show nutrition trends over the month.</p>
-    </div>
-  );
+  // Monthly View Component
+  const MonthlyView = () => {
+    const [currentMonth, setCurrentMonth] = useState<Date>(() => {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    });
+    const [monthlyData, setMonthlyData] = useState<{[key: string]: MealHistoryEntry[]}>({});
+    const [monthlyWeightData, setMonthlyWeightData] = useState<{[key: string]: any[]}>({});
+    const [monthlyLoading, setMonthlyLoading] = useState(false);
 
-  // Graph View Component (placeholder for now)
-  const GraphView = () => (
-    <div style={{ 
-      textAlign: 'center', 
-      padding: '3rem 2rem', 
-      color: '#bdc3c7', 
-      background: '#1a1a1a', 
-      borderRadius: '8px', 
-      border: '1px solid #333' 
-    }}>
-      <h3 style={{ margin: '0 0 1rem 0', color: '#ffffff', fontSize: '1.2rem' }}>Graph View</h3>
-      <p style={{ margin: '0', fontSize: '1rem' }}>Graph view coming soon! This will show nutrition trends with Recharts.</p>
-    </div>
-  );
+    // Get month name and year
+    const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    // Get all dates for the current month
+    const getMonthDates = () => {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      // Calculate days to subtract to get to Monday (1 = Monday, 0 = Sunday)
+      const daysToSubtract = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - daysToSubtract); // Start from Monday
+      
+      const dates = [];
+      const currentDate = new Date(startDate);
+      
+      while (currentDate <= lastDay || dates.length < 42) { // 6 weeks × 7 days
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      return dates;
+    };
+
+    // Navigate to previous month
+    const goToPreviousMonth = () => {
+      setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    };
+
+    // Navigate to next month
+    const goToNextMonth = () => {
+      setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    };
+
+    // Fetch monthly data
+    const fetchMonthlyData = useCallback(async (monthStart: Date) => {
+
+      setMonthlyLoading(true);
+      
+      try {
+        const monthData: {[key: string]: MealHistoryEntry[]} = {};
+        const monthWeightData: {[key: string]: any[]} = {};
+        
+        const year = monthStart.getFullYear();
+        const month = monthStart.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        
+        // Calculate start and end dates for the month
+        const startDate = formatDateForAPI(new Date(year, month, 1));
+        const endDate = formatDateForAPI(new Date(year, month, lastDay));
+        
+        // Fetch all meals for the month in one API call
+        const mealUrl = buildApiUrl(`/api/diet/meals/range?start_date=${startDate}&end_date=${endDate}`);
+
+        const mealResponse = await fetch(mealUrl, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+
+        
+        if (mealResponse.ok) {
+          const mealData = await mealResponse.json();
+          const meals = Array.isArray(mealData.meals) ? mealData.meals : [];
+          
+          // Group meals by date
+          meals.forEach((meal: any) => {
+            const dateStr = meal.date;
+            if (!monthData[dateStr]) {
+              monthData[dateStr] = [];
+            }
+            monthData[dateStr].push(meal);
+          });
+
+        }
+        
+        // Fetch all weight data for the month in one API call
+        const weightUrl = buildApiUrl(`/api/diet/weight/range?start_date=${startDate}&end_date=${endDate}`);
+
+        const weightResponse = await fetch(weightUrl, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+
+        
+        if (weightResponse.ok) {
+          const weightData = await weightResponse.json();
+          const weights = Array.isArray(weightData.weights) ? weightData.weights : [];
+          
+          // Group weights by date
+          weights.forEach((weight: any) => {
+            const dateStr = weight.date;
+            if (!monthWeightData[dateStr]) {
+              monthWeightData[dateStr] = [];
+            }
+            monthWeightData[dateStr].push(weight);
+          });
+
+        }
+        
+        setMonthlyData(monthData);
+        setMonthlyWeightData(monthWeightData);
+      } catch (err) {
+        setError('Failed to load monthly data');
+      } finally {
+        setMonthlyLoading(false);
+      }
+    }, [authToken]);
+
+    // Load monthly data when month changes
+    useEffect(() => {
+      if (activeView === 'monthly' && isLoggedIn && authToken) {
+        fetchMonthlyData(currentMonth);
+      }
+    }, [activeView, currentMonth, isLoggedIn, authToken, fetchMonthlyData]);
+
+    const monthDates = getMonthDates();
+
+    return (
+      <div>
+        {/* Month Header with Navigation */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '2rem',
+          padding: '1rem',
+          background: '#1a1a1a',
+          borderRadius: '8px',
+          border: '1px solid #333'
+        }}>
+          <button
+            onClick={goToPreviousMonth}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#3498db',
+              border: '1px solid #3498db',
+              borderRadius: '4px',
+              color: '#ffffff',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            ← Previous Month
+          </button>
+          
+          <h3 style={{ margin: '0', color: '#ffffff', fontSize: '1.5rem' }}>
+            {monthName}
+          </h3>
+          
+          <button
+            onClick={goToNextMonth}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#3498db',
+              border: '1px solid #3498db',
+              borderRadius: '4px',
+              color: '#ffffff',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            Next Month →
+          </button>
+        </div>
+
+        {/* Calendar Grid */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(7, 1fr)', 
+          gap: '0.5rem',
+          marginBottom: '2rem'
+        }}>
+          {/* Day Headers */}
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+            <div key={day} style={{
+              padding: '0.5rem',
+              textAlign: 'center',
+              fontSize: '0.8rem',
+              color: '#bdc3c7',
+              fontWeight: '500'
+            }}>
+              {day}
+            </div>
+          ))}
+          
+          {/* Calendar Days */}
+          {monthDates.map((date, index) => {
+            const dateStr = formatDateForAPI(date);
+            const dayMeals = monthlyData[dateStr] || [];
+            const dayWeights = monthlyWeightData[dateStr] || [];
+            const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+            const isToday = date.toDateString() === new Date().toDateString();
+            const isPastOrToday = date <= new Date(new Date().setHours(23, 59, 59, 999));
+            
+            return (
+              <div 
+                key={index}
+                style={{
+                  background: isCurrentMonth ? '#1a1a1a' : '#0f0f0f',
+                  border: isToday ? '2px solid #ff7300' : '1px solid #333',
+                  borderRadius: '4px',
+                  padding: '0.5rem',
+                  minHeight: '80px',
+                  cursor: isCurrentMonth && isPastOrToday ? 'pointer' : 'default',
+                  opacity: isCurrentMonth ? 1 : 0.3,
+                  transition: 'all 0.2s ease'
+                }}
+                onClick={() => {
+                  if (isCurrentMonth && isPastOrToday) {
+                    setActiveView('daily');
+                    setSelectedDate(dateStr);
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  if (isCurrentMonth && isPastOrToday) {
+                    e.currentTarget.style.borderColor = '#3498db';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (isCurrentMonth && isPastOrToday) {
+                    e.currentTarget.style.borderColor = isToday ? '#ff7300' : '#333';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                {/* Date Number */}
+                <div style={{ 
+                  fontSize: '0.8rem', 
+                  color: isToday ? '#ff7300' : '#bdc3c7',
+                  fontWeight: isToday ? '600' : '400',
+                  marginBottom: '0.25rem'
+                }}>
+                  {date.getDate()}
+                </div>
+                
+                {/* Content */}
+                {monthlyLoading ? (
+                  <div style={{ fontSize: '0.6rem', color: '#95a5a6' }}>Loading...</div>
+                ) : isCurrentMonth ? (
+                  <div>
+                    {dayMeals.length > 0 ? (
+                      <div style={{ fontSize: '0.6rem', color: '#ffffff' }}>
+                        <div style={{ color: '#ff7300', fontWeight: '500' }}>
+                          {getDailyTotals(dayMeals).calories.toFixed(0)} cal
+                        </div>
+                        {dayWeights.length > 0 && (
+                          <div style={{ color: '#3498db', fontSize: '0.5rem' }}>
+                            {(dayWeights.reduce((sum, w) => sum + (parseFloat(w.weight) || 0), 0) / dayWeights.length).toFixed(1)} lbs
+                          </div>
+                        )}
+                      </div>
+                                          ) : (
+                        <div style={{ fontSize: '0.6rem', color: '#95a5a6' }}>
+                          {isPastOrToday ? 'No data' : ''}
+                        </div>
+                      )}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Monthly Summary */}
+        <div style={{ 
+          background: '#1a1a1a', 
+          border: '1px solid #333', 
+          borderRadius: '8px', 
+          padding: '1.5rem' 
+        }}>
+          <h4 style={{ margin: '0 0 1rem 0', color: '#ffffff', textAlign: 'center' }}>Monthly Summary</h4>
+          {monthlyLoading ? (
+            <div style={{ textAlign: 'center', color: '#bdc3c7' }}>Loading monthly summary...</div>
+          ) : (
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+              gap: '1rem' 
+            }}>
+              {(() => {
+                const daysWithData = Object.values(monthlyData).filter(meals => meals.length > 0).length;
+                
+                if (daysWithData === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '1rem', background: '#2a2a2a', borderRadius: '8px', gridColumn: '1 / -1' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#bdc3c7' }}>No meal data for this month</div>
+                    </div>
+                  );
+                }
+
+                const monthlyTotals = Object.values(monthlyData)
+                  .filter(meals => meals.length > 0)
+                  .reduce((totals, dayMeals) => {
+                    const dayTotals = getDailyTotals(dayMeals);
+                    return {
+                      calories: totals.calories + dayTotals.calories,
+                      protein: totals.protein + dayTotals.protein,
+                      netCarbs: totals.netCarbs + dayTotals.netCarbs,
+                      fat: totals.fat + dayTotals.fat
+                    };
+                  }, { calories: 0, protein: 0, netCarbs: 0, fat: 0 });
+
+                const averages = {
+                  calories: monthlyTotals.calories / daysWithData,
+                  protein: monthlyTotals.protein / daysWithData,
+                  netCarbs: monthlyTotals.netCarbs / daysWithData,
+                  fat: monthlyTotals.fat / daysWithData
+                };
+
+                return (
+                  <>
+                    <div style={{ textAlign: 'center', padding: '1rem', background: '#2a2a2a', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#bdc3c7', marginBottom: '0.5rem' }}>Days with Data</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffffff' }}>{daysWithData}</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '1rem', background: '#2a2a2a', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#bdc3c7', marginBottom: '0.5rem' }}>Avg Calories</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffffff' }}>{averages.calories.toFixed(0)}</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '1rem', background: '#2a2a2a', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#bdc3c2', marginBottom: '0.5rem' }}>Avg Protein</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffffff' }}>{averages.protein.toFixed(0)}g</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '1rem', background: '#2a2a2a', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#bdc3c7', marginBottom: '0.5rem' }}>Avg Net Carbs</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffffff' }}>{averages.netCarbs.toFixed(0)}g</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '1rem', background: '#2a2a2a', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#bdc3c7', marginBottom: '0.5rem' }}>Avg Fat</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffffff' }}>{averages.fat.toFixed(0)}g</div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Graph View Component
+  const GraphView = () => {
+    const [timePeriod, setTimePeriod] = useState<'7days' | '30days' | 'year' | 'overall'>('7days');
+    const [selectedMetrics, setSelectedMetrics] = useState<{
+      calories: boolean;
+      protein: boolean;
+      fat: boolean;
+      carbs: boolean;
+      weight: boolean;
+    }>({
+      calories: true,
+      protein: false,
+      fat: false,
+      carbs: false,
+      weight: true
+    });
+    const [graphData, setGraphData] = useState<any[]>([]);
+    const [graphLoading, setGraphLoading] = useState(false);
+
+    // Fetch graph data based on time period
+    const fetchGraphData = useCallback(async () => {
+      if (!authToken) return;
+      
+      setGraphLoading(true);
+      try {
+        const endDate = new Date();
+        let startDate = new Date();
+        
+        switch (timePeriod) {
+          case '7days':
+            startDate.setDate(endDate.getDate() - 7);
+            break;
+          case '30days':
+            startDate.setDate(endDate.getDate() - 30);
+            break;
+          case 'year':
+            startDate.setFullYear(endDate.getFullYear() - 1);
+            break;
+          case 'overall':
+            startDate = new Date(2020, 0, 1); // Arbitrary start date
+            break;
+        }
+
+        const startDateStr = formatDateForAPI(startDate);
+        const endDateStr = formatDateForAPI(endDate);
+
+        // Fetch meals and weight data for the period
+        const [mealResponse, weightResponse] = await Promise.all([
+          fetch(buildApiUrl(`/api/diet/meals/range?start_date=${startDateStr}&end_date=${endDateStr}`), {
+            headers: { Authorization: `Bearer ${authToken}` }
+          }),
+          fetch(buildApiUrl(`/api/diet/weight/range?start_date=${startDateStr}&end_date=${endDateStr}`), {
+            headers: { Authorization: `Bearer ${authToken}` }
+          })
+        ]);
+
+        if (mealResponse.ok && weightResponse.ok) {
+          const mealData = await mealResponse.json();
+          const weightData = await weightResponse.json();
+
+          // Process data for charts
+          const processedData = processDataForCharts(mealData.meals || [], weightData.weights || []);
+          setGraphData(processedData);
+        }
+      } catch (error) {
+        console.error('Error fetching graph data:', error);
+      } finally {
+        setGraphLoading(false);
+      }
+    }, [timePeriod, authToken]);
+
+    // Process data for chart display
+    const processDataForCharts = (meals: any[], weights: any[]) => {
+      const dataMap = new Map<string, any>();
+      
+      // Group meals by date and calculate daily totals
+      meals.forEach(meal => {
+        const date = meal.date;
+        if (!dataMap.has(date)) {
+          dataMap.set(date, {
+            date: date, // Keep original date for sorting
+            displayDate: formatDateForDisplay(date), // Formatted date for display
+            calories: 0,
+            protein: 0,
+            fat: 0,
+            carbs: 0,
+            weight: null
+          });
+        }
+        
+        const nutrition = JSON.parse(meal.nutrition_json);
+        const entry = dataMap.get(date);
+        entry.calories += nutrition.calories || 0;
+        entry.protein += nutrition.protein || 0;
+        entry.fat += nutrition.fat || 0;
+        entry.carbs += nutrition.carbs || 0;
+      });
+
+      // Add weight data
+      weights.forEach(weight => {
+        const date = weight.date;
+        if (dataMap.has(date)) {
+          const entry = dataMap.get(date);
+          if (entry.weight === null) {
+            entry.weight = parseFloat(weight.weight);
+          } else {
+            // Average multiple weights per day
+            entry.weight = (entry.weight + parseFloat(weight.weight)) / 2;
+          }
+        }
+      });
+
+      // Convert to array and sort by date
+      return Array.from(dataMap.values()).sort((a, b) => {
+        // Parse the MM-DD-YYYY format for sorting
+        const [monthA, dayA, yearA] = a.date.split('-');
+        const [monthB, dayB, yearB] = b.date.split('-');
+        const dateA = new Date(parseInt(yearA), parseInt(monthA) - 1, parseInt(dayA));
+        const dateB = new Date(parseInt(yearB), parseInt(monthB) - 1, parseInt(dayB));
+        return dateA.getTime() - dateB.getTime();
+      });
+    };
+
+    // Format date for display
+    const formatDateForDisplay = (dateStr: string) => {
+      const [month, day] = dateStr.split('-');
+      return `${month}/${day}`;
+    };
+
+    // Toggle metric visibility
+    const toggleMetric = (metric: keyof typeof selectedMetrics) => {
+      setSelectedMetrics(prev => ({
+        ...prev,
+        [metric]: !prev[metric]
+      }));
+    };
+
+    useEffect(() => {
+      fetchGraphData();
+    }, [fetchGraphData]);
+
+    return (
+      <div style={{ padding: '1rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{ margin: '0 0 1rem 0', color: '#ffffff', fontSize: '1.2rem' }}>Nutrition Trends</h3>
+          
+          {/* Time Period Selector */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ color: '#bdc3c7', marginRight: '0.5rem' }}>Time Period:</label>
+            <select 
+              value={timePeriod} 
+              onChange={(e) => setTimePeriod(e.target.value as any)}
+              style={{
+                background: '#2a2a2a',
+                color: '#ffffff',
+                border: '1px solid #444',
+                borderRadius: '4px',
+                padding: '0.5rem',
+                marginRight: '1rem'
+              }}
+            >
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="year">Last Year</option>
+              <option value="overall">Overall</option>
+            </select>
+          </div>
+
+          {/* Metric Toggles */}
+          <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {Object.entries(selectedMetrics).map(([metric, isSelected]) => (
+              <label key={metric} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#bdc3c7' }}>
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleMetric(metric as keyof typeof selectedMetrics)}
+                  style={{ accentColor: '#ff7300' }}
+                />
+                {metric.charAt(0).toUpperCase() + metric.slice(1)}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Chart */}
+        {graphLoading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#bdc3c7' }}>
+            Loading chart data...
+          </div>
+        ) : graphData.length > 0 ? (
+          <div style={{ height: '400px', background: '#1a1a1a', borderRadius: '8px', padding: '1rem' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={graphData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                <XAxis 
+                  dataKey="displayDate" 
+                  stroke="#bdc3c7"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#bdc3c7"
+                  fontSize={12}
+                  yAxisId="left"
+                />
+                <YAxis 
+                  stroke="#bdc3c7"
+                  fontSize={12}
+                  yAxisId="right"
+                  orientation="right"
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#2a2a2a', 
+                    border: '1px solid #444',
+                    color: '#ffffff'
+                  }}
+                />
+                <Legend />
+                
+                {selectedMetrics.calories && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="calories" 
+                    stroke="#ff7300" 
+                    strokeWidth={2}
+                    yAxisId="left"
+                    name="Calories"
+                  />
+                )}
+                {selectedMetrics.protein && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="protein" 
+                    stroke="#3498db" 
+                    strokeWidth={2}
+                    yAxisId="left"
+                    name="Protein (g)"
+                  />
+                )}
+                {selectedMetrics.fat && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="fat" 
+                    stroke="#e74c3c" 
+                    strokeWidth={2}
+                    yAxisId="left"
+                    name="Fat (g)"
+                  />
+                )}
+                {selectedMetrics.carbs && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="carbs" 
+                    stroke="#2ecc71" 
+                    strokeWidth={2}
+                    yAxisId="left"
+                    name="Carbs (g)"
+                  />
+                )}
+                {selectedMetrics.weight && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="weight" 
+                    stroke="#9b59b6" 
+                    strokeWidth={2}
+                    yAxisId="right"
+                    name="Weight (lbs)"
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#bdc3c7' }}>
+            No data available for the selected time period.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Goals View Component (placeholder for now)
   const GoalsView = () => (

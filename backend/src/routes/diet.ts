@@ -81,6 +81,34 @@ router.post('/meals', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// GET /api/diet/meals/range - Get meals for date range (optimized for monthly view)
+router.get('/meals/range', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    const { start_date, end_date } = req.query;
+
+    if (!start_date || !end_date) {
+      res.status(400).json({ error: 'start_date and end_date are required' });
+      return;
+    }
+
+    const query = `
+      SELECT * FROM user_meals 
+      WHERE user_id = $1 
+      AND TO_DATE(date, 'MM-DD-YYYY') >= TO_DATE($2, 'MM-DD-YYYY')
+      AND TO_DATE(date, 'MM-DD-YYYY') <= TO_DATE($3, 'MM-DD-YYYY')
+      ORDER BY date ASC, created_at ASC
+    `;
+
+    const result = await pool.query(query, [userId, start_date, end_date]);
+    
+    res.json({ meals: result.rows });
+  } catch (error: any) {
+    console.error('Get meals by range error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/diet/meals/:date - Get meals for specific date
 router.get('/meals/:date', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -248,6 +276,34 @@ router.get('/weight/history', async (req: Request, res: Response): Promise<void>
     res.json(result.rows);
   } catch (error: any) {
     console.error('Get weight history error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/diet/weight/range - Get weight for date range (optimized for monthly view)
+router.get('/weight/range', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    const { start_date, end_date } = req.query;
+
+    if (!start_date || !end_date) {
+      res.status(400).json({ error: 'start_date and end_date are required' });
+      return;
+    }
+
+    const query = `
+      SELECT * FROM user_weight 
+      WHERE user_id = $1 
+      AND TO_DATE(date, 'MM-DD-YYYY') >= TO_DATE($2, 'MM-DD-YYYY')
+      AND TO_DATE(date, 'MM-DD-YYYY') <= TO_DATE($3, 'MM-DD-YYYY')
+      ORDER BY date ASC, created_at ASC
+    `;
+
+    const result = await pool.query(query, [userId, start_date, end_date]);
+    
+    res.json({ weights: result.rows });
+  } catch (error: any) {
+    console.error('Get weight by range error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -10,6 +10,7 @@ import albumRoutes from './routes/albums';
 import nbaPlayerRoutes from './routes/nba-players';
 import userRoutineRoutes from './routes/user-routines';
 import userRoutes from './routes/users';
+import dietRoutes from './routes/diet';
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +39,7 @@ app.use('/api/albums', albumRoutes);
 app.use('/api/nba-players', nbaPlayerRoutes);
 app.use('/api/users', userRoutineRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/diet', dietRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

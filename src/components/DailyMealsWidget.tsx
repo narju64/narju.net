@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { buildApiUrl } from '../utils/api';
 import './DailyMealsWidget.css';
 
 interface DailyMeal {
   id: string;
   name: string;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  ingredients: Array<{
-    ingredient: {
-      id: string;
-      name: string;
-      calories: number;
-      protein: number;
-      fat: number;
-      carbs: number;
-      sugar: number;
-      fiber: number;
-      category: string;
-      servingSize: string;
-    };
-    quantity: number;
-  }>;
+  meal_type: string;
+  ingredients_json: string;
+  nutrition_json: string;
+  date: string;
+  created_at: string;
+}
+
+interface ParsedDailyMeal {
+  id: string;
+  name: string;
+  mealType: string;
   nutrition: {
     calories: number;
     protein: number;
@@ -36,85 +33,142 @@ interface DailyMeal {
 }
 
 const DailyMealsWidget: React.FC = () => {
+  const { isLoggedIn, authToken } = useAuth();
   const [dailyMeals, setDailyMeals] = useState<DailyMeal[]>([]);
+  const [parsedMeals, setParsedMeals] = useState<ParsedDailyMeal[]>([]);
+
+  // Helper function to get today's date in MM-DD-YYYY format
+  const getTodayDate = (): string => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${month}-${day}-${year}`;
+  };
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [slideOffset, setSlideOffset] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
   const mealsPerPage = 3;
-  const maxPage = Math.max(0, dailyMeals.length - mealsPerPage);
+  const maxPage = Math.max(0, parsedMeals.length - mealsPerPage);
 
-  // Load meals from localStorage and check if we need to reset
+  // Load meals from API for today's date
   useEffect(() => {
-    const loadMeals = () => {
+    if (!isLoggedIn || !authToken) return;
+
+    const loadTodaysMeals = async () => {
+      setLoading(true);
       try {
-        const savedMeals = localStorage.getItem('diet-daily-meals');
+        // Get today's date in MM-DD-YYYY format (matching backend)
+        // Use local timezone to avoid UTC conversion issues
+        const now = new Date();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const year = now.getFullYear();
+        const today = `${month}-${day}-${year}`;
         
-        if (savedMeals && savedMeals !== 'null' && savedMeals !== 'undefined') {
-          const parsedMeals = JSON.parse(savedMeals);
+        console.log('🔍 DailyMealsWidget calculating today:', { 
+          now: now.toLocaleString(), 
+          month, 
+          day, 
+          year, 
+          today 
+        });
+
+        const response = await fetch(buildApiUrl(`/api/diet/meals/${today}`), {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🔍 DailyMealsWidget API response:', data);
           
-          if (Array.isArray(parsedMeals) && parsedMeals.length > 0) {
-            // Filter out meals from previous days
-            const today = new Date().toDateString();
-            const todayMeals = parsedMeals.filter((meal: any) => {
-              // Handle meals that might not have createdAt field (backward compatibility)
-              if (!meal.createdAt) {
-                return false;
+          if (data.meals && data.meals.length > 0) {
+            setDailyMeals(data.meals);
+          } else {
+            // If no meals for today, try to get the most recent meals
+            console.log('🔍 No meals for today, trying to get recent meals...');
+            const recentResponse = await fetch(buildApiUrl('/api/diet/meals/history?limit=10'), {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
               }
-              const isToday = meal.createdAt === today;
-              return isToday;
             });
             
-            setDailyMeals(todayMeals);
-            
-            // If we filtered out old meals, save the updated list
-            if (todayMeals.length !== parsedMeals.length) {
-              localStorage.setItem('diet-daily-meals', JSON.stringify(todayMeals));
+            if (recentResponse.ok) {
+              const recentData = await recentResponse.json();
+              console.log('🔍 Recent meals response:', recentData);
+              setDailyMeals(recentData || []);
+            } else {
+              setDailyMeals([]);
             }
-          } else {
-            setDailyMeals([]);
           }
         } else {
+          console.error('Failed to load today\'s meals');
           setDailyMeals([]);
         }
-        
       } catch (error) {
-        console.warn('❌ DailyMealsWidget: Failed to load daily meals from localStorage:', error);
+        console.error('Error loading today\'s meals:', error);
         setDailyMeals([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadMeals();
-  }, []);
+    loadTodaysMeals();
+  }, [isLoggedIn, authToken]);
 
-  // Listen for changes to daily meals from the Diet component
+  // Parse meals when dailyMeals change
   useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const savedMeals = localStorage.getItem('diet-daily-meals');
-        if (savedMeals && savedMeals !== 'null' && savedMeals !== 'undefined') {
-          const parsedMeals = JSON.parse(savedMeals);
-          if (Array.isArray(parsedMeals)) {
-            setDailyMeals(parsedMeals);
+    const parseMeals = () => {
+      console.log('🔍 DailyMealsWidget parsing meals:', dailyMeals);
+      const parsed = dailyMeals.map(meal => {
+        try {
+          // Handle both string and object nutrition data
+          let nutrition;
+          if (typeof meal.nutrition_json === 'string') {
+            nutrition = JSON.parse(meal.nutrition_json);
+          } else {
+            nutrition = meal.nutrition_json;
           }
+          
+          console.log('🔍 Parsed nutrition for meal:', meal.name, nutrition);
+          return {
+            id: meal.id,
+            name: meal.name,
+            mealType: meal.meal_type,
+            nutrition: {
+              calories: nutrition.calories || 0,
+              protein: nutrition.protein || 0,
+              fat: nutrition.fat || 0,
+              carbs: nutrition.carbs || 0,
+              sugar: nutrition.sugar || 0,
+              fiber: nutrition.fiber || 0,
+              netCarbs: Math.max(0, (nutrition.carbs || 0) - (nutrition.fiber || 0)),
+              proteinPercent: nutrition.proteinPercent || 0,
+              fatPercent: nutrition.fatPercent || 0,
+              carbPercent: nutrition.carbPercent || 0
+            },
+            createdAt: meal.created_at
+          };
+        } catch (error) {
+          console.error('Error parsing meal nutrition:', error);
+          return null;
         }
-      } catch (error) {
-        console.warn('❌ DailyMealsWidget: Failed to load daily meals from localStorage:', error);
-      }
+      }).filter(Boolean) as ParsedDailyMeal[];
+      
+      console.log('🔍 Final parsed meals:', parsed);
+      setParsedMeals(parsed);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events from the Diet component
-    window.addEventListener('dailyMealsUpdated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('dailyMealsUpdated', handleStorageChange);
-    };
-  }, []);
+    parseMeals();
+  }, [dailyMeals]);
 
   const getTotalNutrition = () => {
-    const dailyTotals = dailyMeals.reduce((total, meal) => ({
+    const dailyTotals = parsedMeals.reduce((total, meal) => ({
       calories: total.calories + meal.nutrition.calories,
       protein: total.protein + meal.nutrition.protein,
       fat: total.fat + meal.nutrition.fat,
@@ -178,8 +232,8 @@ const DailyMealsWidget: React.FC = () => {
 
   // Sort meals by meal type order: breakfast, lunch, dinner, snack
   const mealTypeOrder = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
-  const sortedMeals = [...dailyMeals].sort((a, b) => 
-    mealTypeOrder[a.mealType] - mealTypeOrder[b.mealType]
+  const sortedMeals = [...parsedMeals].sort((a, b) => 
+    mealTypeOrder[a.mealType as keyof typeof mealTypeOrder] - mealTypeOrder[b.mealType as keyof typeof mealTypeOrder]
   );
 
   // Carousel navigation functions
@@ -211,9 +265,36 @@ const DailyMealsWidget: React.FC = () => {
   // Reset to first page when meals change
   useEffect(() => {
     setCurrentPage(0);
-  }, [dailyMeals.length]);
+  }, [parsedMeals.length]);
 
-  if (dailyMeals.length === 0) {
+  if (!isLoggedIn) {
+    return (
+      <div className="daily-meals-widget">
+        <div className="widget-header">
+          <h2>Today's Meals</h2>
+        </div>
+        <div className="no-meals">
+          <p>Please log in to view your meals</p>
+          <a href="/auth/login" className="add-meal-link">Login</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="daily-meals-widget">
+        <div className="widget-header">
+          <h2>Today's Meals</h2>
+        </div>
+        <div className="no-meals">
+          <p>Loading meals...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (parsedMeals.length === 0) {
     return (
       <div className="daily-meals-widget">
         <div className="widget-header">
@@ -228,10 +309,14 @@ const DailyMealsWidget: React.FC = () => {
     );
   }
 
+  // Check if we're showing today's meals or recent meals
+  const isShowingRecentMeals = dailyMeals.length > 0 && dailyMeals[0]?.date !== getTodayDate();
+  const widgetTitle = isShowingRecentMeals ? 'Recent Meals' : 'Today\'s Meals';
+
   return (
     <div className="daily-meals-widget">
       <div className="widget-header">
-        <h2>Today's Meals</h2>
+        <h2>{widgetTitle}</h2>
         <div className="nutrition-summary-inline">
           <span className="nutrition-inline-item">
             <span className="nutrition-inline-label">Calories</span>
@@ -250,7 +335,7 @@ const DailyMealsWidget: React.FC = () => {
             <span className="nutrition-inline-value">{totalNutrition.netCarbs.toFixed(1)}g</span>
           </span>
         </div>
-        <span className="meal-count">{dailyMeals.length} meal{dailyMeals.length !== 1 ? 's' : ''}</span>
+        <span className="meal-count">{parsedMeals.length} meal{parsedMeals.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="calorie-distribution">

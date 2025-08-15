@@ -1,4 +1,5 @@
 import pool from './database';
+import { runDietMigrations } from './diet-migrations';
 
 // Create Users table
 export const createUsersTable = async () => {
@@ -180,6 +181,7 @@ export const runMigrations = async () => {
     await createUserSettingsTable();
     await createAdminUser();
     await cleanupHardcodedRoutine();
+    await runDietMigrations();
     // Note: Data has been manually uploaded to Railway database
     console.log('✅ All migrations completed successfully');
   } catch (error) {

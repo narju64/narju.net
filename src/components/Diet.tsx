@@ -17,68 +17,142 @@ interface Ingredient {
   servingSize: string;
   servingSizeValue?: number; // Numerical value (e.g., 4)
   servingSizeUnit?: string;  // Unit (e.g., "oz")
+  isCustom?: boolean; // Whether this is a custom ingredient
+}
+
+interface UserIngredient {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  sugar: number;
+  fiber: number;
+  category: 'protein' | 'vegetables' | 'fats' | 'nuts-seeds' | 'seasonings' | 'beverages' | 'fruits' | 'dairy';
+  serving_size: string;
+  serving_size_value?: number;
+  serving_size_unit?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CustomIngredientForm {
+  name: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  sugar: number;
+  fiber: number;
+  category: 'protein' | 'vegetables' | 'fats' | 'nuts-seeds' | 'seasonings' | 'beverages' | 'fruits' | 'dairy';
+  servingSize: string;
+  servingSizeValue: number;
+  servingSizeUnit: string;
 }
 
 interface SelectedIngredient {
   ingredient: Ingredient;
   quantity: number;
-  servingSizeMultiplier?: number;
+  servingSizeMultiplier: number;
 }
 
-interface PresetMeal {
+interface DailyMeal {
   id: string;
   name: string;
-  ingredients: (SelectedIngredient & { servingSizeMultiplier?: number })[];
-  nutrition: {
-    calories: number;
-    protein: number;
-    fat: number;
-    carbs: number;
-    sugar: number;
-    fiber: number;
-    netCarbs: number;
-    proteinPercent: number;
-    fatPercent: number;
-    carbPercent: number;
-  };
+  mealType: string;
+  ingredients: SelectedIngredient[];
+  nutrition: Nutrition;
+  createdAt: string;
 }
 
-interface ApiResponse {
-  list: {
-    id: number;
-    name: string;
-    category: string;
-    items_json: Ingredient[];
-  };
+interface SavedMeal {
+  id: string;
+  name: string;
+  ingredients: SelectedIngredient[];
+  nutrition: Nutrition;
+  isFavorite: boolean;
+  createdAt: string;
+}
+
+
+interface Nutrition {
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  sugar: number;
+  fiber: number;
+  netCarbs: number;
+  proteinPercent: number;
+  fatPercent: number;
+  carbPercent: number;
+}
+
+interface WeightEntry {
+  id: string;
+  weight: number;
+  date: string;
+  time: 'morning' | 'afternoon' | 'night';
+  created_at: string;
+}
+
+interface WeightForm {
+  weight: number;
+  time: 'morning' | 'afternoon' | 'night';
 }
 
 const Diet: React.FC = () => {
   const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
   const [mealName, setMealName] = useState('');
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'meals'>('ingredients');
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'meals' | 'custom-ingredients' | 'hidden-ingredients' | 'weight'>('ingredients');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [savedMeals, setSavedMeals] = useState<Array<{
-    id: string;
-    name: string;
-    ingredients: (SelectedIngredient & { servingSizeMultiplier?: number })[];
-    nutrition: ReturnType<typeof getTotalNutrition>;
-  }>>([]);
-  const [selectedDailyMeals, setSelectedDailyMeals] = useState<Array<{
-    id: string;
-    name: string;
-    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    ingredients: (SelectedIngredient & { servingSizeMultiplier?: number })[];
-    nutrition: ReturnType<typeof getTotalNutrition>;
-  }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [savedMeals, setSavedMeals] = useState<Array<SavedMeal>>([]);
+  const [selectedDailyMeals, setSelectedDailyMeals] = useState<Array<DailyMeal>>([]);
   const [ingredientServingSizes, setIngredientServingSizes] = useState<Record<string, number>>({});
   const [currentMealServingSizes, setCurrentMealServingSizes] = useState<Record<string, number>>({});
+  const [isSavingMeal, setIsSavingMeal] = useState(false);
   
   // New state for hybrid data loading
   const [ingredientsData, setIngredientsData] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Custom ingredients state
+  const [userIngredients, setUserIngredients] = useState<UserIngredient[]>([]);
+  const [showCustomIngredientForm, setShowCustomIngredientForm] = useState(false);
+  const [editingIngredient, setEditingIngredient] = useState<UserIngredient | null>(null);
+  const [customIngredientForm, setCustomIngredientForm] = useState<CustomIngredientForm>({
+    name: '',
+    calories: 0,
+    protein: 0,
+    fat: 0,
+    carbs: 0,
+    sugar: 0,
+    fiber: 0,
+    category: 'protein',
+    servingSize: '1 serving',
+    servingSizeValue: 1,
+    servingSizeUnit: 'serving'
+  });
+  const [isSavingIngredient, setIsSavingIngredient] = useState(false);
+
+  const [hiddenIngredients, setHiddenIngredients] = useState<Ingredient[]>([]);
+  
+  // Weight tracking state
+  const [weightEntries, setWeightEntries] = useState<WeightEntry[]>([]);
+  const [showWeightForm, setShowWeightForm] = useState(false);
+  const [editingWeight, setEditingWeight] = useState<WeightEntry | null>(null);
+  const [weightForm, setWeightForm] = useState<WeightForm>(() => {
+    // Initialize with first available time slot, but we'll need to set this after weightEntries loads
+    return {
+      weight: 0,
+      time: 'morning'
+    };
+  });
+  const [isSavingWeight, setIsSavingWeight] = useState(false);
+  
   const { isLoggedIn, authToken } = useAuth();
 
   // Helper function to calculate nutrition for a meal's ingredients
@@ -86,8 +160,8 @@ const Diet: React.FC = () => {
     const total = mealIngredients.reduce((acc, item) => {
       const ingredient = item.ingredient;
       const quantity = item.quantity;
-      // Use stored serving size multiplier if available, otherwise default to 1
-      const servingSizeMultiplier = item.servingSizeMultiplier || 1;
+      // Use current serving size multiplier from state, fallback to stored value, then default to 1
+      const servingSizeMultiplier = getCurrentMealServingSizeMultiplier(ingredient.id) || item.servingSizeMultiplier || 1;
       
       return {
         calories: acc.calories + (ingredient.calories * servingSizeMultiplier * quantity),
@@ -107,7 +181,12 @@ const Diet: React.FC = () => {
     const carbPercent = totalCalories > 0 ? (netCarbs * 4 / totalCalories) * 100 : 0;
 
     return {
-      ...total,
+      calories: total.calories,
+      protein: total.protein,
+      fat: total.fat,
+      carbs: total.carbs,
+      sugar: total.sugar,
+      fiber: total.fiber,
       netCarbs,
       proteinPercent,
       fatPercent,
@@ -115,27 +194,405 @@ const Diet: React.FC = () => {
     };
   };
 
+  // Custom ingredients functions
+  const loadUserIngredients = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/diet/ingredients'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserIngredients(data);
+      } else {
+        console.error('Failed to load user ingredients');
+      }
+    } catch (error) {
+      console.error('Error loading user ingredients:', error);
+    }
+  };
+
+  const saveCustomIngredient = async (ingredientData: CustomIngredientForm) => {
+    setIsSavingIngredient(true);
+    try {
+      const url = editingIngredient 
+        ? buildApiUrl(`/api/diet/ingredients/${editingIngredient.id}`)
+        : buildApiUrl('/api/diet/ingredients');
+      
+      const method = editingIngredient ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: ingredientData.name,
+          calories: ingredientData.calories,
+          protein: ingredientData.protein,
+          fat: ingredientData.fat,
+          carbs: ingredientData.carbs,
+          sugar: ingredientData.sugar,
+          fiber: ingredientData.fiber,
+          category: ingredientData.category,
+          serving_size: ingredientData.servingSize,
+          serving_size_value: ingredientData.servingSizeValue,
+          serving_size_unit: ingredientData.servingSizeUnit
+        })
+      });
+
+      if (response.ok) {
+        const savedIngredient = await response.json();
+        
+        if (editingIngredient) {
+          setUserIngredients(prev => prev.map(ing => 
+            ing.id === editingIngredient.id ? savedIngredient : ing
+          ));
+        } else {
+          setUserIngredients(prev => [...prev, savedIngredient]);
+        }
+        
+        // Reset form and close
+        setCustomIngredientForm({
+          name: '',
+          calories: 0,
+          protein: 0,
+          fat: 0,
+          carbs: 0,
+          sugar: 0,
+          fiber: 0,
+          category: 'protein',
+          servingSize: '1 serving',
+          servingSizeValue: 1,
+          servingSizeUnit: 'serving'
+        });
+        setShowCustomIngredientForm(false);
+        setEditingIngredient(null);
+      } else {
+        console.error('Failed to save custom ingredient');
+      }
+    } catch (error) {
+      console.error('Error saving custom ingredient:', error);
+    } finally {
+      setIsSavingIngredient(false);
+    }
+  };
+
+  const deleteCustomIngredient = async (ingredientId: string) => {
+    if (!window.confirm('Are you sure you want to delete this ingredient?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/diet/ingredients/${ingredientId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setUserIngredients(prev => prev.filter(ing => ing.id !== ingredientId));
+      } else {
+        console.error('Failed to delete custom ingredient');
+      }
+    } catch (error) {
+      console.error('Error deleting custom ingredient:', error);
+    }
+  };
+
+  const editCustomIngredient = (ingredient: UserIngredient) => {
+    setEditingIngredient(ingredient);
+    setCustomIngredientForm({
+      name: ingredient.name,
+      calories: ingredient.calories,
+      protein: ingredient.protein,
+      fat: ingredient.fat,
+      carbs: ingredient.carbs,
+      sugar: ingredient.sugar,
+      fiber: ingredient.fiber,
+      category: ingredient.category,
+      servingSize: ingredient.serving_size,
+      servingSizeValue: ingredient.serving_size_value || 1,
+      servingSizeUnit: ingredient.serving_size_unit || 'serving'
+    });
+    setShowCustomIngredientForm(true);
+  };
+
+  const resetCustomIngredientForm = () => {
+    setCustomIngredientForm({
+      name: '',
+      calories: 0,
+      protein: 0,
+      fat: 0,
+      carbs: 0,
+      sugar: 0,
+      fiber: 0,
+      category: 'protein',
+      servingSize: '1 serving',
+      servingSizeValue: 1,
+      servingSizeUnit: 'serving'
+    });
+    setShowCustomIngredientForm(false);
+    setEditingIngredient(null);
+  };
+
+  // Weight tracking functions
+  const loadWeightEntries = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/diet/weight'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setWeightEntries(data.entries || data || []);
+      } else {
+        console.error('Failed to load weight entries');
+      }
+    } catch (error) {
+      console.error('Error loading weight entries:', error);
+    }
+  };
+
+  const saveWeightEntry = async (weightData: WeightForm) => {
+    setIsSavingWeight(true);
+    try {
+      const url = editingWeight 
+        ? buildApiUrl(`/api/diet/weight/${editingWeight.id}`)
+        : buildApiUrl('/api/diet/weight');
+      
+      const method = editingWeight ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          weight: weightData.weight,
+          date: getTodayDate(),
+          time: weightData.time
+        })
+      });
+
+      if (response.ok) {
+        const savedEntry = await response.json();
+        
+        if (editingWeight) {
+          setWeightEntries(prev => prev.map(entry => 
+            entry.id === editingWeight.id ? savedEntry : entry
+          ));
+        } else {
+          setWeightEntries(prev => [...prev, savedEntry]);
+        }
+        
+        // Reset form and close
+        resetWeightForm();
+      } else {
+        console.error('Failed to save weight entry');
+      }
+    } catch (error) {
+      console.error('Error saving weight entry:', error);
+    } finally {
+      setIsSavingWeight(false);
+    }
+  };
+
+  const deleteWeightEntry = async (entryId: string) => {
+    if (!window.confirm('Are you sure you want to delete this weight entry?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/diet/weight/${entryId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setWeightEntries(prev => prev.filter(entry => entry.id !== entryId));
+      } else {
+        console.error('Failed to delete weight entry');
+      }
+    } catch (error) {
+      console.error('Error deleting weight entry:', error);
+    }
+  };
+
+  const editWeightEntry = (entry: WeightEntry) => {
+    setEditingWeight(entry);
+    setWeightForm({
+      weight: entry.weight,
+      time: entry.time as 'morning' | 'afternoon' | 'night'
+    });
+    setShowWeightForm(true);
+  };
+
+  // Update weightForm time to first available slot when weightEntries change
+  useEffect(() => {
+    if (!editingWeight && weightEntries.length > 0) {
+      const availableSlots = getAvailableTimeSlots();
+      if (availableSlots.length > 0 && !availableSlots.includes(weightForm.time)) {
+        setWeightForm(prev => ({ ...prev, time: availableSlots[0] }));
+      }
+    }
+  }, [weightEntries, editingWeight]);
+
+  const resetWeightForm = () => {
+    const availableSlots = getAvailableTimeSlots();
+    setWeightForm({
+      weight: 0,
+      time: availableSlots.length > 0 ? availableSlots[0] : 'morning'
+    });
+    setEditingWeight(null);
+    setShowWeightForm(false);
+  };
+
+  // Load hidden ingredients from preferences and custom ingredients
+  const loadHiddenIngredients = async () => {
+    try {
+      // Load hidden preset ingredients
+      const presetResponse = await fetch(buildApiUrl('/api/diet/all-preset-ingredients'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Load hidden custom ingredients
+      const customResponse = await fetch(buildApiUrl('/api/diet/ingredients/all'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (presetResponse.ok && customResponse.ok) {
+        const presetData = await presetResponse.json();
+        const customData = await customResponse.json();
+        
+        // Filter to only show hidden ingredients
+        const hiddenPresetIngs = presetData.ingredients.filter((ingredient: any) => ingredient.isHidden);
+        const hiddenCustomIngs = customData.filter((ingredient: any) => ingredient.is_hidden);
+        
+        // Combine and format custom ingredients to match preset ingredient structure
+        const formattedCustomIngs = hiddenCustomIngs.map((ingredient: any) => ({
+          id: `user_${ingredient.id}`,
+          name: ingredient.name,
+          calories: ingredient.calories,
+          protein: ingredient.protein,
+          fat: ingredient.fat,
+          carbs: ingredient.carbs,
+          sugar: ingredient.sugar,
+          fiber: ingredient.fiber,
+          category: ingredient.category,
+          servingSize: ingredient.serving_size,
+          servingSizeValue: ingredient.serving_size_value,
+          servingSizeUnit: ingredient.serving_size_unit,
+          isCustom: true
+        }));
+        
+        // Combine both types of hidden ingredients
+        const allHiddenIngs = [...hiddenPresetIngs, ...formattedCustomIngs];
+        setHiddenIngredients(allHiddenIngs);
+      }
+    } catch (error) {
+      console.error('Error loading hidden ingredients:', error);
+    }
+  };
+
+  // Toggle ingredient visibility (hide/show preset ingredients)
+  const toggleIngredientVisibility = async (ingredientId: string) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/diet/ingredient-preferences/${ingredientId}/toggle-hidden`), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Refresh ingredients from API to get updated list
+        await fetchIngredientsFromApi();
+        
+        // If we're on the hidden ingredients tab and we just restored an ingredient,
+        // refresh the hidden ingredients list
+        if (activeTab === 'hidden-ingredients') {
+          await loadHiddenIngredients();
+        }
+      } else {
+        console.error('Failed to toggle ingredient visibility');
+      }
+    } catch (error) {
+      console.error('Error toggling ingredient visibility:', error);
+    }
+  };
+
+  // Toggle custom ingredient visibility (hide/show custom ingredients)
+  const toggleCustomIngredientVisibility = async (ingredientId: string) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/diet/ingredients/${ingredientId}/toggle-hidden`), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Refresh custom ingredients list
+        await loadUserIngredients();
+        
+        // If we're on the hidden ingredients tab, refresh the hidden ingredients list
+        if (activeTab === 'hidden-ingredients') {
+          await loadHiddenIngredients();
+        }
+      } else {
+        console.error('Failed to toggle custom ingredient visibility');
+      }
+    } catch (error) {
+      console.error('Error toggling custom ingredient visibility:', error);
+    }
+  };
+
   // Load saved meals and daily meals from localStorage on component mount
   useEffect(() => {
-    const savedMealsData = localStorage.getItem('savedMeals');
-    const selectedDailyMealsData = localStorage.getItem('selectedDailyMeals');
-    const ingredientServingSizesData = localStorage.getItem('ingredientServingSizes');
-    const currentMealServingSizesData = localStorage.getItem('currentMealServingSizes');
+    if (isLoggedIn && authToken) {
+      loadSavedMeals();
+      loadTodaysMeals();
+      loadUserIngredients();
+      loadWeightEntries();
+    }
+  }, [isLoggedIn, authToken]);
 
-    if (savedMealsData) {
-      setSavedMeals(JSON.parse(savedMealsData));
+  // Load meals from database when logged in
+  useEffect(() => {
+    if (isLoggedIn && authToken) {
+      loadTodaysMeals();
+      loadSavedMeals();
     }
-    if (selectedDailyMealsData) {
-      setSelectedDailyMeals(JSON.parse(selectedDailyMealsData));
+  }, [isLoggedIn, authToken]);
+
+  // Load hidden ingredients when hidden ingredients tab is selected
+  useEffect(() => {
+    if (isLoggedIn && authToken && activeTab === 'hidden-ingredients') {
+      loadHiddenIngredients();
     }
-    if (ingredientServingSizesData) {
-      setIngredientServingSizes(JSON.parse(ingredientServingSizesData));
-    }
-    if (currentMealServingSizesData) {
-      setCurrentMealServingSizes(JSON.parse(currentMealServingSizesData));
-    }
-    setIsLoading(false);
-  }, []);
+  }, [isLoggedIn, authToken, activeTab]);
 
   // Fetch ingredients when component mounts or auth state changes
   useAuthRefresh(() => {
@@ -157,7 +614,7 @@ const Diet: React.FC = () => {
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(buildApiUrl('/api/lists/diet'), {
+      const response = await fetch(buildApiUrl('/api/diet/preset-ingredients'), {
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json'
@@ -171,10 +628,10 @@ const Diet: React.FC = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: ApiResponse = await response.json();
+      const data = await response.json();
       
-      if (data.list && data.list.items_json && data.list.items_json.length > 0) {
-        setIngredientsData(data.list.items_json);
+      if (data.ingredients && data.ingredients.length > 0) {
+        setIngredientsData(data.ingredients);
       } else {
         setError('No ingredients data available');
       }
@@ -191,19 +648,19 @@ const Diet: React.FC = () => {
   // Save meals to localStorage whenever savedMeals changes
   useEffect(() => {
     // Don't save while we're still loading
-    if (isLoading) return;
+    if (loading) return;
     
     try {
       localStorage.setItem('savedMeals', JSON.stringify(savedMeals));
     } catch (error) {
       console.warn('❌ Failed to save meals to localStorage:', error);
     }
-  }, [savedMeals, isLoading]);
+  }, [savedMeals, loading]);
 
   // Save daily meals to localStorage and notify widget
   useEffect(() => {
     // Don't save while we're still loading
-    if (isLoading) return;
+    if (loading) return;
     
     try {
       localStorage.setItem('selectedDailyMeals', JSON.stringify(selectedDailyMeals));
@@ -215,7 +672,7 @@ const Diet: React.FC = () => {
     } catch (error) {
       console.warn('❌ Failed to save daily meals to localStorage:', error);
     }
-  }, [selectedDailyMeals, isLoading, ingredientServingSizes, currentMealServingSizes]);
+  }, [selectedDailyMeals, loading, ingredientServingSizes, currentMealServingSizes]);
 
 
   
@@ -269,22 +726,7 @@ const Diet: React.FC = () => {
     }));
   };
 
-  const getAdjustedIngredientNutrition = (ingredient: Ingredient) => {
-    const multiplier = getIngredientServingSizeMultiplier(ingredient.id);
-    const baseValue = ingredient.servingSizeValue || 1;
-    
-    // The multiplier now directly represents the desired serving size value
-    const adjustedMultiplier = multiplier / baseValue;
-    
-    return {
-      calories: ingredient.calories * adjustedMultiplier,
-      protein: ingredient.protein * adjustedMultiplier,
-      fat: ingredient.fat * adjustedMultiplier,
-      carbs: ingredient.carbs * adjustedMultiplier,
-      sugar: ingredient.sugar * adjustedMultiplier,
-      fiber: ingredient.fiber * adjustedMultiplier,
-    };
-  };
+
 
   // Serving Size Selector Component
   const ServingSizeSelector: React.FC<{
@@ -407,30 +849,25 @@ const Diet: React.FC = () => {
     );
   };
 
-  // Ingredient database - use ingredientsData state (from API or hardcoded fallback)
-  const ingredients: Ingredient[] = ingredientsData.length > 0 ? ingredientsData : [];
+  // Combine preset ingredients with user ingredients
+  const ingredients: Ingredient[] = [
+    ...ingredientsData,
+    ...userIngredients.map(userIng => ({
+      id: `user_${userIng.id}`,
+      name: userIng.name,
+      calories: userIng.calories,
+      protein: userIng.protein,
+      fat: userIng.fat,
+      carbs: userIng.carbs,
+      sugar: userIng.sugar,
+      fiber: userIng.fiber,
+      category: userIng.category,
+      servingSize: userIng.serving_size,
+      servingSizeValue: userIng.serving_size_value,
+      servingSizeUnit: userIng.serving_size_unit
+    }))
+  ];
 
-  // Default preset meals (always show in localhost)
-  const getPresetMeals = (): PresetMeal[] => {
-    // Hardcoded presets - these are always available to all users
-    return [
-      {
-        id: 'preset-1754355207462',
-        name: 'Eggs & Almonds',
-        ingredients: [
-          { ingredient: ingredients.find(i => i.id === 'almonds')!, quantity: 1, servingSizeMultiplier: 0.5 },
-          { ingredient: ingredients.find(i => i.id === 'coconut-oil')!, quantity: 1, servingSizeMultiplier: 1 },
-          { ingredient: ingredients.find(i => i.id === 'eggs')!, quantity: 1, servingSizeMultiplier: 4 },
-          { ingredient: ingredients.find(i => i.id === 'garlic')!, quantity: 1, servingSizeMultiplier: 0.25 },
-          { ingredient: ingredients.find(i => i.id === 'hemp-seeds')!, quantity: 1, servingSizeMultiplier: 1 },
-          { ingredient: ingredients.find(i => i.id === 'hot-sauce')!, quantity: 1, servingSizeMultiplier: 1 },
-          { ingredient: ingredients.find(i => i.id === 'pepper')!, quantity: 1, servingSizeMultiplier: 1 },
-          { ingredient: ingredients.find(i => i.id === 'salt')!, quantity: 1, servingSizeMultiplier: 1 }
-        ],
-        nutrition: { calories: 549, protein: 30.6, fat: 46.0, carbs: 6.8, sugar: 1.7, fiber: 3.0, netCarbs: 3.8, proteinPercent: 22.2, fatPercent: 75.0, carbPercent: 2.8 }
-      }
-    ];
-  };
 
   const addIngredient = (ingredient: Ingredient) => {
     const currentMultiplier = getIngredientServingSizeMultiplier(ingredient.id);
@@ -442,7 +879,7 @@ const Diet: React.FC = () => {
       return; 
     } else {
       // Store the original ingredient in selectedIngredients.
-      setSelectedIngredients([...selectedIngredients, { ingredient: ingredient, quantity: 1 }]);
+      setSelectedIngredients([...selectedIngredients, { ingredient: ingredient, quantity: 1, servingSizeMultiplier: currentMultiplier }]);
       // Set the current meal serving size to match what was selected in the ingredients panel
       updateCurrentMealServingSize(ingredient.id, currentMultiplier);
     }
@@ -467,33 +904,101 @@ const Diet: React.FC = () => {
     setCurrentMealServingSizes({});
   };
 
-  const addSavedMeal = (savedMeal: typeof savedMeals[0]) => {
-    // Clear current ingredients and add the saved meal's ingredients
-    setSelectedIngredients([...savedMeal.ingredients]);
-    setMealName(savedMeal.name);
-    
-    // Restore serving size multipliers for the loaded ingredients
-    const newServingSizes: { [key: string]: number } = {};
-    savedMeal.ingredients.forEach(item => {
-      if (item.servingSizeMultiplier) {
-        newServingSizes[item.ingredient.id] = item.servingSizeMultiplier;
+  const addSavedMeal = (savedMeal: SavedMeal) => {
+    try {
+      // Add safety check to ensure savedMeal has required properties
+      if (!savedMeal || !savedMeal.ingredients || !Array.isArray(savedMeal.ingredients)) {
+        console.error('Invalid saved meal structure:', savedMeal);
+        return;
       }
-    });
-    setCurrentMealServingSizes(newServingSizes);
+      
+      // Validate that all ingredients have the required structure
+      const validIngredients = savedMeal.ingredients.filter(item => 
+        item && item.ingredient && item.ingredient.id && item.ingredient.name
+      );
+      
+      if (validIngredients.length === 0) {
+        console.error('No valid ingredients found in saved meal:', savedMeal);
+        return;
+      }
+      
+      // Clear current ingredients and add the saved meal's ingredients
+      setSelectedIngredients([...validIngredients]);
+      setMealName(savedMeal.name || 'Unnamed Meal');
+      
+      // Restore serving size multipliers for the loaded ingredients
+      const newServingSizes: { [key: string]: number } = {};
+      validIngredients.forEach(item => {
+        if (item && item.ingredient && item.ingredient.id && item.servingSizeMultiplier) {
+          newServingSizes[item.ingredient.id] = item.servingSizeMultiplier;
+        }
+      });
+      setCurrentMealServingSizes(newServingSizes);
+    } catch (error) {
+      console.error('Error adding saved meal:', error);
+      // Don't crash the page, just log the error
+    }
   };
 
-  const removeFromDailyMeals = (mealId: string) => {
+  const removeFromDailyMeals = async (mealId: string) => {
+    try {
+      // Delete from database
+      const response = await fetch(buildApiUrl(`/api/diet/meals/${mealId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to delete meal from database');
+      }
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+    }
+
+    // Update local state
     setSelectedDailyMeals(selectedDailyMeals.filter(meal => meal.id !== mealId));
+    
+    // Refresh data from backend to ensure consistency
+    await refreshDataFromBackend();
   };
 
-  const removeSavedMeal = (mealId: string) => {
+  const removeSavedMeal = async (mealId: string) => {
+    try {
+      // Delete from database
+      const response = await fetch(buildApiUrl(`/api/diet/saved-meals/${mealId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to delete saved meal from database');
+      }
+    } catch (error) {
+      console.error('Error deleting saved meal:', error);
+    }
+
+    // Update local state
     setSavedMeals(savedMeals.filter(meal => meal.id !== mealId));
+    
+    // Refresh data from backend to ensure consistency
+    await refreshDataFromBackend();
   };
 
-  const saveMeal = () => {
+  const saveMeal = async () => {
     if (selectedIngredients.length === 0) return;
     if (!mealName.trim()) {
       alert('Please enter a meal name');
+      return;
+    }
+    
+    if (!isLoggedIn || !authToken) {
+      alert('Please log in to save meals');
       return;
     }
     
@@ -506,26 +1011,23 @@ const Diet: React.FC = () => {
       }
     }
     
-    // Check if this exact combination of ingredients already exists in saved meals or preset meals
+    // Check if this exact combination of ingredients already exists in saved meals
     const ingredientsKey = selectedIngredients
       .sort((a, b) => a.ingredient.id.localeCompare(b.ingredient.id))
       .map(item => `${item.ingredient.id}:${item.quantity}`)
       .join(',');
-    
+      
     // Check against saved meals
     const existingSavedMeal = savedMeals.find(meal => {
+      // Add safety check to ensure meal has required properties
+      if (!meal || !meal.ingredients || !Array.isArray(meal.ingredients)) {
+        return false; // Skip invalid meals
+      }
+      
       const mealIngredientsKey = meal.ingredients
+        .filter(item => item && item.ingredient && item.ingredient.id) // Filter out invalid items
         .sort((a, b) => a.ingredient.id.localeCompare(b.ingredient.id))
-        .map(item => `${item.ingredient.id}:${item.quantity}`)
-        .join(',');
-      return mealIngredientsKey === ingredientsKey;
-    });
-    
-    // Check against preset meals
-    const existingPresetMeal = getPresetMeals().find(meal => {
-      const mealIngredientsKey = meal.ingredients
-        .sort((a, b) => a.ingredient.id.localeCompare(b.ingredient.id))
-        .map(item => `${item.ingredient.id}:${item.quantity}`)
+        .map(item => `${item.ingredient.id}:${item.quantity || 1}`)
         .join(',');
       return mealIngredientsKey === ingredientsKey;
     });
@@ -536,139 +1038,312 @@ const Diet: React.FC = () => {
       servingSizeMultiplier: getCurrentMealServingSizeMultiplier(item.ingredient.id)
     }));
     
-    const dailyMeal = {
-      id: Date.now().toString(),
-      name: mealName.trim(),
-      mealType: selectedMealType,
-      ingredients: ingredientsWithServingSizes,
-      nutrition: getTotalNutrition(),
-      createdAt: new Date().toDateString()
-    };
+    const nutrition = calculateNutritionForMeal(ingredientsWithServingSizes);
     
-    // Always add to daily meals (Daily Meals section)
-    setSelectedDailyMeals([...selectedDailyMeals, dailyMeal]);
+    setIsSavingMeal(true);
     
-    // Only add to saved meals (Meals tab) if it's not a duplicate
-    if (!existingSavedMeal && !existingPresetMeal) {
-      const savedMeal = {
-        id: Date.now().toString(),
+    try {
+      // Save to daily meals (user_meals table)
+      const mealData = {
         name: mealName.trim(),
+        meal_type: selectedMealType,
+        ingredients_json: ingredientsWithServingSizes.map(item => ({
+          ingredient_id: String(item.ingredient.id),
+          ingredient_name: String(item.ingredient.name),
+          calories: Number(item.ingredient.calories) || 0,
+          protein: Number(item.ingredient.protein) || 0,
+          fat: Number(item.ingredient.fat) || 0,
+          carbs: Number(item.ingredient.carbs) || 0,
+          sugar: Number(item.ingredient.sugar) || 0,
+          fiber: Number(item.ingredient.fiber) || 0,
+          category: String(item.ingredient.category),
+          serving_size: String(item.ingredient.servingSize),
+          serving_size_value: item.ingredient.servingSizeValue ? Number(item.ingredient.servingSizeValue) : null,
+          serving_size_unit: item.ingredient.servingSizeUnit || null,
+          quantity: Number(item.quantity) || 1,
+          serving_size_multiplier: Number(item.servingSizeMultiplier) || 1
+        })),
+        nutrition_json: {
+          calories: Number(nutrition.calories) || 0,
+          protein: Number(nutrition.protein) || 0,
+          fat: Number(nutrition.fat) || 0,
+          carbs: Number(nutrition.carbs) || 0,
+          sugar: Number(nutrition.sugar) || 0,
+          fiber: Number(nutrition.fiber) || 0,
+          net_carbs: Number(nutrition.netCarbs) || 0,
+          protein_percent: Number(nutrition.proteinPercent) || 0,
+          fat_percent: Number(nutrition.fatPercent) || 0,
+          carb_percent: Number(nutrition.carbPercent) || 0
+        },
+        date: getTodayDate()
+      };
+
+      const dailyMealResponse = await fetch(buildApiUrl('/api/diet/meals'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(mealData)
+      });
+
+      if (!dailyMealResponse.ok) {
+        const errorText = await dailyMealResponse.text();
+        throw new Error(`Failed to save daily meal: ${dailyMealResponse.statusText} - ${errorText}`);
+      }
+
+      const savedDailyMeal = await dailyMealResponse.json();
+      
+      // Only add to saved meals (user_saved_meals table) if it's not a duplicate
+      if (!existingSavedMeal) {
+        const savedMealData = {
+          name: mealName.trim(),
+          ingredients_json: ingredientsWithServingSizes.map(item => ({
+            ingredient_id: String(item.ingredient.id),
+            ingredient_name: String(item.ingredient.name),
+            calories: Number(item.ingredient.calories),
+            protein: Number(item.ingredient.protein),
+            fat: Number(item.ingredient.fat),
+            carbs: Number(item.ingredient.carbs),
+            sugar: Number(item.ingredient.sugar),
+            fiber: Number(item.ingredient.fiber),
+            category: String(item.ingredient.category),
+            serving_size: String(item.ingredient.servingSize),
+            serving_size_value: item.ingredient.servingSizeValue ? Number(item.ingredient.servingSizeValue) : null,
+            serving_size_unit: item.ingredient.servingSizeUnit ? String(item.ingredient.servingSizeUnit) : null,
+            quantity: Number(item.quantity),
+            serving_size_multiplier: Number(item.servingSizeMultiplier) || 1
+          })),
+          nutrition_json: {
+            calories: Number(nutrition.calories) || 0,
+            protein: Number(nutrition.protein) || 0,
+            fat: Number(nutrition.fat) || 0,
+            carbs: Number(nutrition.carbs) || 0,
+            sugar: Number(nutrition.sugar) || 0,
+            fiber: Number(nutrition.fiber) || 0,
+            net_carbs: Number(nutrition.netCarbs) || 0,
+            protein_percent: Number(nutrition.proteinPercent) || 0,
+            fat_percent: Number(nutrition.fatPercent) || 0,
+            carb_percent: Number(nutrition.carbPercent) || 0
+          }
+        };
+
+        const savedMealResponse = await fetch(buildApiUrl('/api/diet/saved-meals'), {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(savedMealData)
+        });
+
+        if (!savedMealResponse.ok) {
+          console.warn('Failed to save to saved meals, but daily meal was saved');
+        } else {
+          const savedMeal = await savedMealResponse.json();
+          // Ensure the saved meal has the proper structure before adding to state
+          if (savedMeal && savedMeal.id) {
+            setSavedMeals([...savedMeals, savedMeal]);
+          }
+        }
+      }
+      
+      // Add to local state for immediate UI update
+      const dailyMeal = {
+        id: savedDailyMeal.id || Date.now().toString(),
+        name: mealName.trim(),
+        mealType: selectedMealType,
         ingredients: ingredientsWithServingSizes,
-        nutrition: getTotalNutrition()
+        nutrition: nutrition,
+        createdAt: new Date().toDateString()
       };
-      setSavedMeals([...savedMeals, savedMeal]);
-    }
-    
-    setSelectedIngredients([]);
-    setMealName('');
-    setCurrentMealServingSizes({});
-  };
-
-  const saveAsPreset = () => {
-    if (selectedIngredients.length === 0) return;
-    if (!mealName.trim()) {
-      alert('Please enter a meal name');
-      return;
-    }
-
-    // Generate the code for the new preset
-    const newPresetCode = generatePresetCode(mealName.trim(), selectedIngredients);
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(newPresetCode).then(() => {
-      alert('Preset code copied to clipboard! Paste it into the getPresetMeals function in Diet.tsx');
-    }).catch(() => {
-      // Fallback if clipboard API fails
-      prompt('Copy this code and paste it into the getPresetMeals function:', newPresetCode);
-    });
-
-    setSelectedIngredients([]);
-    setMealName('');
-    setCurrentMealServingSizes({});
-  };
-
-  const generatePresetCode = (name: string, ingredients: SelectedIngredient[]) => {
-    const ingredientCode = ingredients.map(item => {
-      const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
-      return `{ ingredient: ingredients.find(i => i.id === '${item.ingredient.id}')!, quantity: ${item.quantity}, servingSizeMultiplier: ${currentMultiplier} }`;
-    }).join(',\n                 ');
-
-    // Calculate nutrition using current meal serving size multipliers
-    const nutrition = ingredients.reduce((total, item) => {
-      const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
       
-      return {
-        calories: total.calories + (item.ingredient.calories * currentMultiplier * item.quantity),
-        protein: total.protein + (item.ingredient.protein * currentMultiplier * item.quantity),
-        fat: total.fat + (item.ingredient.fat * currentMultiplier * item.quantity),
-        carbs: total.carbs + (item.ingredient.carbs * currentMultiplier * item.quantity),
-        sugar: total.sugar + (item.ingredient.sugar * currentMultiplier * item.quantity),
-        fiber: total.fiber + (item.ingredient.fiber * currentMultiplier * item.quantity),
-      };
-    }, { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
-    
-    // Calculate net carbs (total carbs - fiber)
-    const netCarbs = Math.max(0, nutrition.carbs - nutrition.fiber);
-    
-    // Calculate calorie distribution percentages
-    const proteinCalories = nutrition.protein * 4; // 4 calories per gram of protein
-    const fatCalories = nutrition.fat * 9; // 9 calories per gram of fat
-    const netCarbCalories = netCarbs * 4; // 4 calories per gram of net carbs
-    
-    const totalCalories = proteinCalories + fatCalories + netCarbCalories;
-    
-    const proteinPercent = totalCalories > 0 ? (proteinCalories / totalCalories) * 100 : 0;
-    const fatPercent = totalCalories > 0 ? (fatCalories / totalCalories) * 100 : 0;
-    const carbPercent = totalCalories > 0 ? (netCarbCalories / totalCalories) * 100 : 0;
-
-    return `{
-               id: 'preset-${Date.now()}',
-               name: '${name}',
-               ingredients: [
-                 ${ingredientCode}
-               ],
-               nutrition: { calories: ${Math.round(nutrition.calories)}, protein: ${nutrition.protein.toFixed(1)}, fat: ${nutrition.fat.toFixed(1)}, carbs: ${nutrition.carbs.toFixed(1)}, sugar: ${nutrition.sugar.toFixed(1)}, fiber: ${nutrition.fiber.toFixed(1)}, netCarbs: ${netCarbs.toFixed(1)}, proteinPercent: ${proteinPercent.toFixed(1)}, fatPercent: ${fatPercent.toFixed(1)}, carbPercent: ${carbPercent.toFixed(1)} }
-             }`;
-  };
-
-
-
-  const getTotalNutrition = () => {
-    const totals = selectedIngredients.reduce((total, item) => {
-      const currentMultiplier = getCurrentMealServingSizeMultiplier(item.ingredient.id);
+      setSelectedDailyMeals([...selectedDailyMeals, dailyMeal]);
       
-      return {
-        calories: total.calories + (item.ingredient.calories * currentMultiplier * item.quantity),
-        protein: total.protein + (item.ingredient.protein * currentMultiplier * item.quantity),
-        fat: total.fat + (item.ingredient.fat * currentMultiplier * item.quantity),
-        carbs: total.carbs + (item.ingredient.carbs * currentMultiplier * item.quantity),
-        sugar: total.sugar + (item.ingredient.sugar * currentMultiplier * item.quantity),
-        fiber: total.fiber + (item.ingredient.fiber * currentMultiplier * item.quantity),
-      };
-    }, { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
-    
-    // Calculate net carbs (total carbs - fiber)
-    const netCarbs = Math.max(0, totals.carbs - totals.fiber);
-    
-    // Calculate calorie distribution percentages
-    const proteinCalories = totals.protein * 4; // 4 calories per gram of protein
-    const fatCalories = totals.fat * 9; // 9 calories per gram of fat
-    const netCarbCalories = netCarbs * 4; // 4 calories per gram of net carbs
-    
-    const totalCalories = proteinCalories + fatCalories + netCarbCalories;
-    
-    const proteinPercent = totalCalories > 0 ? (proteinCalories / totalCalories) * 100 : 0;
-    const fatPercent = totalCalories > 0 ? (fatCalories / totalCalories) * 100 : 0;
-    const carbPercent = totalCalories > 0 ? (netCarbCalories / totalCalories) * 100 : 0;
-    
-    return {
-      ...totals,
-      netCarbs,
-      proteinPercent,
-      fatPercent,
-      carbPercent
-    };
+      // Clear the form
+      setSelectedIngredients([]);
+      setMealName('');
+      setCurrentMealServingSizes({});
+      
+      // Refresh data from backend to ensure consistency
+      await refreshDataFromBackend();
+      
+    } catch (error) {
+      console.error('Error saving meal:', error);
+      alert(`Failed to save meal: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSavingMeal(false);
+    }
   };
+
+  // Load today's meals from database
+  const loadTodaysMeals = async () => {
+    if (!authToken) return;
+    
+    try {
+      const today = getTodayDate();
+      console.log('🔍 Loading meals for date:', today);
+      
+      const response = await fetch(buildApiUrl(`/api/diet/meals/${today}`), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 API response:', data);
+        
+        // Handle both new format (with meals property) and old format (direct array)
+        const meals = data.meals || data;
+        if (meals && meals.length > 0) {
+          console.log('🔍 Found meals:', meals.length);
+          // Transform database meals to match our local state format
+          const transformedMeals = meals.map((meal: any) => {
+            try {
+              // Parse JSON data safely
+              const ingredients = typeof meal.ingredients_json === 'string' 
+                ? JSON.parse(meal.ingredients_json) 
+                : meal.ingredients_json;
+              
+              const nutrition = typeof meal.nutrition_json === 'string' 
+                ? JSON.parse(meal.nutrition_json) 
+                : meal.nutrition_json;
+              
+              // Ensure ingredients have the proper structure
+              const validIngredients = ingredients.filter((item: any) => 
+                item && item.ingredient_id && item.ingredient_name
+              ).map((item: any) => ({
+                ingredient: {
+                  id: item.ingredient_id,
+                  name: item.ingredient_name,
+                  calories: Number(item.calories) || 0,
+                  protein: Number(item.protein) || 0,
+                  fat: Number(item.fat) || 0,
+                  carbs: Number(item.carbs) || 0,
+                  sugar: Number(item.sugar) || 0,
+                  fiber: Number(item.fiber) || 0,
+                  category: item.category || 'protein',
+                  servingSize: item.serving_size || '1',
+                  servingSizeValue: item.serving_size_value || 1,
+                  servingSizeUnit: item.serving_size_unit || ''
+                },
+                quantity: Number(item.quantity) || 1,
+                servingSizeMultiplier: Number(item.serving_size_multiplier) || 1
+              }));
+              
+              return {
+                id: meal.id.toString(),
+                name: meal.name || 'Unnamed Meal',
+                mealType: meal.meal_type || 'unknown',
+                ingredients: validIngredients,
+                nutrition: nutrition,
+                createdAt: meal.created_at ? new Date(meal.created_at).toDateString() : new Date().toDateString()
+              };
+            } catch (parseError) {
+              console.error('Error parsing meal data:', parseError, meal);
+              return null;
+            }
+          }).filter(Boolean); // Remove any null entries from parsing errors
+          
+          if (transformedMeals.length > 0) {
+            setSelectedDailyMeals(transformedMeals);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading today\'s meals:', error);
+      // Don't show error to user, just log it
+    }
+  };
+
+  // Load saved meals from database
+  const loadSavedMeals = async () => {
+    if (!authToken) return;
+    
+    try {
+      const response = await fetch(buildApiUrl('/api/diet/saved-meals'), {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Handle both new format (with meals property) and old format (direct array)
+        const meals = data.meals || data;
+        if (meals && meals.length > 0) {
+          // Transform database meals to match our local state format
+          const transformedMeals = meals.map((meal: any) => {
+            try {
+              // Parse JSON data safely
+              const ingredients = typeof meal.ingredients_json === 'string' 
+                ? JSON.parse(meal.ingredients_json) 
+                : meal.ingredients_json;
+              
+              const nutrition = typeof meal.nutrition_json === 'string' 
+                ? JSON.parse(meal.nutrition_json) 
+                : meal.nutrition_json;
+              
+              // Ensure ingredients have the proper structure
+              const validIngredients = ingredients.filter((item: any) => 
+                item && item.ingredient_id && item.ingredient_name
+              ).map((item: any) => ({
+                ingredient: {
+                  id: item.ingredient_id,
+                  name: item.ingredient_name,
+                  calories: Number(item.calories) || 0,
+                  protein: Number(item.protein) || 0,
+                  fat: Number(item.fat) || 0,
+                  carbs: Number(item.carbs) || 0,
+                  sugar: Number(item.sugar) || 0,
+                  fiber: Number(item.fiber) || 0,
+                  category: item.category || 'protein',
+                  servingSize: item.serving_size || '1',
+                  servingSizeValue: item.serving_size_value || 1,
+                  servingSizeUnit: item.serving_size_unit || ''
+                },
+                quantity: Number(item.quantity) || 1,
+                servingSizeMultiplier: Number(item.serving_size_multiplier) || 1
+              }));
+              
+              return {
+                id: meal.id.toString(),
+                name: meal.name || 'Unnamed Meal',
+                ingredients: validIngredients,
+                nutrition: nutrition,
+                isFavorite: meal.is_favorite || false,
+                createdAt: meal.created_at ? new Date(meal.created_at).toDateString() : new Date().toDateString()
+              };
+            } catch (parseError) {
+              console.error('Error parsing saved meal data:', parseError, meal);
+              return null;
+            }
+          }).filter(Boolean); // Remove any null entries from parsing errors
+          
+          if (transformedMeals.length > 0) {
+            setSavedMeals(transformedMeals);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved meals:', error);
+      // Don't show error to user, just log it
+    }
+  };
+
+  // Refresh data from backend to ensure consistency
+  const refreshDataFromBackend = async () => {
+    if (isLoggedIn && authToken) {
+      await Promise.all([
+        loadTodaysMeals(),
+        loadSavedMeals()
+      ]);
+    }
+  };
+
 
              const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
@@ -703,14 +1378,21 @@ const Diet: React.FC = () => {
   };
 
   const getDailyNutrition = () => {
-    const dailyTotals = selectedDailyMeals.reduce((total, meal) => ({
-      calories: total.calories + meal.nutrition.calories,
-      protein: total.protein + meal.nutrition.protein,
-      fat: total.fat + meal.nutrition.fat,
-      carbs: total.carbs + meal.nutrition.carbs,
-      sugar: total.sugar + meal.nutrition.sugar,
-      fiber: total.fiber + meal.nutrition.fiber,
-    }), { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
+    const dailyTotals = selectedDailyMeals.reduce((total, meal) => {
+      // Add safety check to ensure meal has required properties
+      if (!meal || !meal.nutrition) {
+        return total; // Skip invalid meals
+      }
+      
+      return {
+        calories: total.calories + (meal.nutrition.calories || 0),
+        protein: total.protein + (meal.nutrition.protein || 0),
+        fat: total.fat + (meal.nutrition.fat || 0),
+        carbs: total.carbs + (meal.nutrition.carbs || 0),
+        sugar: total.sugar + (meal.nutrition.sugar || 0),
+        fiber: total.fiber + (meal.nutrition.fiber || 0),
+      };
+    }, { calories: 0, protein: 0, fat: 0, carbs: 0, sugar: 0, fiber: 0 });
     
     // Calculate net carbs (total carbs - fiber)
     const netCarbs = Math.max(0, dailyTotals.carbs - dailyTotals.fiber);
@@ -735,10 +1417,21 @@ const Diet: React.FC = () => {
     };
   };
 
-  // Get unique categories from ingredients
+  // Get unique categories from ingredients in the specified display order
   const getUniqueCategories = () => {
-    const categories = ingredients.map(ingredient => ingredient.category);
-    return [...new Set(categories)];
+    // Define the order that matches how ingredients are displayed
+    const categoryOrder: Array<'protein' | 'vegetables' | 'fats' | 'nuts-seeds' | 'seasonings' | 'beverages' | 'fruits' | 'dairy'> = [
+      'protein', 'nuts-seeds', 'dairy', 'vegetables', 'fats', 'seasonings', 'fruits', 'beverages'
+    ];
+    
+    // Get unique categories from ingredients
+    const availableCategories = ingredients
+      .filter(ingredient => ingredient && ingredient.category)
+      .map(ingredient => ingredient.category);
+    const uniqueCategories = [...new Set(availableCategories)];
+    
+    // Return categories in the specified order, filtering out any that don't exist
+    return categoryOrder.filter(category => uniqueCategories.includes(category));
   };
 
   // Filter ingredients based on selected categories
@@ -746,13 +1439,31 @@ const Diet: React.FC = () => {
     // First filter by category
     let filteredIngredients = ingredients;
     if (selectedCategories.length > 0) {
-      filteredIngredients = ingredients.filter(ingredient => selectedCategories.includes(ingredient.category));
+      filteredIngredients = ingredients.filter(ingredient => 
+        ingredient && ingredient.category && selectedCategories.includes(ingredient.category)
+      );
     }
     
     // Then filter out ingredients that are already in the current meal
-    return filteredIngredients.filter(ingredient => 
-      !selectedIngredients.some(item => item.ingredient.id === ingredient.id)
+    const availableIngredients = filteredIngredients.filter(ingredient => 
+      ingredient && ingredient.id && !selectedIngredients.some(item => 
+        item && item.ingredient && item.ingredient.id === ingredient.id
+      )
     );
+
+    // Group ingredients by category in the specified order
+    const categoryOrder = ['protein', 'nuts-seeds', 'dairy', 'vegetables', 'fats', 'seasonings', 'fruits', 'beverages'];
+    
+    const groupedIngredients: Ingredient[] = [];
+    
+    categoryOrder.forEach(category => {
+      const categoryIngredients = availableIngredients.filter(ingredient => ingredient.category === category);
+      if (categoryIngredients.length > 0) {
+        groupedIngredients.push(...categoryIngredients);
+      }
+    });
+    
+    return groupedIngredients;
   };
 
   // Toggle category selection
@@ -764,7 +1475,7 @@ const Diet: React.FC = () => {
     );
   };
 
-  const totalNutrition = getTotalNutrition();
+  const totalNutrition = calculateNutritionForMeal(selectedIngredients);
 
   // Show login required message if not logged in
   if (!isLoggedIn) {
@@ -778,39 +1489,77 @@ const Diet: React.FC = () => {
     );
   }
 
+  // Helper function to get today's date in MM-DD-YYYY format (matching database)
+  const getTodayDate = (): string => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const year = now.getFullYear();
+    const result = `${month}-${day}-${year}`;
+    console.log('🔍 getTodayDate() called:', { now: now.toLocaleString(), result });
+    return result;
+  };
+
+  // Helper function to get available time slots for weight entries today
+  const getAvailableTimeSlots = (): Array<'morning' | 'afternoon' | 'night'> => {
+    const today = getTodayDate();
+    const usedTimeSlots = weightEntries
+      .filter(entry => entry.date === today)
+      .map(entry => entry.time);
+    
+    const allTimeSlots: Array<'morning' | 'afternoon' | 'night'> = ['morning', 'afternoon', 'night'];
+    const availableSlots = allTimeSlots.filter(time => !usedTimeSlots.includes(time));
+    
+    return availableSlots;
+  };
+
   return (
     <div className="diet-page">
-      <div className="diet-header">
-        <h1>Diet & Nutrition</h1>
-        <p>Build your meals by clicking on ingredients below</p>
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '10px', color: '#e67e22', fontWeight: 'bold' }}>
-            Loading ingredients from database...
-          </div>
-        )}
-        {error && (
-          <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
-            Error loading from database: {error}. Using hardcoded data.
-          </div>
-        )}
-      </div>
+             {loading && (
+         <div style={{ textAlign: 'center', padding: '10px', color: '#e67e22', fontWeight: 'bold' }}>
+           Loading ingredients from database...
+         </div>
+       )}
+       {error && (
+         <div style={{ textAlign: 'center', padding: '10px', color: '#e53e3e' }}>
+           Error loading ingredients: {error}
+         </div>
+       )}
 
       <div className="diet-container">
                  <div className="ingredients-section">
-           <div className="tab-header">
-             <button 
-               className={`tab-button ${activeTab === 'ingredients' ? 'active' : ''}`}
-               onClick={() => setActiveTab('ingredients')}
-             >
-               Ingredients
-             </button>
-             <button 
-               className={`tab-button ${activeTab === 'meals' ? 'active' : ''}`}
-               onClick={() => setActiveTab('meals')}
-             >
-               Meals
-             </button>
-           </div>
+                       <div className="tab-header">
+              <button 
+                className={`tab-button ${activeTab === 'ingredients' ? 'active' : ''}`}
+                onClick={() => setActiveTab('ingredients')}
+              >
+                Ingredients
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'meals' ? 'active' : ''}`}
+                onClick={() => setActiveTab('meals')}
+              >
+                Meals
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'custom-ingredients' ? 'active' : ''}`}
+                onClick={() => setActiveTab('custom-ingredients')}
+              >
+                Custom Ingredients
+              </button>
+                             <button 
+                 className={`tab-button ${activeTab === 'hidden-ingredients' ? 'active' : ''}`}
+                 onClick={() => setActiveTab('hidden-ingredients')}
+               >
+                 Hidden Ingredients
+               </button>
+               <button 
+                 className={`tab-button ${activeTab === 'weight' ? 'active' : ''}`}
+                 onClick={() => setActiveTab('weight')}
+               >
+                 Weight
+               </button>
+            </div>
            
                        {activeTab === 'ingredients' && (
               <>
@@ -848,105 +1597,514 @@ const Diet: React.FC = () => {
                     </button>
                   )}
                 </div>
-                <div className="ingredients-grid">
-                  {getFilteredIngredients().map(ingredient => {
-                    const adjustedNutrition = getAdjustedIngredientNutrition(ingredient);
-                    return (
-                      <button
-                        key={ingredient.id}
-                        className="ingredient-button"
-                        onClick={() => addIngredient(ingredient)}
-                        style={{ borderLeftColor: getCategoryColor(ingredient.category) }}
-                      >
-                        <div className="ingredient-name">{ingredient.name}</div>
-                        <div className="ingredient-serving">
-                          <ServingSizeSelector
-                            ingredient={ingredient}
-                            onUpdate={(multiplier) => updateIngredientServingSize(ingredient.id, multiplier)}
+                                 
+                 <div className="ingredients-grid">
+                   {getFilteredIngredients().map(ingredient => {
+                     const isUserIngredient = ingredient.id.startsWith('user_');
+                     
+                     return (
+                       <div key={ingredient.id} className="ingredient-card">
+                         <button
+                           className="ingredient-button"
+                           onClick={() => addIngredient(ingredient)}
+                           style={{ borderLeftColor: getCategoryColor(ingredient.category) }}
+                         >
+                           <div className="ingredient-name">{ingredient.name}</div>
+                           <div className="ingredient-serving">
+                             <ServingSizeSelector
+                               ingredient={ingredient}
+                               onUpdate={(multiplier) => updateIngredientServingSize(ingredient.id, multiplier)}
+                             />
+                           </div>
+                           <div className="ingredient-nutrition">
+                             <span>{Number(ingredient.calories || 0).toFixed(0)} cal</span>
+                             <span>P: {Number(ingredient.protein || 0).toFixed(1)}g</span>
+                             <span>F: {Number(ingredient.fat || 0).toFixed(1)}g</span>
+                             <span>C: {Number(ingredient.carbs || 0).toFixed(1)}g</span>
+                             <span>S: {Number(ingredient.sugar || 0).toFixed(1)}g</span>
+                             <span>Fi: {Number(ingredient.fiber || 0).toFixed(1)}g</span>
+                           </div>
+                         </button>
+                         
+                         {/* Hide button for all ingredients (both preset and custom) */}
+                         <button
+                           className="ingredient-delete-button"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             if (isUserIngredient) {
+                               // For custom ingredients, remove the user_ prefix to get the actual ID
+                               const actualId = ingredient.id.replace('user_', '');
+                               toggleCustomIngredientVisibility(actualId);
+                             } else {
+                               toggleIngredientVisibility(ingredient.id);
+                             }
+                           }}
+                           title="Hide ingredient"
+                         >
+                           ×
+                         </button>
+                       </div>
+                     );
+                                      })}
+                 </div>
+                 
+                 
+               </>
+             )}
+           
+                       {activeTab === 'meals' && (
+              <div className="meals-grid">
+                {/* Saved Meals */}
+               {savedMeals.map(meal => {
+                 // Add safety check to ensure meal has required properties
+                 if (!meal || !meal.ingredients || !meal.nutrition) {
+                   return null; // Skip invalid meals
+                 }
+                 
+                 return (
+                   <div key={meal.id} className="saved-meal-card" onClick={() => addSavedMeal(meal)}>
+                     <div className="meal-header">
+                       <h3>{meal.name}</h3>
+                       <button 
+                         className="delete-meal-button"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           removeSavedMeal(meal.id);
+                         }}
+                       >
+                         ×
+                       </button>
+                     </div>
+                     <div className="meal-ingredients">
+                       <h4>Ingredients:</h4>
+                       <ul>
+                         {meal.ingredients.map((item, index) => {
+                           const totalQuantity = (item.quantity * (item.servingSizeMultiplier || 1));
+                           const servingUnit = item.ingredient.servingSizeUnit || '';
+                           return (
+                             <li key={index}>
+                               {item.ingredient.name} - {totalQuantity} {servingUnit}
+                             </li>
+                           );
+                         })}
+                       </ul>
+                     </div>
+                                           <div className="meal-nutrition">
+                        <div className="nutrition-grid">
+                          <span>Calories: {meal.nutrition.calories.toFixed(0)}</span>
+                          <span>Protein: {meal.nutrition.protein.toFixed(1)}g</span>
+                          <span>Fat: {meal.nutrition.fat.toFixed(1)}g</span>
+                          <span>Carbs: {meal.nutrition.carbs.toFixed(1)}g</span>
+                          <span>Sugar: {meal.nutrition.sugar.toFixed(1)}g</span>
+                          <span>Fiber: {meal.nutrition.fiber.toFixed(1)}g</span>
+                        </div>
+                      </div>
+                   </div>
+                 );
+               })}
+              </div>
+            )}
+
+            {activeTab === 'custom-ingredients' && (
+              <div className="custom-ingredients-section">
+                <div className="custom-ingredients-header">
+                  <h3>Custom Ingredients</h3>
+                  <button 
+                    className="add-custom-ingredient-button"
+                    onClick={() => setShowCustomIngredientForm(true)}
+                  >
+                    + Add Custom Ingredient
+                  </button>
+                </div>
+
+                {showCustomIngredientForm && (
+                  <div className="custom-ingredient-form">
+                    <h4>{editingIngredient ? 'Edit' : 'Add'} Custom Ingredient</h4>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      saveCustomIngredient(customIngredientForm);
+                    }}>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Name:</label>
+                          <input
+                            type="text"
+                            value={customIngredientForm.name}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, name: e.target.value }))}
+                            required
                           />
                         </div>
-                        <div className="ingredient-nutrition">
-                          <span>{adjustedNutrition.calories.toFixed(0)} cal</span>
-                          <span>P: {adjustedNutrition.protein.toFixed(1)}g</span>
-                          <span>F: {adjustedNutrition.fat.toFixed(1)}g</span>
-                          <span>C: {adjustedNutrition.carbs.toFixed(1)}g</span>
-                          <span>S: {adjustedNutrition.sugar.toFixed(1)}g</span>
-                          <span>Fi: {adjustedNutrition.fiber.toFixed(1)}g</span>
+                        <div className="form-group">
+                          <label>Category:</label>
+                          <select
+                            value={customIngredientForm.category}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, category: e.target.value as any }))}
+                            required
+                          >
+                            <option value="protein">Protein</option>
+                            <option value="vegetables">Vegetables</option>
+                            <option value="fats">Fats</option>
+                            <option value="nuts-seeds">Nuts/Seeds</option>
+                            <option value="seasonings">Seasonings</option>
+                            <option value="beverages">Beverages</option>
+                            <option value="fruits">Fruits</option>
+                            <option value="dairy">Dairy</option>
+                          </select>
                         </div>
-                      </button>
-                    );
-                  })}
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Calories:</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.calories}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, calories: Number(e.target.value) }))}
+                            required
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Protein (g):</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.protein}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, protein: Number(e.target.value) }))}
+                            required
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Fat (g):</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.fat}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, fat: Number(e.target.value) }))}
+                            required
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Carbs (g):</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.carbs}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, carbs: Number(e.target.value) }))}
+                            required
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Sugar (g):</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.sugar}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, sugar: Number(e.target.value) }))}
+                            required
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Fiber (g):</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.fiber}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, fiber: Number(e.target.value) }))}
+                            required
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Serving Size:</label>
+                          <input
+                            type="text"
+                            value={customIngredientForm.servingSize}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, servingSize: e.target.value }))}
+                            required
+                            placeholder="e.g., 1 cup, 100g"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Serving Value:</label>
+                          <input
+                            type="number"
+                            value={customIngredientForm.servingSizeValue}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, servingSizeValue: Number(e.target.value) }))}
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Unit:</label>
+                          <input
+                            type="text"
+                            value={customIngredientForm.servingSizeUnit}
+                            onChange={(e) => setCustomIngredientForm(prev => ({ ...prev, servingSizeUnit: e.target.value }))}
+                            placeholder="e.g., cup, g, oz"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-actions">
+                        <button 
+                          type="submit" 
+                          className="save-ingredient-button"
+                          disabled={isSavingIngredient}
+                        >
+                          {isSavingIngredient ? 'Saving...' : (editingIngredient ? 'Update' : 'Save')}
+                        </button>
+                        <button 
+                          type="button" 
+                          className="cancel-button"
+                          onClick={resetCustomIngredientForm}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="user-ingredients-grid">
+                  {userIngredients.map(ingredient => (
+                    <div key={ingredient.id} className="user-ingredient-card">
+                      <div className="ingredient-header">
+                        <h4>{ingredient.name}</h4>
+                        <div className="ingredient-actions">
+                          <button 
+                            className="edit-ingredient-button"
+                            onClick={() => editCustomIngredient(ingredient)}
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            className="delete-ingredient-button"
+                            onClick={() => deleteCustomIngredient(ingredient.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                      <div className="ingredient-category">
+                        <span className={`category-badge ${ingredient.category}`}>
+                          {ingredient.category === 'nuts-seeds' ? 'Nuts/Seeds' : 
+                           ingredient.category === 'protein' ? 'Meat' : 
+                           ingredient.category === 'vegetables' ? 'Vegetable' :
+                           ingredient.category === 'seasonings' ? 'Seasoning' :
+                           ingredient.category === 'beverages' ? 'Beverage' :
+                           ingredient.category === 'fruits' ? 'Fruit' :
+                           ingredient.category === 'dairy' ? 'Dairy' :
+                           ingredient.category === 'fats' ? 'Fat' :
+                           ingredient.category}
+                        </span>
+                      </div>
+                      <div className="ingredient-serving">
+                        {ingredient.serving_size}
+                        {ingredient.serving_size_value && ingredient.serving_size_unit && (
+                          <span> ({ingredient.serving_size_value} {ingredient.serving_size_unit})</span>
+                        )}
+                      </div>
+                      <div className="ingredient-nutrition">
+                        <span>{Number(ingredient.calories || 0).toFixed(0)} cal</span>
+                        <span>P: {Number(ingredient.protein || 0).toFixed(1)}g</span>
+                        <span>F: {Number(ingredient.fat || 0).toFixed(1)}g</span>
+                        <span>C: {Number(ingredient.carbs || 0).toFixed(1)}g</span>
+                        <span>S: {Number(ingredient.sugar || 0).toFixed(1)}g</span>
+                        <span>Fi: {Number(ingredient.fiber || 0).toFixed(1)}g</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </>
+
+                {userIngredients.length === 0 && !showCustomIngredientForm && (
+                  <div className="no-custom-ingredients">
+                    <p>No custom ingredients yet. Create your first one!</p>
+                  </div>
+                )}
+              </div>
             )}
-           
-           {activeTab === 'meals' && (
-             <div className="meals-grid">
-               {/* Preset Meals */}
-               {getPresetMeals().map(preset => (
-                 <div key={preset.id} className="meal-button preset-meal">
-                   <button
-                     className="meal-content"
-                     onClick={() => addSavedMeal(preset)}
-                   >
-                                           <div className="meal-name">{preset.name}</div>
-                     <div className="meal-ingredients">
-                       {preset.ingredients.map(item => (
-                         <span key={item.ingredient.id} className="meal-ingredient">
-                           {item.ingredient.name} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
-                         </span>
-                       ))}
-                     </div>
-                     <div className="meal-nutrition">
-                       <span>{calculateNutritionForMeal(preset.ingredients).calories.toFixed(0)} cal</span>
-                       <span>P: {calculateNutritionForMeal(preset.ingredients).protein.toFixed(1)}g</span>
-                       <span>F: {calculateNutritionForMeal(preset.ingredients).fat.toFixed(1)}g</span>
-                       <span>C: {calculateNutritionForMeal(preset.ingredients).netCarbs.toFixed(1)}g</span>
-                     </div>
-                   </button>
-                   
-                 </div>
-               ))}
-               
-               {/* Saved Meals */}
-               {savedMeals.map(meal => (
-                 <div key={meal.id} className="meal-button saved-meal">
-                   <button
-                     className="meal-content"
-                     onClick={() => addSavedMeal(meal)}
-                   >
-                                           <div className="meal-name">{meal.name}</div>
-                     <div className="meal-ingredients">
-                       {meal.ingredients.map(item => (
-                         <span key={item.ingredient.id} className="meal-ingredient">
-                           {item.ingredient.name} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
-                         </span>
-                       ))}
-                     </div>
-                     <div className="meal-nutrition">
-                       <span>{meal.nutrition.calories.toFixed(0)} cal</span>
-                       <span>P: {meal.nutrition.protein.toFixed(1)}g</span>
-                       <span>F: {meal.nutrition.fat.toFixed(1)}g</span>
-                       <span>C: {meal.nutrition.netCarbs.toFixed(1)}g</span>
-                     </div>
-                   </button>
-                   <button
-                     onClick={() => removeSavedMeal(meal.id)}
-                     className="remove-saved-meal-button"
-                     title="Delete saved meal"
-                   >
-                     ×
-                   </button>
-                 </div>
-               ))}
-               
-               {getPresetMeals().length === 0 && savedMeals.length === 0 && (
-                 <div className="no-meals">
-                   <p>No meals available. Create meals to see them here.</p>
-                 </div>
-               )}
-             </div>
-           )}
+
+            {activeTab === 'hidden-ingredients' && (
+              <div className="hidden-ingredients-section">
+                <div className="hidden-ingredients-header">
+                  <p>These ingredients are hidden from your main list. Click the ↻ button to restore them.</p>
+                </div>
+                
+                {hiddenIngredients.length > 0 ? (
+                  <div className="ingredients-grid hidden-ingredients-grid">
+                    {hiddenIngredients.map(ingredient => (
+                      <div key={ingredient.id} className="ingredient-card hidden-ingredient">
+                        <button
+                          className="ingredient-button"
+                          onClick={() => addIngredient(ingredient)}
+                          style={{ borderLeftColor: getCategoryColor(ingredient.category) }}
+                        >
+                                                  <div className="ingredient-name">
+                          {ingredient.name}
+                          {ingredient.isCustom && <span className="custom-indicator"> (Custom)</span>}
+                        </div>
+                        <div className="ingredient-serving">
+                          <span>(1 serving)</span>
+                        </div>
+                          <div className="ingredient-nutrition">
+                            <span>{Number(ingredient.calories || 0).toFixed(0)} cal</span>
+                            <span>P: {Number(ingredient.protein || 0).toFixed(1)}g</span>
+                            <span>F: {Number(ingredient.fat || 0).toFixed(1)}g</span>
+                            <span>C: {Number(ingredient.carbs || 0).toFixed(1)}g</span>
+                            <span>S: {Number(ingredient.sugar || 0).toFixed(1)}g</span>
+                            <span>Fi: {Number(ingredient.fiber || 0).toFixed(1)}g</span>
+                          </div>
+                        </button>
+                        
+                        {/* Restore button for hidden ingredients */}
+                        <button
+                          className="ingredient-restore-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (ingredient.isCustom) {
+                              // For custom ingredients, remove the user_ prefix to get the actual ID
+                              const actualId = ingredient.id.replace('user_', '');
+                              toggleCustomIngredientVisibility(actualId);
+                            } else {
+                              toggleIngredientVisibility(ingredient.id);
+                            }
+                          }}
+                          title="Restore ingredient"
+                        >
+                          ↻
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-hidden-ingredients">
+                    <p>No hidden ingredients. Hidden ingredients will appear here when you hide them from the main ingredients list.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'weight' && (
+              <div className="weight-section">
+                <div className="weight-header">
+                  <h3>Weight Tracking</h3>
+                  <button 
+                    className="add-weight-button"
+                    onClick={() => setShowWeightForm(true)}
+                  >
+                    + Add Weight Entry
+                  </button>
+                </div>
+
+                {showWeightForm && (
+                  <div className="weight-form">
+                    <h4>{editingWeight ? 'Edit Weight Entry' : 'Add Weight Entry'}</h4>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="weight">Weight (lbs):</label>
+                        <input
+                          type="number"
+                          id="weight"
+                          value={weightForm.weight}
+                          onChange={(e) => setWeightForm({...weightForm, weight: parseFloat(e.target.value) || 0})}
+                          step="0.1"
+                          min="0"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="time">Time:</label>
+                        <select
+                          id="time"
+                          value={weightForm.time}
+                          onChange={(e) => setWeightForm({...weightForm, time: e.target.value as 'morning' | 'afternoon' | 'night'})}
+                        >
+                          {editingWeight ? (
+                            // When editing, show the current time slot
+                            <option value={editingWeight.time}>{editingWeight.time.charAt(0).toUpperCase() + editingWeight.time.slice(1)}</option>
+                          ) : (
+                            // When adding new, show only available time slots
+                            getAvailableTimeSlots().map(time => (
+                              <option key={time} value={time}>
+                                {time.charAt(0).toUpperCase() + time.slice(1)}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        {!editingWeight && getAvailableTimeSlots().length === 0 && (
+                          <div className="no-slots-available" style={{ color: '#e67e22', fontSize: '0.9em', marginTop: '5px' }}>
+                            All time slots filled for today
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button
+                        className="save-weight-button"
+                        onClick={() => saveWeightEntry(weightForm)}
+                        disabled={isSavingWeight || weightForm.weight <= 0}
+                      >
+                        {isSavingWeight ? 'Saving...' : (editingWeight ? 'Update' : 'Save')}
+                      </button>
+                      <button
+                        className="cancel-button"
+                        onClick={resetWeightForm}
+                        disabled={isSavingWeight}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {weightEntries.length > 0 ? (
+                  <div className="weight-entries-list">
+                    {weightEntries.map((entry) => (
+                      <div key={entry.id} className="weight-entry-card">
+                        <div className="weight-entry-header">
+                          <div className="weight-value">
+                            <span className="weight-number">{entry.weight}</span>
+                            <span className="weight-unit"> lbs</span>
+                          </div>
+                          <div className="weight-time">{entry.time}</div>
+                        </div>
+                        <div className="weight-date">{new Date(entry.date).toLocaleDateString()}</div>
+                        <div className="weight-entry-actions">
+                          <button
+                            className="edit-weight-button"
+                            onClick={() => editWeightEntry(entry)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="delete-weight-button"
+                            onClick={() => deleteWeightEntry(entry.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-weight-entries">
+                    <p>No weight entries yet. Add your first entry to start tracking!</p>
+                  </div>
+                )}
+              </div>
+            )}
          </div>
 
          <div className="right-column">
@@ -957,19 +2115,11 @@ const Diet: React.FC = () => {
                                       <button 
                       onClick={saveMeal} 
                       className="save-button"
-                      disabled={selectedIngredients.length === 0 || !mealName.trim() || getAvailableMealTypes().length === 0}
+                      disabled={selectedIngredients.length === 0 || !mealName.trim() || getAvailableMealTypes().length === 0 || isSavingMeal}
                     >
-                      Save Meal
+                      {isSavingMeal ? 'Saving...' : 'Save Meal'}
                     </button>
-                    {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                      <button 
-                        onClick={saveAsPreset} 
-                        className="save-preset-button"
-                        disabled={selectedIngredients.length === 0 || !mealName.trim()}
-                      >
-                        Save as Preset
-                      </button>
-                    )}
+                    
                    <button onClick={clearMeal} className="clear-button">Clear Meal</button>
                  </div>
               </div>
@@ -991,7 +2141,7 @@ const Diet: React.FC = () => {
                    <select
                      id="meal-type"
                      value={selectedMealType}
-                     onChange={(e) => setSelectedMealType(e.target.value as 'breakfast' | 'lunch' | 'dinner')}
+                     onChange={(e) => setSelectedMealType(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}
                      className="meal-type-select"
                      disabled={getAvailableMealTypes().length === 0}
                    >
@@ -1248,37 +2398,50 @@ const Diet: React.FC = () => {
 
                {/* Individual Meals */}
                <div className="saved-meals-grid">
-                 {selectedDailyMeals.map(meal => (
-                   <div key={meal.id} className="saved-meal-card">
-                     <div className="saved-meal-header">
-                       <div className="meal-title">
-                         <h3>{meal.name}</h3>
-                         <span className="meal-type">{meal.mealType}</span>
+                 {selectedDailyMeals.map(meal => {
+                   // Add safety check to ensure meal has required properties
+                   if (!meal || !meal.ingredients || !meal.nutrition) {
+                     return null; // Skip invalid meals
+                   }
+                   
+                   return (
+                     <div key={meal.id} className="saved-meal-card">
+                       <div className="saved-meal-header">
+                         <div className="meal-title">
+                           <h3>{meal.name || 'Unnamed Meal'}</h3>
+                           <span className="meal-type">{meal.mealType || 'Unknown'}</span>
+                         </div>
+                         <button 
+                           onClick={() => removeFromDailyMeals(meal.id)}
+                           className="delete-meal-button"
+                         >
+                           ×
+                         </button>
                        </div>
-                       <button 
-                         onClick={() => removeFromDailyMeals(meal.id)}
-                         className="delete-meal-button"
-                       >
-                         ×
-                       </button>
-                     </div>
-                     <div className="saved-meal-ingredients">
-                       {meal.ingredients.map(item => (
-                         <span key={item.ingredient.id} className="saved-ingredient">
-                           {item.ingredient.name} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
+                       <div className="saved-meal-ingredients">
+                         {meal.ingredients.map(item => {
+                           // Add safety check for ingredient
+                           if (!item || !item.ingredient) {
+                             return null;
+                           }
+                           return (
+                             <span key={item.ingredient.id} className="saved-ingredient">
+                               {item.ingredient.name || 'Unknown'} {formatServingSize(item.servingSizeMultiplier || 1, item.ingredient.servingSizeUnit || '')}
+                             </span>
+                           );
+                         })}
+                       </div>
+                       <div className="saved-meal-nutrition">
+                         <span className="nutrition-summary">
+                           {meal.nutrition.calories?.toFixed(0) || '0'} cal • 
+                           P: {meal.nutrition.protein?.toFixed(1) || '0'}g • 
+                           F: {meal.nutrition.fat?.toFixed(1) || '0'}g • 
+                           C: {meal.nutrition.netCarbs?.toFixed(1) || '0'}g
                          </span>
-                       ))}
+                       </div>
                      </div>
-                     <div className="saved-meal-nutrition">
-                       <span className="nutrition-summary">
-                         {meal.nutrition.calories.toFixed(0)} cal • 
-                         P: {meal.nutrition.protein.toFixed(1)}g • 
-                         F: {meal.nutrition.fat.toFixed(1)}g • 
-                         C: {meal.nutrition.netCarbs.toFixed(1)}g
-                       </span>
-                     </div>
-                   </div>
-                 ))}
+                   );
+                 })}
                </div>
              </div>
            )}

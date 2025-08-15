@@ -86,6 +86,135 @@
   gap: 1rem;
 }
 
+.ingredient-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+.ingredient-delete-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #e74c3c;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  z-index: 10;
+}
+
+.ingredient-delete-button:hover {
+  background: #c0392b;
+}
+
+.ingredients-info {
+  margin-bottom: 1rem;
+}
+
+.ingredients-help {
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #3498db;
+  text-align: center;
+}
+
+.ingredients-actions {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.toggle-hidden-button {
+  background: #95a5a6;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-hidden-button:hover {
+  background: #7f8c8d;
+}
+
+.hidden-ingredients-section {
+  padding: 0;
+}
+
+.hidden-ingredients-header {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.hidden-ingredients-header h3 {
+  color: #95a5a6;
+  margin-bottom: 0.5rem;
+}
+
+.hidden-ingredients-header p {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.hidden-ingredients-grid {
+  opacity: 0.8;
+}
+
+.no-hidden-ingredients {
+  text-align: center;
+  padding: 2rem;
+  color: #bdc3c7;
+}
+
+.no-hidden-ingredients p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.hidden-ingredient .ingredient-button {
+  border-color: #95a5a6;
+  opacity: 0.7;
+}
+
+.ingredient-restore-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #27ae60;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  z-index: 10;
+}
+
+.ingredient-restore-button:hover {
+  background: #229954;
+}
+
 .meals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -219,6 +348,8 @@
   transition: all 0.2s ease;
   color: #ffffff;
   font-family: inherit;
+  width: 100%;
+  flex: 1;
 }
 
 .ingredient-button:hover {
@@ -920,4 +1051,634 @@
 
 .clear-filters-button:hover {
   background: #c0392b;
+} 
+
+/* Custom Ingredients Styles */
+.custom-ingredients-section {
+  padding: 1rem 0;
+}
+
+.custom-ingredients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.custom-ingredients-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.3rem;
+}
+
+.add-custom-ingredient-button {
+  background: #ff7300;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.add-custom-ingredient-button:hover {
+  background: #e65a00;
+}
+
+.custom-ingredient-form {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #3a3a3a;
+}
+
+.custom-ingredient-form h4 {
+  margin: 0 0 1rem 0;
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #ff7300;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.save-ingredient-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.save-ingredient-button:hover:not(:disabled) {
+  background: #218838;
+}
+
+.save-ingredient-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-button:hover {
+  background: #5a6268;
+}
+
+.user-ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.user-ingredient-card {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #3a3a3a;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-ingredient-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ingredient-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.ingredient-header h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ingredient-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-ingredient-button {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.edit-ingredient-button:hover {
+  background: #138496;
+}
+
+.delete-ingredient-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.delete-ingredient-button:hover {
+  background: #c82333;
+}
+
+
+
+.custom-indicator {
+  color: #17a2b8;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.ingredient-category {
+  margin-bottom: 0.75rem;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.category-badge.protein {
+  background: #dc3545;
+  color: white;
+}
+
+.category-badge.vegetables {
+  background: #28a745;
+  color: white;
+}
+
+.category-badge.fats {
+  background: #ffc107;
+  color: #212529;
+}
+
+.category-badge.nuts-seeds {
+  background: #fd7e14;
+  color: white;
+}
+
+.category-badge.seasonings {
+  background: #6f42c1;
+  color: white;
+}
+
+.category-badge.beverages {
+  background: #17a2b8;
+  color: white;
+}
+
+.category-badge.fruits {
+  background: #e83e8c;
+  color: white;
+}
+
+.category-badge.dairy {
+  background: #20c997;
+  color: white;
+}
+
+.ingredient-serving {
+  margin-bottom: 0.75rem;
+  color: #bdc3c7;
+  font-size: 0.9rem;
+}
+
+.ingredient-nutrition {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #bdc3c7;
+}
+
+.ingredient-nutrition span {
+  text-align: center;
+  padding: 0.25rem;
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+.no-custom-ingredients {
+  text-align: center;
+  padding: 2rem;
+  color: #bdc3c7;
+  grid-column: 1 / -1;
+}
+
+/* Saved Meals Card Styles */
+.saved-meal-card {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #3a3a3a;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.saved-meal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.meal-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.meal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-meal-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.add-meal-button:hover {
+  background: #218838;
+}
+
+.delete-meal-button {
+  background: #e74c3c;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.delete-meal-button:hover {
+  background: #c82333;
+}
+
+.meal-ingredients {
+  margin-bottom: 1rem;
+}
+
+.meal-ingredients h4 {
+  margin: 0 0 0.5rem 0;
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.meal-ingredients ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #bdc3c7;
+  font-size: 0.85rem;
+}
+
+.meal-ingredients li {
+  margin-bottom: 0.25rem;
+}
+
+.meal-nutrition h4 {
+  margin: 0 0 0.5rem 0;
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #bdc3c7;
+}
+
+.nutrition-grid span {
+  text-align: center;
+  padding: 0.25rem;
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+/* Weight Tracking Styles */
+.weight-section {
+  padding: 1rem;
+}
+
+.weight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.weight-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.add-weight-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.add-weight-button:hover {
+  background: #218838;
+}
+
+.weight-form {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.weight-form h4 {
+  margin: 0 0 1rem 0;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.weight-form .form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.weight-form .form-group {
+  flex: 1;
+}
+
+.weight-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.weight-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.weight-form input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.weight-form .form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.save-weight-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.save-weight-button:hover:not(:disabled) {
+  background: #218838;
+}
+
+.save-weight-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.weight-entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.weight-entry-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.weight-entry-card:hover {
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.weight-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.weight-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.weight-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.weight-unit {
+  font-size: 0.9rem;
+  color: #bdc3c7;
+  font-weight: 500;
+}
+
+.weight-time {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.weight-date {
+  font-size: 0.8rem;
+  color: #95a5a6;
+  font-weight: 500;
+}
+
+.weight-notes {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #2a2a2a;
+  border-radius: 4px;
+  color: #bdc3c7;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.weight-entry-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-weight-button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  flex: 1;
+}
+
+.edit-weight-button:hover {
+  background: #2980b9;
+}
+
+.delete-weight-button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  flex: 1;
+}
+
+.delete-weight-button:hover {
+  background: #c0392b;
+}
+
+.no-weight-entries {
+  text-align: center;
+  padding: 2rem;
+  color: #bdc3c7;
+  grid-column: 1 / -1;
+}
+
+.no-weight-entries p {
+  margin: 0;
+  font-size: 1rem;
 } 

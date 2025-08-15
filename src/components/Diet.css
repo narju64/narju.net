@@ -1463,6 +1463,19 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.weight-summary {
+  flex: 1;
+  text-align: center;
+}
+
+.weight-summary-text {
+  color: #bdc3c7;
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 .weight-header h3 {
@@ -1679,6 +1692,20 @@
 }
 
 .no-weight-entries p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.no-weights-today {
+  text-align: center;
+  padding: 2rem;
+  color: #bdc3c7;
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.no-weights-today p {
   margin: 0;
   font-size: 1rem;
 } 

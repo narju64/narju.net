@@ -2069,40 +2069,52 @@ const Diet: React.FC = () => {
                   </div>
                 )}
 
-                {weightEntries.length > 0 ? (
-                  <div className="weight-entries-list">
-                    {weightEntries.map((entry) => (
-                      <div key={entry.id} className="weight-entry-card">
-                        <div className="weight-entry-header">
-                          <div className="weight-value">
-                            <span className="weight-number">{entry.weight}</span>
-                            <span className="weight-unit"> lbs</span>
+                {(() => {
+                  const today = getTodayDate();
+                  const todaysWeights = weightEntries.filter(entry => entry.date === today);
+                  
+                  if (todaysWeights.length > 0) {
+                    return (
+                      <div className="weight-entries-list">
+                        {todaysWeights.map((entry) => (
+                          <div key={entry.id} className="weight-entry-card">
+                            <div className="weight-entry-header">
+                              <div className="weight-value">
+                                <span className="weight-number">{entry.weight}</span>
+                                <span className="weight-unit"> lbs</span>
+                              </div>
+                              <div className="weight-time">{entry.time}</div>
+                            </div>
+                            <div className="weight-date">{new Date(entry.date).toLocaleDateString()}</div>
+                            <div className="weight-entry-actions">
+                              <button
+                                className="edit-weight-button"
+                                onClick={() => editWeightEntry(entry)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="delete-weight-button"
+                                onClick={() => deleteWeightEntry(entry.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
-                          <div className="weight-time">{entry.time}</div>
-                        </div>
-                        <div className="weight-date">{new Date(entry.date).toLocaleDateString()}</div>
-                        <div className="weight-entry-actions">
-                          <button
-                            className="edit-weight-button"
-                            onClick={() => editWeightEntry(entry)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="delete-weight-button"
-                            onClick={() => deleteWeightEntry(entry.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="no-weight-entries">
-                    <p>No weight entries yet. Add your first entry to start tracking!</p>
-                  </div>
-                )}
+                    );
+                  } else {
+                    return (
+                      <div className="no-weights-today">
+                        <p>No weight entries for today</p>
+                        <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                          Add your first weight entry of the day
+                        </p>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
             )}
          </div>

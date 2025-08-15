@@ -68,7 +68,7 @@ const SwipeableWidgets: React.FC = () => {
       if (diff > 0 && currentIndex < widgets.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else if (diff < 0 && currentIndex > 0) {
-        setCurrentIndex(currentIndex - 1);
+        setCurrentIndex(Math.max(0, currentIndex - 1));
       }
     }
     
@@ -92,7 +92,6 @@ const SwipeableWidgets: React.FC = () => {
     <div className="swipeable-widgets">
       {/* Mobile: Swipeable interface */}
       <div className="swipeable-widgets-mobile">
-        
         <div
           ref={containerRef}
           className="widget-swipe-container"

@@ -182,8 +182,8 @@ router.post('/weight', async (req: Request, res: Response): Promise<void> => {
     const query = `
       INSERT INTO user_weight (user_id, weight, date, notes, time)
       VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (user_id, date) 
-      DO UPDATE SET weight = $2, notes = $3, time = $5, updated_at = CURRENT_TIMESTAMP
+      ON CONFLICT (user_id, date, time) 
+      DO UPDATE SET weight = $2, notes = $3, updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `;
 
